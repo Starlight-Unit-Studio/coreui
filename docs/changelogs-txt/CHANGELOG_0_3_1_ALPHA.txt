@@ -1,0 +1,36 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.3.1-alpha
+DATUM:   27.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Unfertige Demo-Sitzungen durch echte serverseitige Chat-Sitzungen ersetzt. stu_chat_messages.session_id ist jetzt die verbindliche Zugehoerigkeit jeder privaten Nachricht.
+* Exakte Turn-Zuordnung mit reply_to_id eingefuehrt. Eine Ember-Antwort kann nicht mehr nur deshalb einer falschen Anfrage zugeordnet werden, weil ihre Nachrichten-ID spaeter liegt.
+* Eigenen History-Endpunkt api/console_messages.php hinzugefuegt. Er prueft Authentifizierung, Sitzungsbesitz und Charakter und filtert jede Abfrage nach Benutzer plus Sitzung.
+* Fehlerhafte History-Heuristik since_id - 80 entfernt. Die neueste Seite wird korrekt rueckwaerts geladen; aeltere Seiten werden ueber einen echten before_id-Cursor nachgeladen.
+* Instabilen activeIdx im Browser durch eine feste activeSessionId ersetzt. Sortiert sich die Liste neu, bleibt die geoeffnete Unterhaltung unveraendert.
+* Asynchrone History-, Poll-, SSE- und Browser-Callbacks gegen Sitzungswechsel abgesichert. Spaete Antworten duerfen nur ihre Ursprungssitzung aktualisieren und niemals den gerade sichtbaren fremden Verlauf.
+* Console-SSE verlangt jetzt session_id, laedt den User-Turn aus genau dieser Sitzung und dedupliziert nur ueber die Kombination aus Sitzung plus reply_to_id.
+* Modellkontext fuer private Unterhaltungen nach session_id isoliert. Ohne gueltige Sitzungs-ID liefert der Kontextpfad absichtlich keinen Verlauf.
+* Browser-Recherchejobs um session_id und trigger_message_id erweitert. Systemstatus, finales Rechercheergebnis und Live-Browser-SSE bleiben bis zum Workerabschluss am urspruenglichen Turn gebunden.
+* Sitzungsmetadaten um last_message_id, last_read_message_id und archived_at erweitert. Lesemarkierungen veraendern die Aktivitaetsreihenfolge nicht mehr.
+* Automatische MariaDB-Aktualisierung von updated_at entfernt. Nur echte neue Nachrichten oder eine bewusste Wiederherstellung sortieren Sitzungen neu.
+* Automatisches Loeschen der jeweils aeltesten Sitzung entfernt. Es gilt ein klares Limit von 100 aktiven Sitzungen; Archivierung bleibt reversibel und Nachrichten werden nicht geloescht.
+* Kanalweite Game-Chat-Kommandos im privaten Console-Kanal deaktiviert, einschliesslich des seltenen modellgenerierten Fallbackpfads ohne SSE. Insbesondere kann ein Console-Text keinen Verlauf anderer Sitzungen ueber einen globalen Prune-Pfad veraendern.
+* Sitzungsnamen koennen direkt im Drawer umbenannt, verlustfrei archiviert und ueber die neue Archivansicht wiederhergestellt werden. Neue Unterhaltungen erhalten nach der ersten Nachricht weiterhin automatisch einen sinnvollen Titel.
+* Unread-Zaehler, Nachrichtenanzahl, stabile Auswahl nach Reload und Cache pro Sitzung in die Oberflaeche aufgenommen.
+* Bereits bestaetigte Nachrichten bleiben bei einem kurzzeitigen History- oder Sitzungslistenfehler sichtbar. Fehlerantworten leeren weder den Sitzungscache noch die lokale Liste.
+* Der Hintergrund-Poll beendet den Wartestatus nur noch bei einer Ember-Antwort, deren reply_to_id exakt dem offenen Turn dieser Sitzung entspricht.
+* Migration 003_console_sessions hinzugefuegt. Alte, wegen des Demo-Modells nicht verlaesslich trennbare Console-Nachrichten werden pro Benutzer verlustfrei in WIEDERHERGESTELLTER VERLAUF gesammelt; leere Demo-Zeiger werden lediglich archiviert.
+* stack.sh up, start und restart wenden neue idempotente Migrationen automatisch vor dem Dienststart an. Der explizite Befehl stack.sh migrate bleibt verfuegbar.
+* Nginx-Allowlists fuer den neuen authentifizierten Endpunkt console_messages.php in Compose und Native aktualisiert.
+* Eigenen session-selftest.php und Preflight-Pruefungen fuer Schema, Scope, Turn-Zuordnung, Legacy-Erhalt, Client-Rennen und Worker-Weitergabe aufgenommen.
+* Produktive Dokumentationsadresse von webui.starlight-unit.de auf coreui.starlight-unit.de aktualisiert. Die lokale config.local.php bleibt bei Updates absichtlich erhalten.
+* Thinking-Schranke, lange Ollama-Antworten, Benutzer-KI-Einstellungen, Admin Core, Game, Homepage, KeyHelp, Apache, Host-PHP und Repack-Pfade bleiben unveraendert.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.3.1-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

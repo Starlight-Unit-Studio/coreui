@@ -1,0 +1,21 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.2.6-alpha
+DATUM:   19.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Live-Browser nach echten Aktionen auf kurze Frame-Bursts umgestellt. SearXNG und Abschluss erhalten bis zu zwei Frames; Navigation, Klick, Eingabe und Scrollen standardmaessig drei Frames im Abstand von 240 Millisekunden.
+* Frame-Anzahl und Abstand ueber STU_EMBER_BROWSE_FRAME_BURST sowie STU_EMBER_BROWSE_FRAME_INTERVAL_MS konfigurierbar gemacht und auf sichere Bereiche von 1 bis 5 Frames beziehungsweise 120 bis 800 Millisekunden begrenzt.
+* Ghost-Cursor in jedem Browserframe sichtbar gehalten. Bis zum ersten echten Klick startet er an einer festen neutralen Position, danach behaelt er die letzte reale Playwright-Position bei.
+* Klickposition und Klickimpuls voneinander getrennt. Die neue Datenbankspalte cursor_click kennzeichnet nur den Frame eines bestaetigten Playwright-Klicks; normale Folgeframes loesen keinen falschen Klickring mehr aus.
+* Ghost-Cursor kleiner, kontrastreicher und auf hellen wie dunklen Webseiten lesbar gestaltet. Den grossen dekorativen Eckwinkel des Browserpanels reduziert, damit er nicht mehr wie ein uebergrosser Cursor wirkt.
+* Client-Puffer auf 16 Browserframes erweitert und die Wiedergabezeit fuer normale Frames sowie echte Klickframes getrennt abgestimmt.
+* Bestehende Installationen werden durch den Browse-Worker automatisch migriert. Eine vorhandene api/config.local.php muss fuer die neuen Standardwerte nicht ersetzt werden.
+* Eigene CoreUI-Versionierung auf 0.2.6-alpha angehoben. Repack, Game, Homepage und die auslaufende STU Console bleiben unberuehrt.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.2.6-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

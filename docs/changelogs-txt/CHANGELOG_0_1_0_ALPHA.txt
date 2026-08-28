@@ -1,0 +1,21 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.1.0-alpha
+DATUM:   19.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Eigenstaendiges HTML-Grundgeruest fuer Ember CoreUI erstellt.
+* Helles Ayal'ren-HUD, SVG-Runenmatrix, Sidebar, Ticker, Chat-Feed und Composer gestaltet.
+* Bestehende DOM-Kopplung fuer die aktuelle Console-JavaScript-Laufzeit erhalten.
+* Grundlayout in feste Navigations-, Kopf-, Verlaufs- und Eingabebereiche gegliedert, damit die spaetere funktionale Erweiterung ohne Austausch des visuellen Kerns moeglich bleibt.
+* Eigene Ayal'ren-Runenmatrix als CoreUI-Kernsymbol eingefuehrt und vom spaeter getrennt gefuehrten Studio-Branding abgegrenzt.
+* Chatblasen, Statusanzeige, Nachrichtenzeiten, Eingabefeld und primaere Aktionen als konsistentes HUD-System angelegt.
+* Erste Desktop-Proportionen, Typografie, Farbvariablen, Raster, Schatten und Bewegungsmuster in einer gemeinsamen CoreUI-Styleschicht gebuendelt.
+* Game, Homepage und bestehende Repack-Oberflaechen nicht ersetzt; der Stand war ein eigenstaendiger Alpha-Frontendkern.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.1.0-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

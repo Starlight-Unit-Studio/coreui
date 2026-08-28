@@ -1,0 +1,21 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.2.8-alpha
+DATUM:   19.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* 404-Ursache der neuen Einstellungsseite behoben: settings.html in die gehaerteten HTML-Allowlists des Compose-Nginx-Templates und des Native-Nginx-Templates aufgenommen.
+* Update-Luecke geschlossen, bei der der absichtlich erhaltene var/-Ordner eine alte generierte Nginx-Konfiguration behalten konnte.
+* scripts/stack.sh rendert Nginx- und PHP-FPM-Runtime-Dateien vor up, start und restart automatisch aus den aktuellen Templates und den lokal gespeicherten Portwerten neu.
+* Explizite, idempotente Wartungsaktion scripts/stack.sh refresh-runtime fuer reine Runtime-Aktualisierungen eingefuehrt.
+* Runtime-Refresh validiert Bind-Adresse und Ports, schreibt keine Zugangsdaten in Webserver-Templates und gibt keine Werte aus compose.env aus.
+* Compose-Preflight liefert bei einer nicht erreichbaren Einstellungsroute nun die konkrete Refresh- und Restart-Anweisung.
+* Compose- und Native-Installer lehnen unvollstaendige Pakete ohne Einstellungsseite oder passendes Nginx-Template fruehzeitig ab.
+* Keine Schema-, Account-, Session-, Modell-, Game-, Homepage- oder Repack-Aenderung.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.2.8-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

@@ -1,0 +1,20 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.1.1-alpha
+DATUM:   19.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Kritischer Mobile-Viewport-Fix fuer Ansichten bis 899 px integriert.
+* html, body, .app-body und .app-shell hart auf die Viewportbreite begrenzt.
+* Horizontalen Seiten-Scroll im mobilen Layout gesperrt.
+* Drawer auf 290 px festgelegt und im Ruhezustand vollstaendig links ausserhalb des Viewports positioniert.
+* Drawer-Einflug auf 380 ms mit eigener Holo-Schattenkante abgestimmt.
+* Overlay-Ebene direkt unterhalb des Drawers abgesichert.
+* .drawer.open ist mobil die einzige Quelle fuer den sichtbaren Drawer-Zustand. Der Checkbox-State steuert dort nicht die Sichtbarkeit, da #sidebarControl im aktuellen HTML standardmaessig aktiviert ist.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.1.1-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

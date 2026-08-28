@@ -1,0 +1,28 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.3.2-alpha
+DATUM:   27.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Endgueltige Sitzungsloeschung als eigenstaendige Serverfunktion ergaenzt. Die bisherige Aktion delete archivierte lediglich; delete_permanently fuehrt nun eine echte SQL-Loeschung aus.
+* Schutzfolge bewusst zweistufig gestaltet: Aktive Sitzungen lassen sich nur archivieren. Der rote Befehl ENDGÜLTIG LÖSCHEN erscheint ausschliesslich bei archivierten Sitzungen und verlangt zusaetzlich die Texteingabe LÖSCHEN oder LOESCHEN.
+* Serverseitige Bestaetigung mit dem konkreten Sitzungsbezug DELETE:<session_id> eingefuehrt. Eine manipulierte Oberflaeche kann die Archivpflicht oder die Bestaetigung nicht umgehen.
+* Eigentuemerpruefung und Zeilensperre mit SELECT ... FOR UPDATE direkt vor der Loeschung aufgenommen. Fremde, bereits entfernte oder zwischenzeitlich wiederhergestellte Sitzungen werden abgelehnt.
+* Laufende und wartende Browser-Recherchen schuetzen die Sitzung vor Loeschung. Jobs im Zustand queued oder running liefern session_busy, statt dem Worker seine Daten waehrend der Verarbeitung zu entziehen.
+* Vollstaendige SQL-Transaktion fuer alle eindeutig sitzungsgebundenen Datensaetze umgesetzt. Sie entfernt Reaktionen, Browserframes, Browserschritte, abgeschlossene Browserjobs, Chatnachrichten, verwaiste Console-Medienzeilen und zuletzt die Sitzung selbst.
+* Fehlerbehandlung auf vollstaendiges Rollback ausgelegt. Scheitert eine einzelne SQL-Operation, bleiben Sitzung und alle abhaengigen Zeilen unveraendert erhalten.
+* Upload-Bereinigung referenzsicher gemacht. Ein stu_console_media-Datensatz wird nur entfernt, wenn seine UUID nach dem Nachrichten-DELETE nirgends mehr referenziert wird.
+* Physische Mediendateien und der Abschluss-Screenshot entfernter Browserjobs werden erst nach erfolgreichem Datenbank-Commit entfernt. Der Pfadfilter erlaubt ausschliesslich einzelne Dateien unter var/console_media, assets/chat_media und uploads/ember_browse; Traversal, fremde Pfade und Symlink-Ziele ausserhalb werden abgewiesen.
+* Loeschergebnis liefert getrennte Zaehler fuer Nachrichten, Reaktionen, Jobs, Schritte, Frames, Medienzeilen sowie geloeschte, fehlende oder nicht entfernbare Dateien. Die Oberflaeche bestaetigt damit die tatsaechliche SQL-Wirkung.
+* Archivierung waehrend einer noch offenen lokalen Antwort blockiert. Dadurch kann auch ein direkter, noch nicht als Browse-Job sichtbarer Modellturn nicht versehentlich aus der aktiven Ansicht entfernt werden.
+* Browser-Runtime-Caches, Poll-Timer, Pending-Zustand, Verlaufsseiten und Lesecursor der geloeschten Sitzung werden gezielt verworfen; andere Sitzungen bleiben unberuehrt.
+* Sitzungs-Selftest um eine produktionsgleiche Loeschtransaktion erweitert. Er legt zwei isolierte Testsitzungen sowie Nachricht, Antwort, Reaktion, Upload, Browse-Job, Schritt und Frame an, prueft Archivpflicht und Busy-Sperre, loescht nur Sitzung A und rollt anschliessend den gesamten Test zurueck.
+* Fuer diese Funktion ist keine neue DDL-Migration erforderlich. 0.3.2-alpha nutzt die in 003_console_sessions vorhandenen Indizes und fuehrt die eigentliche Loeschung als transaktionales SQL-DML aus.
+* Oeffentliche Basisadresse bleibt https://coreui.starlight-unit.de. Die erhaltene lokale config.local.php, Benutzerkonten, KI-Profile, Memories, Lore, Game, Homepage und STU-Datenbank werden nicht veraendert.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.3.2-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

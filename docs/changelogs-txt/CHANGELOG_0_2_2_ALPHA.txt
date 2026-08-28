@@ -1,0 +1,24 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.2.2-alpha
+DATUM:   19.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Kritischen Compose-Fehler im Video-Vision-Pfad behoben: var/ember_frames wird jetzt als eigenes beschreibbares PHP-Volume eingebunden.
+* Frame-Ausgabe von der allgemeinen Python-Arbeitsablage getrennt und ueber STU_EMBER_VIDEO_FRAME_DIR eindeutig konfigurierbar gemacht.
+* Video-Skalierung auf eine echte Begrenzung von Breite und Hoehe umgestellt. Das Seitenverhaeltnis bleibt unveraendert und kleine Frames werden nicht unnoetig hochskaliert.
+* FFmpeg waehlt den ersten Videostream explizit aus, ignoriert Audio im Vision-Pfad und schreibt JPEG-Frames mit kontrollierter Qualitaet.
+* Diagnoseprotokoll um reale Frame-Abmessungen, Zeitstempel und klare Fehlercodes fuer fehlende oder nicht beschreibbare Laufzeitpfade erweitert.
+* Halluzinationsschutz eingebaut: Wenn kein Frame erzeugt oder eingebettet werden konnte, wird keine modellgenerierte Videobeschreibung mehr angefordert.
+* Vision-Prompt gegen kontextgetriebene Sci-Fi-, Androiden-, HUD- und Hologramm-Erfindungen gehaertet.
+* Verdeckten 480-Sekunden-cURL-Deckel auf die bereits fuer PHP-FPM und Nginx vorgesehenen 900 Sekunden angehoben. Die konfigurierte Modellfrist von standardmaessig 600 Sekunden greift damit auch bei mehreren Video-Frames wirklich.
+* Healthcheck und Preflight pruefen nun den Frame-Ordner. Ein eigener Video-Selftest erzeugt im PHP-Container einen synthetischen Clip und validiert ffmpeg, ffprobe, Frame-Extraktion, Skalierung und Cleanup gemeinsam.
+* Veraltetes Top-Level-Feld version aus compose.yaml entfernt, damit aktuelle Docker-Compose-Versionen keine kosmetische Warnung mehr ausgeben.
+* Eigene CoreUI-Versionierung auf 0.2.2-alpha angehoben. Die Repack-Version bleibt davon unberuehrt.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.2.2-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

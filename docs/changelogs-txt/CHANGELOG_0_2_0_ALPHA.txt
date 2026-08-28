@@ -1,0 +1,31 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.2.0-alpha
+DATUM:   19.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Eigenstaendiges Distributionspaket ohne Includes, Assets, Proxies oder Laufzeitpfade aus dem Repack aufgebaut.
+* Alle Frontend-API-Aufrufe auf die lokale, deployment-relative Schnittstelle ./api umgestellt.
+* Lokale Rajdhani- und Share-Tech-Mono-Fonts eingebunden.
+* Eigenes MariaDB-Basisschema fuer Accounts, Charaktere, Sessions, Chat, Medien, RAG-Lite, LZG, Browse-Jobs und Reputation hinzugefuegt.
+* CLI-Bootstrap fuer Ember, Admin-Account, Charakter und stu_kv hinzugefuegt.
+* Standalone-Konfiguration ueber api/config.local.php oder COREUI_*-Umgebungsvariablen eingefuehrt.
+* Eigenen Health-Endpunkt und authentifiziertes CRUD-API fuer ember_memories hinzugefuegt.
+* Gemma-4-Modelfile mit CoreUI-Werkzeugprotokoll und empfohlenen Sampling-Werten hinzugefuegt.
+* Lokales SearXNG-Template mit aktivierter JSON-Search-API hinzugefuegt.
+* Asynchronen Playwright-Browse-Worker als eigenen systemd-Dienst paketiert.
+* SSH-Installer fuer Debian und Ubuntu sowie einen wiederholbaren Preflight-Test hinzugefuegt.
+* Nginx-Allowlist fuer ausschliesslich oeffentliche API-Endpunkte und Schutz interner Projektordner hinzugefuegt.
+* Vision-Dateiaufloesung auf das lokale Projektverzeichnis assets/chat_media begrenzt.
+* Getrennte CoreUI-Versionierung gegenueber der Repack-Versionierung verbindlich dokumentiert.
+
+Bekannte Alpha-Grenze:
+
+* Die visuelle CRUD-LZG-Oberflaeche und weitere spezialisierte Werkzeug-Panels folgen in einem spaeteren Frontend-Schritt. Das lokale CRUD-API ist bereits enthalten.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.2.0-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

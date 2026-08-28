@@ -1,0 +1,23 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.2.9-alpha
+DATUM:   19.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Rohe message.thinking-Tokens aus dem Console-SSE entfernt. Der Server akkumuliert sie nur noch fluechtig fuer die abschliessende Antwortbereinigung und sendet stattdessen feste, inhaltsfreie Fortschrittsstufen.
+* Denkpanel zum sicheren DENKSTATUS umgebaut. Promptteile, Identitaetsdaten, Systemanweisungen, Entwuerfe und Selbstkorrekturen werden weder live noch aus der Historie in den DOM geschrieben.
+* Persistenzschranke in ember_insert() ergaenzt: Neue Console-Antworten speichern ausschliesslich einen festen Prozessstatus, niemals den rohen Thinking-Block.
+* Console-Fetch fail-closed gehaertet. Historische thinking_content-Werte werden serverseitig durch einen sicheren Abschlussstatus ersetzt, bevor die JSON-Antwort erzeugt wird.
+* Einmalige Datenbankbereinigung mit sudo ./scripts/stack.sh scrub-thinking aufgenommen. Sie ersetzt alte Raw-Thinking-Inhalte nur in der isolierten CoreUI-Datenbank.
+* Antwort-Sanitizer um die gemeldeten Muster Actually, the prompt says, The user is asking und Let's try erweitert. Ein fuehrendes, geschlossenes Antwortzitat endet jetzt vor nachfolgender interner Analyse.
+* Thinking-Selftest auf zwoelf Faelle erweitert und um Quellcode-Grenzen fuer SSE und Persistenz ergaenzt.
+* Studio-Original als echte RGBA-PNG freigestellt. Der schwarze Rechteckhintergrund wurde entfernt; die vorhandenen feinen dunklen Konturen an Wortmarke und Symbolen bleiben erhalten.
+* Splash, Login und Einstellungen auf das transparente PNG-Asset umgestellt. Schwarzer Panelhintergrund, Polygonbeschnitt und Rahmen des Logo-Wrappers wurden entfernt.
+* Eigene CoreUI-Versionierung auf 0.2.9-alpha angehoben. Game, Homepage, Repack-Versionierung und auslaufende STU Console bleiben unberuehrt.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.2.9-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

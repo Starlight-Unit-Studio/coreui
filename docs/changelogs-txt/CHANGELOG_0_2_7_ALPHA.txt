@@ -1,0 +1,24 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.2.7-alpha
+DATUM:   19.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Das bereitgestellte originale Starlight Unit Studios-Logo unveraendert als lokales CoreUI-Asset aufgenommen und das fruehere Game-Logo auf Splash und Login ersetzt.
+* Die animierte Ren-Sternenmatrix als eigenstaendiges CoreUI-Kernsymbol in der Sidebar erhalten und klar von der Studio-Herausgebermarke getrennt.
+* Sichtbare Copyright-Zuordnung fuer Splash, Login, Sidebar, Protokolle und den neuen Info-Bereich ergaenzt.
+* Sidebar um den eigenstaendigen Bereich Einstellungen erweitert; Einsatz-Protokolle und Abmeldung bleiben direkt erreichbar.
+* Funktionale Einstellungsseite fuer reduzierte Bewegung, kompakten Datenstrom, Thinking-Panel-Standard, Desktop-Telemetrie und Live-Browser-Bildfolge eingefuehrt.
+* Anzeigeoptionen robust und ohne Schemaaenderung im lokalen Browser gespeichert. Konten, Sessions, Erinnerungen und Modellkonfiguration bleiben unberuehrt.
+* Reale Systemstatusmatrix auf Basis von api/health.php mit Datenbank-, Schema-, Ollama- und Runtime-Pruefung aufgenommen.
+* Angemeldetes Konto und Berechtigungslevel aus der bestehenden isolierten CoreUI-Authentifizierung in den Einstellungen sichtbar gemacht.
+* Protokollansicht um Studio-Zuordnung, Copyright und direkten Wechsel zu den Einstellungen erweitert.
+* Compose- und Native-Preflight pruefen nun Studio-Logo, Einstellungsseite, gemeinsame Preferences-Logik und die Auslieferung der Einstellungsroute.
+* Mobile Viewport-Regel aus dem v1.1.1.96-Patch unveraendert beibehalten; Game, Homepage, Repack-Versionierung und auslaufende STU Console bleiben unberuehrt.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.2.7-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

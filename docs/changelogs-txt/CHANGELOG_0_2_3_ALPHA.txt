@@ -1,0 +1,27 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.2.3-alpha
+DATUM:   19.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* poppler-utils in das isolierte PHP-Image aufgenommen. pdftotext, pdfinfo und pdftoppm stehen damit auch im Docker-Compose-Betrieb wirklich zur Verfuegung.
+* Zweistufige PDF-Erkennung umgesetzt: Dokumente mit Textebene werden direkt extrahiert, Scan-PDFs ohne Textebene werden als repraesentative Seitenbilder an Gemmas Vision-Pfad uebergeben.
+* Eigene beschreibbare Laufzeitablage var/pdf_pages als PHP-Volume hinzugefuegt. Der schreibgeschuetzte Projekt-Mount bleibt unveraendert.
+* PDF-Stichprobe auf standardmaessig vier gleichmaessig verteilte Seiten und maximal 1024 Pixel je Seite begrenzt. Seitenverhaeltnis und Seitenreihenfolge bleiben erhalten.
+* SSE-Routing um PDF-Anhaenge erweitert, damit ein moeglicher Scan-Fallback nicht im reinen Text-Streaming-Pfad ohne Bild-Payload landet.
+* Vision-Dateiaufloesung auf zwei kanonische CoreUI-Runtime-Wurzeln begrenzt: var/ember_frames und var/pdf_pages.
+* Prompt-Injection-Schutz fuer Scan-PDFs eingebaut. Sichtbare Dokumentanweisungen werden als Inhalt, nicht als Systemanweisung behandelt.
+* Halluzinationsschutz fuer PDFs eingebaut: Wenn weder Textebene noch Seitenbilder lesbar sind, wird keine modellgenerierte Inhaltsbeschreibung angefordert.
+* Healthcheck, Compose-Preflight und Native-Preflight um den PDF-Seitenordner erweitert.
+* Preflight um einen vollstaendigen PHP-Syntaxcheck fuer API-, Skript- und Tool-Dateien erweitert, damit auch ein reines Update ohne erneuten Installer fehlerhafte PHP-Dateien sofort stoppt.
+* Eigenen PDF-Selftest hinzugefuegt. Er validiert eine bekannte Textebene und ein bildbasiertes Scan-PDF samt Rasterung, Skalierung, Metadaten und Cleanup.
+* Anwendungssperren fuer den Parallelbetrieb dokumentiert: Game und CoreUI verwenden getrennte Datenbanken und getrennte Lock-Namen. Sie blockieren sich auf Anwendungsebene nicht.
+* Rein lesenden ollama-parallel-report.sh fuer RAM-, VRAM-, Modell- und Dienstdiagnose hinzugefuegt. Der CoreUI-Installer veraendert den gemeinsam genutzten Ollama-Dienst weiterhin nicht.
+* Eigene CoreUI-Versionierung auf 0.2.3-alpha angehoben. Die Repack-Version bleibt davon unberuehrt.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.2.3-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.
