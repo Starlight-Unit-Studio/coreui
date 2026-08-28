@@ -9,7 +9,8 @@ Aktuelle Version: `0.3.2-alpha`
 Um **Ember CoreUI** (optimiert für die Gemma-Modellreihe) vollautomatisch inklusive aller Abhängigkeiten (Docker, Ollama, Datenbank-Migrationen und RAG-Lite) zu installieren, führe einfach diesen Einzeiler in deinem Linux-Terminal (Debian 12+ / Ubuntu 24.04+) aus:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pschildgen87-code/coreui/main/setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/pschildgen87-code/coreui/main/setup.sh -o /tmp/coreui-setup.sh
+bash /tmp/coreui-setup.sh
 ```
 
 ## Ergebnis dieses Releases
