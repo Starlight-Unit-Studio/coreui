@@ -10,7 +10,12 @@ BASE_URL="https://github.com/${REPO}/releases/download/v${VERSION}"
 
 TARGET_DIR="/opt/ember-coreui"
 
-# 1. Vorbereitung
+# Vor dem Update feststellen, ob CoreUI bereits installiert ist.
+EXISTING_INSTALL=0
+if [[ -f "$TARGET_DIR/var/compose.env" ]]; then
+    EXISTING_INSTALL=1
+fi
+
 echo "[Ember CoreUI] Bereite Installation vor..."
 
 sudo apt-get update
@@ -19,7 +24,6 @@ sudo apt-get install -y wget unzip
 sudo mkdir -p "$TARGET_DIR"
 cd "$TARGET_DIR"
 
-# 2. Release herunterladen
 echo "[Ember CoreUI] Lade Release v${VERSION} herunter..."
 
 sudo wget -q --show-progress \
@@ -30,7 +34,6 @@ sudo wget -q \
   "${BASE_URL}/${CHECKSUM}" \
   -O "${CHECKSUM}"
 
-# 3. Integritätsprüfung
 echo "[Ember CoreUI] Verifiziere Dateisicherheit (SHA256)..."
 
 if ! sha256sum -c "$CHECKSUM"; then
@@ -38,7 +41,6 @@ if ! sha256sum -c "$CHECKSUM"; then
     exit 1
 fi
 
-# 4. Entpacken
 echo "[Ember CoreUI] Entpacke Systemdateien..."
 
 sudo unzip -q -o "$ARCHIVE"
@@ -47,8 +49,28 @@ sudo rm -f \
   "$ARCHIVE" \
   "$CHECKSUM"
 
-# 5. Übergabe an Haupt-Installer
 echo "[Ember CoreUI] Uebergebe an den Haupt-Installer..."
 
 sudo chmod +x scripts/install.sh
-sudo ./scripts/install.sh
+
+if (( EXISTING_INSTALL == 1 )); then
+    echo "[Ember CoreUI] Bestehende Installation erkannt - Update-Modus."
+
+    # Kein erneutes Admin-Passwort abfragen.
+    sudo env \
+      COREUI_SKIP_BOOTSTRAP=1 \
+      ./scripts/install.sh
+else
+    echo "[Ember CoreUI] Neue Installation erkannt."
+
+    # curl | bash verwendet STDIN fuer den Script-Download.
+    # Deshalb die Installer-Eingaben direkt vom Terminal lesen.
+    if [[ -r /dev/tty ]]; then
+        sudo ./scripts/install.sh </dev/tty
+    else
+        echo "ERROR: Fuer die Erstinstallation wird ein interaktives Terminal benoetigt."
+        exit 1
+    fi
+fi
+
+echo "[Ember CoreUI] Setup abgeschlossen."
