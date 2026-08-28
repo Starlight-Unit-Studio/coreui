@@ -4,6 +4,14 @@ Ember CoreUI ist ein eigenstaendiges WebUI fuer einen lokalen E.M.B.E.R.-Kern. B
 
 Aktuelle Version: `0.3.2-alpha`
 
+## 🚀 Blitz-Installation (Isolierter Docker-Stack)
+
+Um **Ember CoreUI** (optimiert für die Gemma-Modellreihe) vollautomatisch inklusive aller Abhängigkeiten (Docker, Ollama, Datenbank-Migrationen und RAG-Lite) zu installieren, führe einfach diesen Einzeiler in deinem Linux-Terminal (Debian 12+ / Ubuntu 24.04+) aus:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pschildgen87-code/coreui/main/setup.sh | bash
+```
+
 ## Ergebnis dieses Releases
 
 `0.3.2-alpha` ergaenzt die echten serverseitigen Sitzungen um eine kontrollierte, endgueltige Loeschfunktion. Aktive Unterhaltungen koennen weiterhin nur archiviert werden. Erst in der Archivansicht erscheint `ENDGÜLTIG LÖSCHEN`; Warnung und Texteingabe schuetzen vor einem versehentlichen Klick. Der Server entfernt die Sitzung zusammen mit ihren Nachrichten, Reaktionen, abgeschlossenen Browser-Recherchen, Schritten, Frames und nicht mehr referenzierten Upload-Datensaetzen in einer SQL-Transaktion.
