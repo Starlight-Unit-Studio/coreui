@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="de-DE" />
+  <meta name="language" content="de-DE" />
+  <meta http-equiv="Accept-Language" content="de-DE, de;q=0.9, en;q=0.8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Ember CoreUI - Einsatz-Protokolle</title>
+  <link rel="stylesheet" href="./css/console.css?v=0.3.2-alpha" />
+  <script src="./js/console-gate.js?v=0.3.2-alpha"></script>
+  <script src="./js/coreui-preferences.js?v=0.3.2-alpha"></script>
+</head>
+<body>
+  <div class="protocols-page" style="background-image:url('./images/protocols_background.webp')">
+    <div class="protocols-overlay"></div>
+    <div class="protocols-wrap">
+
+      <header class="proto-header">
+        <button class="proto-back" id="protoBack">← ZURÜCK</button>
+        <div class="proto-title-block">
+          <div class="proto-kicker">EMBER COREUI // N-73</div>
+          <div class="proto-title">EINSATZ-PROTOKOLLE</div>
+        </div>
+        <a class="proto-settings" href="settings.html">EINSTELLUNGEN</a>
+      </header>
+
+      <div class="proto-body">
+        <div id="protoLoading" class="proto-loading">LADE ARCHIV…</div>
+        <div id="protoEmpty"   class="proto-empty"   style="display:none">KEINE PROTOKOLLE VORHANDEN.</div>
+        <div id="protoError"   class="proto-empty"   style="display:none">VERBINDUNGSFEHLER.</div>
+        <ul  class="proto-list" id="protoList"       style="display:none"></ul>
+      </div>
+
+      <footer class="proto-footer">© 2026 Starlight Unit Studios. Alle Rechte vorbehalten.</footer>
+
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('protoBack').addEventListener('click', function() {
+      history.length > 1 ? history.back() : location.href = 'app.html';
+    });
+
+    (function() {
+      var loadingEl = document.getElementById('protoLoading');
+      var emptyEl   = document.getElementById('protoEmpty');
+      var errorEl   = document.getElementById('protoError');
+      var listEl    = document.getElementById('protoList');
+
+      fetch('./api/console_sessions.php?action=list', { credentials: 'include' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          loadingEl.style.display = 'none';
+          if (!d.ok) {
+            if (d.error === 'not_authenticated') { location.replace('login.html'); return; }
+            errorEl.style.display = 'block';
+            return;
+          }
+          var sessions = d.sessions || [];
+          if (!sessions.length) { emptyEl.style.display = 'block'; return; }
+
+          listEl.style.display = 'block';
+          sessions.forEach(function(s) {
+            var li = document.createElement('li');
+            li.className = 'proto-entry';
+            var dateStr = s.updated_at
+              ? new Date(s.updated_at).toLocaleString('de-DE')
+              : (s.created_at ? new Date(s.created_at).toLocaleString('de-DE') : '-');
+
+            li.innerHTML =
+              '<div class="proto-entry-head">' +
+                '<span class="proto-entry-title">' + esc(s.title) + '</span>' +
+                '<span class="proto-entry-date">'  + esc(dateStr) + '</span>' +
+              '</div>' +
+              '<div class="proto-entry-meta">SESSION-ID: ' + esc(s.id) + '</div>';
+
+            li.style.cursor = 'pointer';
+            li.addEventListener('click', function() {
+              location.href = 'app.html';
+            });
+            listEl.appendChild(li);
+          });
+        })
+        .catch(function() {
+          loadingEl.style.display = 'none';
+          errorEl.style.display = 'block';
+        });
+
+      function esc(s) {
+        return String(s)
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+    })();
+  </script>
+</body>
+</html>

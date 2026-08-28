@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="de-DE" />
+  <meta name="language" content="de-DE" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#f0f4fa" />
+  <meta name="application-version" content="0.3.2-alpha" />
+  <title>Ember CoreUI - Einstellungen</title>
+  <link rel="stylesheet" href="./css/console.css?v=0.3.2-alpha" />
+  <script src="./js/console-gate.js?v=0.3.2-alpha"></script>
+  <script src="./js/coreui-preferences.js?v=0.3.2-alpha"></script>
+</head>
+<body class="settings-body">
+  <div class="settings-page">
+    <div class="settings-vector-field" aria-hidden="true"><span></span><span></span><span></span></div>
+
+    <header class="settings-header">
+      <button class="settings-back" id="settingsBack" type="button">← CORE CHANNEL</button>
+      <div class="settings-title-block">
+        <span class="settings-rune" aria-hidden="true">⌬</span>
+        <div>
+          <div class="settings-kicker">AYAL'REN SYSTEMKONFIGURATION</div>
+          <h1>EINSTELLUNGEN</h1>
+        </div>
+      </div>
+      <div class="settings-version">COREUI // v0.3.2-alpha</div>
+    </header>
+
+    <main class="settings-grid">
+      <section class="settings-panel settings-panel-interface" aria-labelledby="interfaceTitle">
+        <header class="settings-panel-head">
+          <span class="settings-panel-glyph" aria-hidden="true">⟐</span>
+          <div><span>SEKTOR 01</span><h2 id="interfaceTitle">OBERFLÄCHE</h2></div>
+        </header>
+
+        <label class="setting-row" for="prefReduceMotion">
+          <span class="setting-copy"><strong>BEWEGUNG REDUZIEREN</strong><small>Rotationen, Pulse und Übergänge auf ein Minimum setzen.</small></span>
+          <span class="settings-switch"><input id="prefReduceMotion" type="checkbox" /><i aria-hidden="true"></i></span>
+        </label>
+        <label class="setting-row" for="prefCompactFeed">
+          <span class="setting-copy"><strong>KOMPAKTER DATENSTROM</strong><small>Nachrichten enger darstellen und mehr Verlauf sichtbar halten.</small></span>
+          <span class="settings-switch"><input id="prefCompactFeed" type="checkbox" /><i aria-hidden="true"></i></span>
+        </label>
+        <label class="setting-row" for="prefShowTelemetry">
+          <span class="setting-copy"><strong>KERNTELEMETRIE</strong><small>Link-, Node- und Uhrzeitdaten in der Desktop-Topbar anzeigen.</small></span>
+          <span class="settings-switch"><input id="prefShowTelemetry" type="checkbox" /><i aria-hidden="true"></i></span>
+        </label>
+      </section>
+
+      <section class="settings-panel settings-panel-chat" aria-labelledby="chatTitle">
+        <header class="settings-panel-head">
+          <span class="settings-panel-glyph amber" aria-hidden="true">◇</span>
+          <div><span>SEKTOR 02</span><h2 id="chatTitle">EMBER-KANAL</h2></div>
+        </header>
+
+        <label class="setting-row" for="prefThinkingExpanded">
+          <span class="setting-copy"><strong>DENKSTATUS OFFEN HALTEN</strong><small>Den sicheren Fortschrittsstatus standardmäßig ausgeklappt lassen. Interne Modellgedanken bleiben verborgen.</small></span>
+          <span class="settings-switch"><input id="prefThinkingExpanded" type="checkbox" /><i aria-hidden="true"></i></span>
+        </label>
+        <label class="setting-row" for="prefLiveFrameMotion">
+          <span class="setting-copy"><strong>LIVE-BROWSER-BILDFOLGE</strong><small>Alle empfangenen Playwright-Frames nacheinander wiedergeben.</small></span>
+          <span class="settings-switch"><input id="prefLiveFrameMotion" type="checkbox" /><i aria-hidden="true"></i></span>
+        </label>
+
+        <div class="settings-local-note">
+          <span aria-hidden="true">⌁</span>
+          <p>Diese Anzeigeoptionen bleiben ausschließlich in diesem Browser gespeichert. Konten, Sessions und Ember-Daten werden dadurch nicht verändert.</p>
+        </div>
+      </section>
+
+      <section class="settings-panel settings-panel-ai" aria-labelledby="aiTitle">
+        <header class="settings-panel-head">
+          <span class="settings-panel-glyph violet" aria-hidden="true">⌬</span>
+          <div><span>SEKTOR 03</span><h2 id="aiTitle">KI-PROFIL</h2></div>
+          <button class="settings-action compact" id="saveAiSettings" type="button">SERVERSEITIG SPEICHERN</button>
+        </header>
+
+        <label class="settings-field" for="aiSystemPrompt">
+          <span><strong>EIGENER SYSTEM-PROMPT</strong><small>Ergänzt Embers feste Kernidentität um deinen Stil und deine Arbeitsweise. Sicherheitsregeln und Werkzeuggrenzen bleiben serverseitig aktiv.</small></span>
+          <textarea id="aiSystemPrompt" rows="8" maxlength="6000" placeholder="Zum Beispiel: Antworte kompakt, erkläre Code schrittweise und frage bei riskanten Änderungen nach."></textarea>
+          <em id="aiPromptCounter">0 / 6000</em>
+        </label>
+
+        <div class="settings-tuning-grid">
+          <label class="settings-field" for="aiMemoryLimit">
+            <span><strong>MEMORY-KONTEXT</strong><small>Maximale Zahl passender Fakten pro Antwort.</small></span>
+            <input id="aiMemoryLimit" type="number" min="0" max="60" step="1" value="16" />
+          </label>
+          <label class="settings-field" for="aiNumPredict">
+            <span><strong>ANTWORTBUDGET</strong><small>Tokenbudget für Thinking plus Antwort. Gemma 4: 6500 empfohlen.</small></span>
+            <input id="aiNumPredict" type="number" min="256" max="16384" step="128" value="6500" />
+          </label>
+          <label class="settings-field" for="aiTemperature">
+            <span><strong>TEMPERATUR</strong><small>0,1 präziser, 1,5 freier. Standard: 1,0.</small></span>
+            <input id="aiTemperature" type="number" min="0.1" max="1.5" step="0.05" value="1.0" />
+          </label>
+          <label class="settings-field" for="aiProvider">
+            <span><strong>MODELLPFAD</strong><small>CoreUI ist für lokale Gemma-4-Modelle ausgelegt.</small></span>
+            <select id="aiProvider"><option value="local">LOKAL // OLLAMA + GEMMA 4</option><option value="external" disabled>EXTERNE API // VORBEREITET</option></select>
+          </label>
+        </div>
+
+        <label class="setting-row" for="aiMemoryEnabled">
+          <span class="setting-copy"><strong>LANGZEITGEDÄCHTNIS VERWENDEN</strong><small>Persönliche und charakterbezogene Fakten in neue Antworten einbeziehen.</small></span>
+          <span class="settings-switch"><input id="aiMemoryEnabled" type="checkbox" /><i aria-hidden="true"></i></span>
+        </label>
+        <div class="settings-local-note" id="externalProviderNote">
+          <span aria-hidden="true">◇</span>
+          <p>Externe OpenAI-kompatible APIs sind als optionaler Adapter vorbereitet, standardmäßig aber deaktiviert. Es gibt keine Kompatibilitätszusage außerhalb der Gemma-4-Reihe.</p>
+        </div>
+      </section>
+
+      <section class="settings-panel settings-panel-memory" aria-labelledby="memoryTitle">
+        <header class="settings-panel-head">
+          <span class="settings-panel-glyph amber" aria-hidden="true">⟐</span>
+          <div><span>SEKTOR 04</span><h2 id="memoryTitle">MEIN MEMORY</h2></div>
+          <button class="settings-action compact" id="reloadMemories" type="button">NEU LADEN</button>
+        </header>
+        <div class="memory-editor">
+          <textarea id="memoryFact" rows="3" maxlength="1000" placeholder="Fakt, Präferenz oder Arbeitskontext, den Ember behalten darf..."></textarea>
+          <label>RELEVANZ <input id="memoryRelevance" type="number" min="1" max="10" value="5" /></label>
+          <button class="settings-action" id="addMemory" type="button">FAKT SPEICHERN</button>
+        </div>
+        <div class="memory-list" id="memoryList" aria-live="polite"></div>
+      </section>
+
+      <section class="settings-panel settings-panel-health" aria-labelledby="healthTitle">
+        <header class="settings-panel-head">
+          <span class="settings-panel-glyph green" aria-hidden="true">⏻</span>
+          <div><span>SEKTOR 05</span><h2 id="healthTitle">SYSTEMSTATUS</h2></div>
+          <button class="settings-action compact" id="refreshHealth" type="button">NEU PRÜFEN</button>
+        </header>
+
+        <div class="health-summary checking" id="healthSummary">KERNSTATUS WIRD GEPRÜFT...</div>
+        <div class="health-facts">
+          <div><span>VERSION</span><strong id="healthVersion">...</strong></div>
+          <div><span>MODELL</span><strong id="healthModel">...</strong></div>
+        </div>
+        <div class="health-checks" id="healthChecks" aria-live="polite"></div>
+      </section>
+
+      <section class="settings-panel settings-panel-account" aria-labelledby="accountTitle">
+        <header class="settings-panel-head">
+          <span class="settings-panel-glyph violet" aria-hidden="true">⌬</span>
+          <div><span>SEKTOR 06</span><h2 id="accountTitle">KONTO UND ZUGRIFF</h2></div>
+        </header>
+
+        <div class="account-ident">
+          <span class="account-avatar" aria-hidden="true">OP</span>
+          <div><span>ANGEMELDETER OPERATOR</span><strong id="accountMail">WIRD GEPRÜFT...</strong></div>
+          <span class="account-level" id="accountLevel">LV.-</span>
+        </div>
+        <div class="settings-actions">
+          <a class="settings-action admin-entry" id="adminEntry" href="./admin/index.html" hidden>ADMIN CORE</a>
+          <button class="settings-action" id="resetPreferences" type="button">ANZEIGE ZURÜCKSETZEN</button>
+          <button class="settings-action danger" id="settingsLogout" type="button">ABMELDEN</button>
+        </div>
+      </section>
+
+      <section class="settings-panel settings-panel-about" id="about" aria-labelledby="aboutTitle">
+        <div class="studio-mark studio-mark-settings">
+          <img src="./images/starlight_unit_studios_logo_transparent_v030.png" alt="Starlight Unit Studios" draggable="false" />
+        </div>
+        <div class="about-copy">
+          <span class="settings-kicker">HERAUSGEBER UND PROJEKTZUORDNUNG</span>
+          <h2 id="aboutTitle">PROJECT STΛRLIɢHT: EMBER COREUI</h2>
+          <p>Eigenständiges, isoliertes WebUI für den lokalen E.M.B.E.R.-Kern. Die CoreUI-Versionierung bleibt bis zur finalen Repack-Aufnahme getrennt.</p>
+          <p class="copyright-line">© 2026 Starlight Unit Studios. Alle Rechte vorbehalten.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="settings-footer">
+      <span>STΛRLIɢHT UNIT STUDIOS</span><i aria-hidden="true"></i><span>EMBER COREUI // N-73</span>
+    </footer>
+    <div class="settings-save-state" id="settingsSaveState" role="status" aria-live="polite">LOKAL GESPEICHERT</div>
+  </div>
+
+  <script src="./js/settings.js?v=0.3.2-alpha"></script>
+</body>
+</html>

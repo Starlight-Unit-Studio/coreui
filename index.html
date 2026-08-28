@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="de-DE" />
+  <meta name="language" content="de-DE" />
+  <meta http-equiv="Accept-Language" content="de-DE, de;q=0.9, en;q=0.8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Project STΛRLIɢHT: Ember CoreUI</title>
+  <link rel="stylesheet" href="./css/console.css?v=0.3.2-alpha" />
+  <script src="./js/console-gate.js?v=0.3.2-alpha"></script>
+  <script src="./js/coreui-preferences.js?v=0.3.2-alpha"></script>
+</head>
+<body>
+  <div class="splash" id="splash">
+    <div class="splash-glow"></div>
+    <div class="studio-mark studio-mark-splash">
+      <img src="./images/starlight_unit_studios_logo_transparent_v030.png" alt="Starlight Unit Studios" class="splash-logo" draggable="false" />
+    </div>
+    <div class="splash-title">EMBER COREUI</div>
+    <div class="splash-sub" id="splashStatus">AYAL'REN MATRIX INIT…</div>
+    <div class="splash-bar">
+      <div class="splash-bar-fill" id="splashBar"></div>
+    </div>
+    <div class="splash-copyright">© 2026 STARLIGHT UNIT STUDIOS // COREUI v0.3.2-alpha</div>
+  </div>
+  <script>
+    var msgs = [
+      'ARCHNET VERBINDUNG…',
+      'EMBER INTERFACE LADEN…',
+      'SICHERHEITSPROTOKOLL AKTIV…',
+      'BEREIT.'
+    ];
+    var i = 0;
+    var bar = document.getElementById('splashBar');
+    var status = document.getElementById('splashStatus');
+    var pct = 0;
+    var iv = setInterval(function() {
+      i++;
+      pct = Math.min(100, Math.round((i / msgs.length) * 100));
+      bar.style.width = pct + '%';
+      if (i < msgs.length) {
+        status.textContent = msgs[i];
+      }
+      if (i >= msgs.length) {
+        clearInterval(iv);
+        setTimeout(function() {
+          location.href = 'login.html';
+        }, 400);
+      }
+    }, 380);
+  </script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="de-DE" />
+  <meta name="language" content="de-DE" />
+  <meta http-equiv="Accept-Language" content="de-DE, de;q=0.9, en;q=0.8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+  />
+  <meta name="theme-color" content="#f0f4fa" />
+  <meta name="color-scheme" content="light" />
+  <meta name="application-version" content="0.3.2-alpha" />
+  <title>Project STΛRLIɢHT: Ember CoreUI</title>
+  <link rel="stylesheet" href="./css/console.css?v=0.3.2-alpha" />
+  <script src="./js/console-gate.js?v=0.3.2-alpha"></script>
+  <script src="./js/coreui-preferences.js?v=0.3.2-alpha"></script>
+</head>
+<body class="app-body coreui-body">
+  <input
+    class="sidebar-control"
+    id="sidebarControl"
+    type="checkbox"
+    checked
+    aria-hidden="true"
+    tabindex="-1"
+  />
+
+  <div class="drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
+
+  <nav class="drawer" id="drawer" aria-label="Ember CoreUI Sitzungen">
+    <div class="drawer-vector-field" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
+    </div>
+
+    <header class="drawer-header">
+      <div class="brand-lockup">
+        <div class="ren-matrix" aria-label="Ren Sternenmatrix, Kernsignatur 73">
+          <svg
+            class="ren-matrix-svg"
+            viewBox="0 0 220 220"
+            role="img"
+            aria-labelledby="renMatrixTitle renMatrixDesc"
+          >
+            <title id="renMatrixTitle">Project Starlight Ember Core Matrix</title>
+            <desc id="renMatrixDesc">
+              Verschachtelte Sternenmatrix mit Orbitalringen, Ayal-Glyphen und erwachendem Kern.
+            </desc>
+            <defs>
+              <linearGradient id="renCoreGradient" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#5b92ff" />
+                <stop offset="0.48" stop-color="#9b7dff" />
+                <stop offset="1" stop-color="#e29b39" />
+              </linearGradient>
+              <radialGradient id="renHaloGradient" cx="50%" cy="50%" r="50%">
+                <stop offset="0" stop-color="#ffffff" stop-opacity="0.98" />
+                <stop offset="0.38" stop-color="#7facff" stop-opacity="0.72" />
+                <stop offset="1" stop-color="#5b92ff" stop-opacity="0" />
+              </radialGradient>
+              <filter id="renGlow" x="-70%" y="-70%" width="240%" height="240%">
+                <feGaussianBlur stdDeviation="3.2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="amberGlow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="2.1" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <g class="matrix-guide" aria-hidden="true">
+              <path d="M25 110H195M110 25V195M50 50L170 170M170 50L50 170" />
+              <path d="M38 82H58V62M162 62V82H182M38 138H58V158M162 158V138H182" />
+              <circle cx="110" cy="110" r="82" />
+              <circle cx="110" cy="110" r="57" />
+            </g>
+
+            <g class="matrix-orbit matrix-orbit-a" aria-hidden="true">
+              <ellipse cx="110" cy="110" rx="91" ry="43" transform="rotate(18 110 110)" />
+              <circle class="orbit-node orbit-node-cx" cx="198" cy="120" r="4.5" />
+              <circle class="orbit-node orbit-node-amb" cx="34" cy="72" r="3.5" />
+            </g>
+            <g class="matrix-orbit matrix-orbit-b" aria-hidden="true">
+              <ellipse cx="110" cy="110" rx="89" ry="38" transform="rotate(112 110 110)" />
+              <path d="M110 15l4 7-4 7-4-7z" />
+              <circle class="orbit-node orbit-node-amb" cx="106" cy="198" r="4" />
+            </g>
+
+            <g class="matrix-runes" aria-hidden="true">
+              <path d="M50 43h13l-7 10 9 8H48l7-8z" />
+              <path d="M159 40v18l8-9 7 10V40" />
+              <path d="M176 143h-15l8 8-9 11h17" />
+              <path d="M61 164V145l-9 10-8-10v19" />
+              <path d="M24 103l7 7-7 7M196 103l-7 7 7 7" />
+              <path d="M103 24l7 7 7-7M103 196l7-7 7 7" />
+            </g>
+
+            <g class="matrix-star" filter="url(#renGlow)">
+              <path
+                class="star-outer"
+                d="M110 35l15 47 45-25-26 45 47 8-47 9 26 44-45-24-15 46-15-46-45 24 26-44-47-9 47-8-26-45 45 25z"
+              />
+              <path
+                class="star-inner"
+                d="M110 58l13 36 35-13-23 29 23 29-35-13-13 36-13-36-35 13 23-29-23-29 35 13z"
+              />
+              <path class="star-diamond" d="M110 75l35 35-35 35-35-35z" />
+            </g>
+
+            <g class="matrix-core" filter="url(#amberGlow)">
+              <circle class="core-halo" cx="110" cy="110" r="28" />
+              <circle class="core-ring" cx="110" cy="110" r="19" />
+              <path class="core-rune" d="M110 91l11 19-11 19-11-19zM99 110h22" />
+              <circle class="core-point" cx="110" cy="110" r="4.5" />
+            </g>
+
+            <g class="matrix-code" aria-hidden="true">
+              <text x="109" y="13">N-73</text>
+              <text x="109" y="214">NARU-YONE</text>
+              <text x="7" y="113" transform="rotate(-90 7 113)">IRENU-ATHAR</text>
+              <text x="213" y="113" transform="rotate(90 213 113)">SEKHEN-KUN</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="brand-copy">
+          <div class="brand-kicker">PROJECT STΛRLIɢHT</div>
+          <div class="brand-title">EMBER <span>COREUI</span></div>
+          <div class="brand-signature">AYAL'REN MATRIX // N-73 // v0.3.2-alpha</div>
+        </div>
+      </div>
+
+      <label
+        class="drawer-close"
+        id="drawerClose"
+        for="sidebarControl"
+        role="button"
+        tabindex="0"
+        aria-label="Sidebar einklappen"
+      >
+        <span aria-hidden="true">‹</span>
+      </label>
+    </header>
+
+    <div class="core-ticker" aria-label="Ayal Systemticker">
+      <div class="ticker-track">
+        <span class="ticker-unit">SHA ANU-RESH · IRENU-ATHAR SEKHEN-KUN · CORE N-73 ·</span>
+        <span class="ticker-unit" aria-hidden="true">SHA ANU-RESH · IRENU-ATHAR SEKHEN-KUN · CORE N-73 ·</span>
+        <span class="ticker-unit" aria-hidden="true">SHA ANU-RESH · IRENU-ATHAR SEKHEN-KUN · CORE N-73 ·</span>
+        <span class="ticker-unit" aria-hidden="true">SHA ANU-RESH · IRENU-ATHAR SEKHEN-KUN · CORE N-73 ·</span>
+      </div>
+    </div>
+
+    <div class="drawer-content">
+      <button class="btn-new-session hud-button hud-button-primary" id="btnNewSession" type="button">
+        <span class="hud-button-glyph" aria-hidden="true">⌬</span>
+        <span class="hud-button-copy">
+          <strong>NEUE VERBINDUNG</strong>
+          <small>Privaten Kernkanal öffnen</small>
+        </span>
+      </button>
+
+      <section class="session-zone" aria-labelledby="sessionZoneTitle">
+        <div class="section-label" id="sessionZoneTitle">
+          <span class="section-rune" aria-hidden="true">⟐</span>
+          <span>SITZUNGSMATRIX</span>
+          <span class="section-count" id="sessionCount">00</span>
+          <button class="session-archive-toggle" id="sessionArchiveToggle" type="button">ARCHIV</button>
+        </div>
+        <ul class="session-list" id="sessionList" aria-live="polite"></ul>
+      </section>
+    </div>
+
+    <footer class="drawer-footer">
+      <div class="drawer-system-line" aria-hidden="true">
+        <span>SUVARU</span>
+        <i></i>
+        <span>CORE LINK</span>
+      </div>
+      <button class="btn-settings hud-button hud-button-quiet" id="btnSettings" type="button">
+        <span aria-hidden="true">⌬</span>
+        <span>EINSTELLUNGEN</span>
+      </button>
+      <button class="btn-protocols hud-button hud-button-quiet" id="btnProtocols" type="button">
+        <span aria-hidden="true">⌁</span>
+        <span>PROTOKOLLE</span>
+      </button>
+      <button class="btn-logout hud-button hud-button-quiet" id="btnLogout" type="button">
+        <span aria-hidden="true">⏻</span>
+        <span>ABMELDEN</span>
+      </button>
+      <div class="drawer-copyright">© 2026 STARLIGHT UNIT STUDIOS</div>
+    </footer>
+  </nav>
+
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="header-leading">
+        <label
+          class="header-menu-btn"
+          id="btnDrawer"
+          for="sidebarControl"
+          role="button"
+          tabindex="0"
+          aria-label="Sitzungsnavigation umschalten"
+          aria-controls="drawer"
+        >
+          <span></span><span></span><span></span>
+        </label>
+
+        <div class="header-title-block">
+          <div class="header-eyebrow">
+            <span class="header-rune" aria-hidden="true">⌬</span>
+            E.M.B.E.R. PRIVATE INTERFACE
+          </div>
+          <div class="header-title-row">
+            <h1 class="header-title">CORE CHANNEL</h1>
+            <span class="header-divider" aria-hidden="true"></span>
+            <div class="header-session-name" id="headerSessionName">EMBER</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-telemetry" aria-label="Kerntelemetrie">
+        <div class="telemetry-cell">
+          <span class="telemetry-key">LINK</span>
+          <strong>PRIVATE</strong>
+        </div>
+        <div class="telemetry-cell">
+          <span class="telemetry-key">NODE</span>
+          <strong>N-73</strong>
+        </div>
+        <div class="telemetry-cell telemetry-clock">
+          <span class="telemetry-key">LOCAL</span>
+          <strong id="coreClock">--:--</strong>
+        </div>
+      </div>
+
+      <div class="header-status" id="headerStatus" aria-live="polite">
+        <button
+          class="status-dot"
+          id="statusDot"
+          type="button"
+          aria-label="E.M.B.E.R. Status"
+          aria-pressed="false"
+        >
+          <span class="power-orbit" aria-hidden="true"></span>
+          <span class="power-glyph" aria-hidden="true">⏻</span>
+        </button>
+        <div class="status-copy">
+          <span class="status-kicker">E.M.B.E.R.</span>
+          <span class="status-label" id="statusLabel">VERBINDE…</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="messages-area" id="messagesArea">
+      <div class="feed-vector feed-vector-a" aria-hidden="true"></div>
+      <div class="feed-vector feed-vector-b" aria-hidden="true"></div>
+
+      <section class="feed-shell" aria-label="Private Unterhaltung mit E.M.B.E.R.">
+        <header class="feed-header">
+          <div class="feed-header-title">
+            <span class="feed-rune" aria-hidden="true">⟐</span>
+            <span>AKTIVER DATENSTROM</span>
+          </div>
+          <div class="feed-header-line" aria-hidden="true"></div>
+          <div class="feed-header-code">CHANNEL // CONSOLE</div>
+        </header>
+
+        <div
+          class="messages-inner"
+          id="messagesInner"
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions text"
+        ></div>
+      </section>
+
+      <button class="jump-latest" id="jumpLatest" type="button" aria-label="Zur neuesten Nachricht springen">
+        <span aria-hidden="true">↓</span>
+        <span class="jump-latest-ring" aria-hidden="true"></span>
+      </button>
+    </main>
+
+    <footer class="composer">
+      <div class="capability-strip" aria-label="Aktive E.M.B.E.R. Werkzeuge">
+        <div class="capability-label">
+          <span aria-hidden="true">⌁</span>
+          <span>TOOL BUS</span>
+        </div>
+        <div class="capability-item" id="ragState" data-state="ready">
+          <i aria-hidden="true"></i><span>RAG-LITE</span>
+        </div>
+        <div class="capability-item" id="memoryState" data-state="ready">
+          <i aria-hidden="true"></i><span>CRUD-LZG</span>
+        </div>
+        <div class="capability-item" id="webState" data-state="ready">
+          <i aria-hidden="true"></i><span>WEB</span>
+        </div>
+        <div class="capability-item" id="browseState" data-state="ready">
+          <i aria-hidden="true"></i><span>BROWSE</span>
+        </div>
+      </div>
+
+      <div class="composer-attach" id="attachChip" hidden>
+        <span class="attach-icon" id="attachIcon" aria-hidden="true">📎</span>
+        <span class="attach-meta">
+          <span class="attach-name" id="attachName"></span>
+          <span class="attach-sub" id="attachSub"></span>
+        </span>
+        <span class="attach-bar" id="attachBar" hidden>
+          <span class="attach-bar-fill" id="attachBarFill"></span>
+        </span>
+        <button class="attach-remove" id="attachRemove" type="button" aria-label="Anhang entfernen">×</button>
+      </div>
+
+      <div class="composer-frame">
+        <span class="composer-bracket composer-bracket-left" aria-hidden="true"></span>
+        <span class="composer-bracket composer-bracket-right" aria-hidden="true"></span>
+
+        <div class="composer-inner">
+          <input
+            type="file"
+            id="fileInput"
+            hidden
+            accept="image/*,video/*,audio/*,.pdf,.txt,.md,.csv,.json,.log,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.tar,.gz"
+          />
+
+          <button class="composer-attach-btn" id="btnAttach" type="button" aria-label="Datei oder Bild anhängen">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </svg>
+          </button>
+
+          <label class="composer-field" for="inputMessage">
+            <span class="composer-field-label">TRANSMISSION</span>
+            <input
+              id="inputMessage"
+              type="text"
+              class="composer-input"
+              placeholder="Nachricht an Ember…"
+              autocomplete="off"
+              maxlength="12000"
+              aria-describedby="composerHint"
+            />
+          </label>
+
+          <button class="composer-send" id="btnSend" type="button" aria-label="Nachricht senden">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 4.5 21 12 4 19.5l3.1-6.1L15 12l-7.9-1.4z" />
+              <path d="M7.1 10.6 15 12l-7.9 1.4" />
+            </svg>
+            <span class="send-rune" aria-hidden="true">⟐</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="composer-footer-line" id="composerHint">
+        <span>PRIVATE CORE LINK</span>
+        <i aria-hidden="true"></i>
+        <span>ENTER SENDEN</span>
+        <span class="composer-glyphs" aria-hidden="true">⌬ 73 ⟐</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="./js/console-app.js?v=0.3.2-alpha"></script>
+</body>
+</html>

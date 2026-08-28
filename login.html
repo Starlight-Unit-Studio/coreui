@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="de-DE" />
+  <meta name="language" content="de-DE" />
+  <meta http-equiv="Accept-Language" content="de-DE, de;q=0.9, en;q=0.8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Ember CoreUI - Login</title>
+  <link rel="stylesheet" href="./css/console.css?v=0.3.2-alpha" />
+  <script src="./js/console-gate.js?v=0.3.2-alpha"></script>
+  <script src="./js/coreui-preferences.js?v=0.3.2-alpha"></script>
+</head>
+<body>
+  <div class="login-page" style="background-image:url('./images/login_background.webp')">
+    <div class="login-overlay"></div>
+    <div class="login-card">
+      <div class="studio-mark studio-mark-login">
+        <img class="logo" src="./images/starlight_unit_studios_logo_transparent_v030.png" alt="Starlight Unit Studios" draggable="false" />
+      </div>
+      <div class="login-brand">EMBER COREUI</div>
+      <div class="login-brand-sub">PROJECT STΛRLIɢHT // N-73</div>
+
+      <div class="login-field-group">
+        <label for="email">E-MAIL</label>
+        <input id="email" type="email" placeholder="name@domain.tld" autocomplete="username" required />
+      </div>
+      <div class="login-field-group">
+        <label for="password">PASSWORT</label>
+        <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+      </div>
+
+      <div id="loginError" class="login-error" style="display:none"></div>
+
+      <button id="loginBtn" type="button">EINLOGGEN</button>
+      <div class="login-copyright">© 2026 Starlight Unit Studios. Alle Rechte vorbehalten.</div>
+    </div>
+  </div>
+
+  <script>
+    // Bereits eingeloggt? Direkt weiter.
+    (function() {
+      fetch('./api/auth.php?action=me', { credentials: 'include' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.ok && d.user_id) {
+            location.replace('app.html');
+          }
+        })
+        .catch(function() {});
+    })();
+
+    function showError(msg) {
+      var el = document.getElementById('loginError');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('loginError').style.display = 'none';
+    }
+
+    function doLogin() {
+      var email = document.getElementById('email').value.trim();
+      var pass  = document.getElementById('password').value;
+      var btn   = document.getElementById('loginBtn');
+
+      hideError();
+
+      if (!email || !pass) {
+        showError('Bitte E-Mail und Passwort eingeben.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'VERBINDE…';
+
+      fetch('./api/auth.php?action=login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: email, password: pass })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.ok) {
+          location.replace('app.html');
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'EINLOGGEN';
+          var errMap = {
+            'invalid_credentials': 'E-Mail oder Passwort falsch.',
+            'invalid_username':    'Ungültige E-Mail-Adresse.',
+            'invalid_password':    'Passwort zu kurz (min. 8 Zeichen).',
+            'rate_limited':        'Zu viele Versuche. Bitte warten.',
+            'account_banned':      'Konto gesperrt.',
+            'banned':              'Konto gesperrt.'
+          };
+          showError(errMap[d.error] || ('Fehler: ' + (d.error || 'unbekannt')));
+        }
+      })
+      .catch(function(err) {
+        btn.disabled = false;
+        btn.textContent = 'EINLOGGEN';
+        showError('Verbindungsfehler. Server nicht erreichbar.');
+      });
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', doLogin);
+    document.getElementById('password').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('email').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('password').focus();
+    });
+  </script>
+</body>
+</html>

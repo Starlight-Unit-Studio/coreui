@@ -1,0 +1,124 @@
+services:
+  database:
+    image: mariadb:11.4
+    network_mode: host
+    restart: unless-stopped
+    command:
+      - --port=${COREUI_DB_PORT}
+      - --bind-address=127.0.0.1
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-name-resolve
+    environment:
+      COREUI_DB_PORT: ${COREUI_DB_PORT}
+      MARIADB_DATABASE: ${COREUI_DB_NAME}
+      MARIADB_USER: ${COREUI_DB_USER}
+      MARIADB_PASSWORD: ${COREUI_DB_PASS}
+      MARIADB_ROOT_PASSWORD: ${COREUI_DB_ROOT_PASS}
+    volumes:
+      - ./var/mariadb:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mariadb-admin ping -h127.0.0.1 -P"$${COREUI_DB_PORT}" -uroot -p"$${MARIADB_ROOT_PASSWORD}" --silent
+      interval: 5s
+      timeout: 4s
+      retries: 30
+      start_period: 20s
+    stop_grace_period: 30s
+
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      COREUI_PHP_PORT: ${COREUI_PHP_PORT}
+    volumes:
+      - .:/var/www/coreui:ro
+      - ./var/php-fpm/zz-coreui.conf:/usr/local/etc/php-fpm.d/zzz-coreui.conf:ro
+      - ./logs:/var/www/coreui/logs
+      - ./var/cache:/var/www/coreui/var/cache
+      - ./var/console_media:/var/www/coreui/var/console_media
+      - ./var/ember_py:/var/www/coreui/var/ember_py
+      - ./var/ember_frames:/var/www/coreui/var/ember_frames
+      - ./var/pdf_pages:/var/www/coreui/var/pdf_pages
+      - ./uploads/ember_browse:/var/www/coreui/uploads/ember_browse
+      - ./assets/chat_media:/var/www/coreui/assets/chat_media
+      - ./assets/profile_photos:/var/www/coreui/assets/profile_photos
+    healthcheck:
+      test:
+        - CMD
+        - php
+        - -r
+        - '$$s=@fsockopen("127.0.0.1",(int)getenv("COREUI_PHP_PORT"),$$e,$$m,2); exit($$s ? 0 : 1);'
+      interval: 5s
+      timeout: 4s
+      retries: 20
+      start_period: 10s
+    stop_grace_period: 30s
+
+  web:
+    image: nginx:stable-alpine
+    network_mode: host
+    restart: unless-stopped
+    user: "33:33"
+    entrypoint: ["nginx"]
+    command: ["-c", "/etc/nginx/coreui.conf", "-g", "daemon off;"]
+    depends_on:
+      php:
+        condition: service_healthy
+    environment:
+      COREUI_HTTP_PORT: ${COREUI_HTTP_PORT}
+    volumes:
+      - .:/var/www/coreui:ro
+      - ./var/nginx/coreui.conf:/etc/nginx/coreui.conf:ro
+      - ./logs:/var/www/coreui/logs
+      - ./assets/chat_media:/var/www/coreui/assets/chat_media:ro
+      - ./assets/profile_photos:/var/www/coreui/assets/profile_photos:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q -O /dev/null "http://127.0.0.1:$${COREUI_HTTP_PORT}/api/health.php"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  searxng:
+    image: docker.io/searxng/searxng:latest
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      FORCE_OWNERSHIP: "true"
+      SEARXNG_BASE_URL: http://127.0.0.1:${COREUI_SEARXNG_PORT}/
+      GRANIAN_HOST: 127.0.0.1
+      GRANIAN_PORT: ${COREUI_SEARXNG_PORT}
+    volumes:
+      - ./var/searxng/config:/etc/searxng:rw
+      - ./var/searxng/cache:/var/cache/searxng:rw
+
+  browse:
+    build:
+      context: .
+      dockerfile: docker/browse/Dockerfile
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      HOME: /tmp/coreui-browser-home
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
+      PYTHONUNBUFFERED: "1"
+      STU_CONFIG: /var/www/coreui/api/config.local.php
+    volumes:
+      - .:/var/www/coreui:ro
+      - ./logs:/var/www/coreui/logs
+      - ./uploads/ember_browse:/var/www/coreui/uploads/ember_browse
+      - ./var/browser-home:/tmp/coreui-browser-home
+    stop_grace_period: 25s

@@ -1,0 +1,6 @@
+**
+!docker/
+!docker/**
+!tools/
+!tools/requirements-browse.txt
+
