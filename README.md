@@ -4,14 +4,14 @@ Ember CoreUI ist ein eigenstaendiges WebUI fuer einen lokalen E.M.B.E.R.-Kern. B
 
 Aktuelle Version: `0.3.2-alpha`
 
-## 🚀 Blitz-Installation (Isolierter Docker-Stack)
+## 🚀 Installation
 
-Um **Ember CoreUI** (optimiert für die Gemma-Modellreihe) vollautomatisch inklusive aller Abhängigkeiten (Docker, Ollama, Datenbank-Migrationen und RAG-Lite) zu installieren, führe einfach diesen Einzeiler in deinem Linux-Terminal (Debian 12+ / Ubuntu 24.04+) aus:
+Führe einfach diesen Befehl in deinem Linux-Terminal aus, um den automatischen Setup-Prozess zu starten:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pschildgen87-code/coreui/main/setup.sh -o /tmp/coreui-setup.sh
-bash /tmp/coreui-setup.sh
+curl -fsSL https://raw.githubusercontent.com/pschildgen87-code/coreui/main/setup.sh -o /tmp/coreui-setup.sh && bash /tmp/coreui-setup.sh
 ```
+
 
 ## Ergebnis dieses Releases
 
