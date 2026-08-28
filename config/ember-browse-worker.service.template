@@ -1,0 +1,25 @@
+[Unit]
+Description=Ember CoreUI asynchronous browse worker
+After=network-online.target mariadb.service ollama.service docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=@@COREUI_ROOT@@
+Environment=PYTHONUNBUFFERED=1
+Environment=PLAYWRIGHT_BROWSERS_PATH=@@COREUI_ROOT@@/var/playwright
+Environment=HOME=@@COREUI_ROOT@@/var/worker-home
+ExecStart=@@COREUI_ROOT@@/var/venv/bin/python @@COREUI_ROOT@@/tools/ember_browse_worker.py --config @@COREUI_ROOT@@/api/config.local.php --poll 2
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=@@COREUI_ROOT@@/logs @@COREUI_ROOT@@/uploads/ember_browse @@COREUI_ROOT@@/var
+
+[Install]
+WantedBy=multi-user.target
