@@ -498,7 +498,7 @@ Ember CoreUI-Versionen sind nicht mit Repack-Versionen gleichzusetzen. Der Mobil
 
 ## Copyright und rechtliche Finalisierung
 
-Copyright: `© 2026 Starlight Unit Studios. Alle Rechte vorbehalten.`
+Copyright: `© 2026 Patrick Schildgen · Starlight Unit Studios · Lizenziert unter CC BY-NC-SA 4.0`
 
 Das Studio-Logo wird aus der bereitgestellten Originaldatei verwendet. Fuer die helle CoreUI-Oberflaeche wurde ausschliesslich der schwarze Hintergrund transparent freigestellt; Motiv, Wortlaut, Proportionen und vorhandene dunkle Konturen bleiben erhalten. Die Lizenzen der lokal mitgelieferten Schriften sind getrennt unter `assets/fonts/LICENSES.md` dokumentiert.
 
