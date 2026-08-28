@@ -1,0 +1,360 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+IFS=$'\n\t'
+
+PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+VERSION="$(tr -d '[:space:]' < "$PROJECT_ROOT/VERSION")"
+COMPOSE_FILE="$PROJECT_ROOT/compose.yaml"
+ENV_FILE="$PROJECT_ROOT/var/compose.env"
+CONFIG_FILE="$PROJECT_ROOT/api/config.local.php"
+COMPOSE_PROJECT='ember-coreui'
+COMPOSE_CMD=()
+FAILURES=0
+
+ok() {
+  printf '[OK]     %s\n' "$*"
+}
+
+warn() {
+  printf '[WARN]   %s\n' "$*" >&2
+}
+
+fail() {
+  printf '[FEHLER] %s\n' "$*" >&2
+  FAILURES=$((FAILURES + 1))
+}
+
+is_enabled() {
+  case "${1:-}" in
+    1|true|TRUE|yes|YES|on|ON) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+compose() {
+  "${COMPOSE_CMD[@]}" \
+    --project-name "$COMPOSE_PROJECT" \
+    --env-file "$ENV_FILE" \
+    --file "$COMPOSE_FILE" \
+    "$@"
+}
+
+service_running() {
+  local service="$1"
+  local container_id
+  container_id="$(compose ps -q "$service" 2>/dev/null || true)"
+  [[ -n "$container_id" ]] || return 1
+  [[ "$(docker inspect --format '{{.State.Running}}' "$container_id" 2>/dev/null || true)" == 'true' ]]
+}
+
+check_service() {
+  local service="$1"
+  local label="$2"
+  if service_running "$service"; then
+    ok "$label laeuft im eigenen Compose-Projekt."
+  else
+    fail "$label laeuft nicht."
+  fi
+}
+
+printf 'Ember CoreUI Compose-Preflight, Version %s\n\n' "$VERSION"
+
+if [[ ! -f "$ENV_FILE" ]]; then
+  fail 'var/compose.env fehlt. Fuehre scripts/install.sh aus.'
+fi
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  fail 'api/config.local.php fehlt. Fuehre scripts/install.sh aus.'
+fi
+if [[ ! -f "$COMPOSE_FILE" ]]; then
+  fail 'compose.yaml fehlt.'
+fi
+
+UI_FILES=(
+  app.html
+  settings.html
+  admin/index.html
+  protocols.html
+  css/console.css
+  css/admin.css
+  js/console-app.js
+  js/coreui-preferences.js
+  js/settings.js
+  js/admin.js
+  api/user_settings.php
+  api/admin.php
+  api/ai_settings.php
+  api/console_session_store.php
+  api/console_sessions.php
+  api/console_messages.php
+  database/migrations/002_coreui_management.sql
+  database/migrations/003_console_sessions.sql
+  scripts/session-selftest.php
+  images/starlight_unit_studios_logo_transparent_v030.png
+)
+for ui_file in "${UI_FILES[@]}"; do
+  if [[ ! -s "$PROJECT_ROOT/$ui_file" ]]; then
+    fail "CoreUI-Oberflaechendatei fehlt oder ist leer: $ui_file"
+  fi
+done
+if (( FAILURES == 0 )); then
+  ok 'Studio-Branding, KI-Einstellungen und Admin Core sind paketiert.'
+fi
+
+if grep -Fq "action: 'delete_permanently'" "$PROJECT_ROOT/js/console-app.js" \
+    && grep -Fq "coreui_console_session_delete_tx" "$PROJECT_ROOT/api/console_session_store.php" \
+    && grep -Fq "delete_confirmation_required" "$PROJECT_ROOT/api/console_sessions.php"; then
+  ok 'Archivgeschuetzte, transaktionale Sitzungsloeschung ist paketiert.'
+else
+  fail 'Die sichere Sitzungsloeschung ist unvollstaendig paketiert.'
+fi
+
+if grep -Fq "sse_send('token'" "$PROJECT_ROOT/api/console_stream.php"; then
+  fail 'Der SSE-Endpunkt sendet noch ungepruefte Modell-Tokens an den Browser.'
+else
+  ok 'SSE-Ausgaben passieren erst nach der serverseitigen Antwortpruefung.'
+fi
+
+if (( FAILURES > 0 )); then
+  printf '\nPreflight vorzeitig beendet: %d Problem(e).\n' "$FAILURES" >&2
+  exit 1
+fi
+
+# Die Datei wird ausschliesslich vom Installer mit validierten einzeiligen Werten erzeugt.
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +a
+
+if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  ok 'Docker-Daemon ist erreichbar.'
+else
+  fail 'Docker-Daemon ist nicht erreichbar.'
+fi
+
+if docker compose version >/dev/null 2>&1; then
+  COMPOSE_CMD=(docker compose)
+  ok 'Docker Compose v2 ist vorhanden.'
+elif command -v docker-compose >/dev/null 2>&1; then
+  COMPOSE_CMD=(docker-compose)
+  ok 'Docker Compose ist vorhanden.'
+else
+  fail 'Docker Compose fehlt.'
+fi
+
+if (( ${#COMPOSE_CMD[@]} > 0 )); then
+  if compose config >/dev/null 2>&1; then
+    ok 'Compose-Konfiguration ist gueltig.'
+  else
+    fail 'Compose-Konfiguration ist ungueltig.'
+  fi
+
+  check_service database 'CoreUI-MariaDB'
+  check_service php 'CoreUI-PHP-FPM'
+  check_service web 'CoreUI-Nginx'
+  if is_enabled "${COREUI_INSTALL_SEARXNG:-0}"; then
+    check_service searxng 'CoreUI-SearXNG'
+  fi
+  if is_enabled "${COREUI_INSTALL_BROWSE:-0}"; then
+    check_service browse 'CoreUI-Browse-Worker'
+  fi
+
+  if compose exec -T php php -r \
+      'require "/var/www/coreui/api/db.php"; echo (int)stu_pdo()->query("SELECT COUNT(*) FROM stu_schema_migrations")->fetchColumn();' \
+      >/dev/null 2>&1; then
+    ok 'Eigene MariaDB-Verbindung und CoreUI-Schema funktionieren.'
+  else
+    fail 'Eigene MariaDB-Verbindung oder CoreUI-Schema ist fehlerhaft.'
+  fi
+
+  if compose exec -T php php -r \
+      'require "/var/www/coreui/api/db.php"; $p=stu_pdo(); $p->query("SELECT user_id FROM stu_user_ai_settings LIMIT 1"); $p->query("SELECT id FROM stu_admin_audit LIMIT 1");' \
+      >/dev/null 2>&1; then
+    ok 'Migration 002: Nutzer-KI-Einstellungen und Admin-Audit sind bereit.'
+  else
+    fail 'Migration 002 fehlt. Fuehre scripts/stack.sh migrate aus.'
+  fi
+
+  if compose exec -T php php -r \
+      'require "/var/www/coreui/api/db.php"; $p=stu_pdo(); $p->query("SELECT last_message_id,last_read_message_id,archived_at FROM stu_console_sessions LIMIT 0"); $p->query("SELECT session_id,reply_to_id FROM stu_chat_messages LIMIT 0"); $p->query("SELECT session_id,trigger_message_id FROM stu_ember_browse_jobs LIMIT 0");' \
+      >/dev/null 2>&1; then
+    ok 'Migration 003: echte Sitzungen und Turn-Zuordnung sind bereit.'
+  else
+    fail 'Migration 003 fehlt. Fuehre scripts/stack.sh migrate aus.'
+  fi
+
+  for extension_name in curl dom gd mbstring pdo_mysql zip; do
+    if compose exec -T php php -m 2>/dev/null | grep -Fxq "$extension_name"; then
+      ok "PHP-Erweiterung aktiv: $extension_name"
+    else
+      fail "PHP-Erweiterung fehlt: $extension_name"
+    fi
+  done
+
+  if compose exec -T php sh -ec \
+      'find api scripts tools -type f -name "*.php" -print0 | xargs -0 -r -n1 php -l >/dev/null'; then
+    ok 'Alle paketierten PHP-Dateien bestehen den Syntaxcheck.'
+  else
+    fail 'Mindestens eine paketierte PHP-Datei hat einen Syntaxfehler.'
+  fi
+
+  thinking_selftest=''
+  if thinking_selftest="$(compose exec -T -u 33:33 php php scripts/thinking-sanitize-selftest.php 2>&1)"; then
+    thinking_selftest="${thinking_selftest//$'\r'/}"
+    ok "$thinking_selftest"
+  else
+    thinking_selftest="${thinking_selftest//$'\r'/}"
+    fail "$thinking_selftest"
+  fi
+
+  reply_selftest=''
+  if reply_selftest="$(compose exec -T -u 33:33 php php scripts/reply-pipeline-selftest.php 2>&1)"; then
+    reply_selftest="${reply_selftest//$'\r'/}"
+    ok "$reply_selftest"
+  else
+    reply_selftest="${reply_selftest//$'\r'/}"
+    fail "$reply_selftest"
+  fi
+
+  session_selftest=''
+  if session_selftest="$(compose exec -T -u 33:33 php php scripts/session-selftest.php 2>&1)"; then
+    session_selftest="${session_selftest//$'\r'/}"
+    ok "$session_selftest"
+  else
+    session_selftest="${session_selftest//$'\r'/}"
+    fail "$session_selftest"
+  fi
+
+  logo_selftest=''
+  if logo_selftest="$(compose exec -T -u 33:33 php php scripts/logo-alpha-selftest.php 2>&1)"; then
+    logo_selftest="${logo_selftest//$'\r'/}"
+    ok "$logo_selftest"
+  else
+    logo_selftest="${logo_selftest//$'\r'/}"
+    fail "$logo_selftest"
+  fi
+
+  if is_enabled "${COREUI_INSTALL_BROWSE:-0}"; then
+    frame_table_ready=0
+    for _frame_try in {1..15}; do
+      if compose exec -T php php -r \
+          'require "/var/www/coreui/api/db.php"; stu_pdo()->query("SELECT id FROM stu_ember_browse_frames LIMIT 1");' \
+          >/dev/null 2>&1; then
+        frame_table_ready=1
+        break
+      fi
+      sleep 1
+    done
+    if (( frame_table_ready == 1 )); then
+      ok 'Private Live-Browser-Frame-Tabelle ist bereit.'
+    else
+      fail 'Private Live-Browser-Frame-Tabelle fehlt. Browse-Worker neu starten.'
+    fi
+  fi
+
+  LOCK_NAMESPACE="$(compose exec -T php php -r \
+    'require "/var/www/coreui/api/config.php"; echo STU_EMBER_LOCK_NAMESPACE;' 2>/dev/null || true)"
+  LOCK_NAMESPACE="${LOCK_NAMESPACE//$'\r'/}"
+  if [[ -n "$LOCK_NAMESPACE" && "$LOCK_NAMESPACE" != 'ember' && "$LOCK_NAMESPACE" != 'stu' ]]; then
+    ok "Eigener MariaDB-Lock-Namespace aktiv: $LOCK_NAMESPACE"
+  else
+    fail 'Kein sicherer CoreUI-Lock-Namespace aktiv.'
+  fi
+
+  for writable_dir in \
+    /var/www/coreui/logs \
+    /var/www/coreui/var/cache \
+    /var/www/coreui/var/console_media \
+    /var/www/coreui/var/ember_frames \
+    /var/www/coreui/var/pdf_pages \
+    /var/www/coreui/uploads/ember_browse \
+    /var/www/coreui/assets/chat_media \
+    /var/www/coreui/assets/profile_photos/pending \
+    /var/www/coreui/assets/profile_photos/approved; do
+    if compose exec -T -u 33:33 php test -w "$writable_dir" >/dev/null 2>&1; then
+      ok "Container-Schreibpfad bereit: ${writable_dir#/var/www/coreui/}"
+    else
+      fail "Container-Schreibpfad nicht bereit: ${writable_dir#/var/www/coreui/}"
+    fi
+  done
+
+  video_selftest=''
+  if video_selftest="$(compose exec -T -u 33:33 php php scripts/video-selftest.php 2>&1)"; then
+    video_selftest="${video_selftest//$'\r'/}"
+    ok "$video_selftest"
+  else
+    video_selftest="${video_selftest//$'\r'/}"
+    fail "$video_selftest"
+  fi
+
+  pdf_selftest=''
+  if pdf_selftest="$(compose exec -T -u 33:33 php php scripts/pdf-selftest.php 2>&1)"; then
+    pdf_selftest="${pdf_selftest//$'\r'/}"
+    ok "$pdf_selftest"
+  else
+    pdf_selftest="${pdf_selftest//$'\r'/}"
+    fail "$pdf_selftest"
+  fi
+fi
+
+if curl -fsS --max-time 10 "http://127.0.0.1:${COREUI_HTTP_PORT}/api/health.php" >/dev/null 2>&1; then
+  ok "CoreUI-Healthcheck antwortet auf Loopback-Port ${COREUI_HTTP_PORT}."
+else
+  fail "CoreUI-Healthcheck antwortet nicht auf Port ${COREUI_HTTP_PORT}."
+fi
+
+if curl -fsS --max-time 10 "http://127.0.0.1:${COREUI_HTTP_PORT}/settings.html" \
+    | grep -Fq 'EINSTELLUNGEN'; then
+  ok 'CoreUI-Einstellungen werden vom isolierten Webserver ausgeliefert.'
+else
+  fail 'CoreUI-Einstellungen sind nicht erreichbar. Fuehre scripts/stack.sh refresh-runtime und danach scripts/stack.sh restart web aus.'
+fi
+
+if curl -fsS --max-time 10 "http://127.0.0.1:${COREUI_HTTP_PORT}/admin/index.html" \
+    | grep -Fq 'ADMIN CORE'; then
+  ok 'Das isolierte Admin Core wird vom CoreUI-Webserver ausgeliefert.'
+else
+  fail 'Admin Core ist nicht erreichbar.'
+fi
+
+SESSION_ROUTE_STATUS="$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' \
+  "http://127.0.0.1:${COREUI_HTTP_PORT}/api/console_messages.php" 2>/dev/null || true)"
+if [[ "$SESSION_ROUTE_STATUS" == '401' || "$SESSION_ROUTE_STATUS" == '400' ]]; then
+  ok 'Der authentifizierte Sitzungs-History-Endpunkt wird vom CoreUI-Webserver erreicht.'
+else
+  fail "Sitzungs-History-Endpunkt nicht korrekt geroutet (HTTP ${SESSION_ROUTE_STATUS:-000})."
+fi
+
+if command -v ollama >/dev/null 2>&1 \
+    && ollama show "${COREUI_MODEL_NAME}" >/dev/null 2>&1; then
+  ok "Getrenntes Ollama-Modell vorhanden: ${COREUI_MODEL_NAME}"
+else
+  fail "CoreUI-Ollama-Modell fehlt: ${COREUI_MODEL_NAME}"
+fi
+
+if is_enabled "${COREUI_INSTALL_SEARXNG:-0}"; then
+  if curl -fsS --max-time 10 \
+      "http://127.0.0.1:${COREUI_SEARXNG_PORT}/search?q=ember&format=json" >/dev/null 2>&1; then
+    ok "Eigene SearXNG-JSON-Suche antwortet auf Port ${COREUI_SEARXNG_PORT}."
+  else
+    fail "Eigene SearXNG-JSON-Suche antwortet nicht auf Port ${COREUI_SEARXNG_PORT}."
+  fi
+fi
+
+if [[ "${COREUI_BIND_ADDRESS:-127.0.0.1}" == '127.0.0.1' ]]; then
+  ok 'Webzugriff ist standardmaessig auf Loopback begrenzt.'
+else
+  warn 'CoreUI lauscht bewusst auf 0.0.0.0. Firewall und TLS muessen separat geprueft werden.'
+fi
+
+if [[ -L /etc/nginx/sites-enabled/default || -e /etc/nginx/sites-enabled/default ]]; then
+  ok 'Eine bestehende Nginx-Default-Site wurde nicht entfernt.'
+else
+  warn 'Keine Nginx-Default-Site gefunden. CoreUI veraendert diesen Zustand nicht.'
+fi
+
+if (( FAILURES > 0 )); then
+  printf '\nPreflight fehlgeschlagen: %d Problem(e).\n' "$FAILURES" >&2
+  exit 1
+fi
+
+printf '\nPreflight erfolgreich. Ember CoreUI laeuft im isolierten Parallelmodus.\n'
