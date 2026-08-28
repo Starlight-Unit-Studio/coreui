@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f0f4fa" />
+  <meta name="application-version" content="0.3.2-alpha" />
+  <title>Ember CoreUI - Admin Core</title>
+  <link rel="stylesheet" href="../css/admin.css?v=0.3.2-alpha" />
+  <script src="../js/console-gate.js?v=0.3.2-alpha"></script>
+</head>
+<body>
+  <div class="admin-field" aria-hidden="true"><i></i><i></i><i></i></div>
+  <header class="admin-topbar">
+    <a class="admin-back" href="../settings.html">← EINSTELLUNGEN</a>
+    <div class="admin-brand">
+      <img src="../images/starlight_unit_studios_logo_transparent_v030.png" alt="Starlight Unit Studios" draggable="false" />
+      <div><span>PROJECT STΛRLIɢHT // N-73</span><h1>ADMIN CORE</h1></div>
+    </div>
+    <div class="admin-identity"><span id="adminIdentity">AUTH...</span><strong>v0.3.2-alpha</strong></div>
+  </header>
+
+  <div class="admin-shell">
+    <nav class="admin-nav" aria-label="Verwaltungsbereiche">
+      <button class="active" data-panel="overview"><b>⌬</b><span>ÜBERSICHT</span></button>
+      <button data-panel="users"><b>◇</b><span>BENUTZER</span></button>
+      <button data-panel="memories"><b>⟐</b><span>MEMORY</span></button>
+      <button data-panel="lore"><b>⌁</b><span>RAG-LORE</span></button>
+      <button data-panel="runtime"><b>⏻</b><span>RUNTIME</span></button>
+      <button data-panel="logs"><b>⚡</b><span>PROTOKOLL</span></button>
+      <button data-panel="audit"><b>◈</b><span>AUDIT</span></button>
+    </nav>
+
+    <main class="admin-main">
+      <div class="admin-flash" id="adminFlash" role="status" aria-live="polite"></div>
+
+      <section class="admin-panel active" data-panel-view="overview">
+        <header class="panel-head"><div><span>SEKTOR 00</span><h2>SYSTEMÜBERSICHT</h2></div><button id="refreshOverview">AKTUALISIEREN</button></header>
+        <div class="stat-grid" id="statGrid">
+          <article><span>BENUTZER</span><strong data-stat="users">...</strong></article>
+          <article><span>SITZUNGEN</span><strong data-stat="sessions">...</strong></article>
+          <article><span>NACHRICHTEN</span><strong data-stat="messages">...</strong></article>
+          <article><span>MEMORIES</span><strong data-stat="memories">...</strong></article>
+          <article><span>LORE-CHUNKS</span><strong data-stat="lore_chunks">...</strong></article>
+          <article><span>BROWSE AKTIV</span><strong data-stat="browse_active">...</strong></article>
+        </div>
+        <div class="admin-callout"><b>ISOLATION AKTIV</b><p>Dieses Panel verwaltet ausschließlich das eigene CoreUI-Schema. Game, Homepage, Global-Chat und Repack-Admin werden nicht angesprochen.</p></div>
+      </section>
+
+      <section class="admin-panel" data-panel-view="users" hidden>
+        <header class="panel-head"><div><span>SEKTOR 01</span><h2>BENUTZER UND RECHTE</h2></div><button id="reloadUsers">NEU LADEN</button></header>
+        <div class="toolbar"><input id="userSearch" type="search" placeholder="E-Mail oder Charakter suchen..." /><button id="searchUsers">SUCHEN</button></div>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>KONTO</th><th>ROLLE</th><th>SPERRE BIS</th><th>SITZUNGEN</th><th>AKTION</th></tr></thead><tbody id="userRows"></tbody></table></div>
+      </section>
+
+      <section class="admin-panel" data-panel-view="memories" hidden>
+        <header class="panel-head"><div><span>SEKTOR 02</span><h2>CRUD-LZG</h2></div><button id="reloadAdminMemories">NEU LADEN</button></header>
+        <form class="admin-form memory-form" id="adminMemoryForm">
+          <input id="adminMemoryId" type="hidden" value="0" />
+          <label class="wide">FAKT<textarea id="adminMemoryFact" rows="4" maxlength="2000" required></textarea></label>
+          <label>SCOPE<select id="adminMemoryScope"><option value="global">GLOBAL</option><option value="user">USER</option><option value="character">CHARACTER</option></select></label>
+          <label>RELEVANZ<input id="adminMemoryRelevance" type="number" min="1" max="10" value="5" /></label>
+          <label>USER-ID<input id="adminMemoryUser" type="number" min="0" value="0" /></label>
+          <label>CHARAKTER-ID<input id="adminMemoryCharacter" type="text" maxlength="64" /></label>
+          <div class="form-actions wide"><button type="submit">SPEICHERN</button><button type="button" id="resetAdminMemory">NEUER FAKT</button></div>
+        </form>
+        <div class="toolbar"><input id="memorySearch" type="search" placeholder="Memory durchsuchen..." /><select id="memoryScopeFilter"><option value="">ALLE SCOPES</option><option value="global">GLOBAL</option><option value="user">USER</option><option value="character">CHARACTER</option></select><button id="searchAdminMemories">FILTERN</button></div>
+        <div class="memory-admin-list" id="adminMemoryRows"></div>
+      </section>
+
+      <section class="admin-panel" data-panel-view="lore" hidden>
+        <header class="panel-head"><div><span>SEKTOR 03</span><h2>RAG-LITE UND KANON</h2></div><button id="reloadLore">QUELLEN LADEN</button></header>
+        <div class="lore-sources" id="loreSources"></div>
+        <div class="toolbar"><input id="loreSearch" type="search" placeholder="Lore-Auszüge durchsuchen..." /><select id="loreSourceFilter"><option value="">ALLE QUELLEN</option></select><button id="searchLore">SUCHEN</button></div>
+        <div class="lore-results" id="loreResults"></div>
+        <div class="admin-callout amber"><b>IMPORT ÜBER SSH</b><p>Neuindizierung bleibt bewusst ein kontrollierter Terminal-Schritt über tools/ingest_docx_knowledge.php. Das Panel führt keine Dateipfade außerhalb des Pakets aus.</p></div>
+      </section>
+
+      <section class="admin-panel" data-panel-view="runtime" hidden>
+        <header class="panel-head"><div><span>SEKTOR 04</span><h2>COREUI-RUNTIME</h2></div><button id="saveRuntime">SPEICHERN</button></header>
+        <div class="admin-form runtime-form">
+          <label class="check"><input id="registrationEnabled" type="checkbox" /><span>ÖFFENTLICHE REGISTRIERUNG</span></label>
+          <label class="check"><input id="maintenanceEnabled" type="checkbox" /><span>WARTUNGSMODUS</span></label>
+          <label class="check"><input id="memoryDefaultEnabled" type="checkbox" /><span>MEMORY STANDARDMÄSSIG AN</span></label>
+          <label>SYSTEM-PROMPT-LIMIT<input id="promptLimit" type="number" min="500" max="12000" step="100" /></label>
+          <label class="wide">WARTUNGSMELDUNG<textarea id="maintenanceMessage" rows="3" maxlength="520"></textarea></label>
+          <div class="runtime-divider wide"><span>WERKZEUGPFAD</span></div>
+          <label class="check"><input id="toolWebEnabled" type="checkbox" /><span>SCHNELLE WEB-SUCHE</span></label>
+          <label class="check"><input id="toolBrowseEnabled" type="checkbox" /><span>TIEFE BROWSER-RECHERCHE</span></label>
+          <label class="check"><input id="toolPythonEnabled" type="checkbox" /><span>ISOLIERTES PYTHON</span></label>
+          <div class="runtime-divider wide"><span>OPTIONALER EXTERNER ADAPTER</span></div>
+          <label class="check"><input id="externalEnabled" type="checkbox" /><span>EXTERNEN ADAPTER VORBEREITEN (NOCH INAKTIV)</span></label>
+          <label>ANZEIGENAME<input id="externalLabel" type="text" maxlength="160" /></label>
+          <label class="wide">HTTPS BASE-URL<input id="externalBaseUrl" type="url" placeholder="https://api.example.com/v1" /></label>
+          <label class="wide">MODELLNAME<input id="externalModel" type="text" maxlength="160" /></label>
+        </div>
+        <div class="admin-callout"><b>KEIN KOMPATIBILITÄTSVERSPRECHEN</b><p>Der lokale Ollama-Pfad mit Gemma 4 bleibt der Referenzbetrieb. API-Schlüssel gehören ausschließlich serverseitig in STU_EXTERNAL_API_KEY und werden nie im Browser gespeichert.</p></div>
+      </section>
+
+      <section class="admin-panel" data-panel-view="logs" hidden>
+        <header class="panel-head"><div><span>SEKTOR 05</span><h2>FEHLERPROTOKOLL</h2></div><div class="head-actions"><button id="reloadLogs">NEU LADEN</button><button class="danger" id="clearLogs">LEEREN</button></div></header>
+        <pre class="log-output" id="logOutput">PROTOKOLL WIRD GELADEN...</pre>
+      </section>
+
+      <section class="admin-panel" data-panel-view="audit" hidden>
+        <header class="panel-head"><div><span>SEKTOR 06</span><h2>ADMIN-AUDIT</h2></div><button id="reloadAudit">NEU LADEN</button></header>
+        <div class="audit-list" id="auditRows"></div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="admin-footer"><span>© 2026 STARLIGHT UNIT STUDIOS</span><i></i><span>EMBER COREUI // ADMIN N-73</span></footer>
+  <script src="../js/admin.js?v=0.3.2-alpha"></script>
+</body>
+</html>
