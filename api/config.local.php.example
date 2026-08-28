@@ -1,0 +1,49 @@
+<?php
+/* Optional local overrides for Ember CoreUI.
+   Copy to config.local.php. Never publish the copied file. */
+
+define('STU_DB_HOST', '127.0.0.1');
+define('STU_DB_PORT', 13306);
+define('STU_DB_NAME', 'ember_coreui');
+define('STU_DB_USER', 'ember_coreui');
+define('STU_DB_PASS', 'REPLACE_WITH_A_LONG_RANDOM_PASSWORD');
+
+define('STU_PUBLIC_BASE_URL', 'https://console.example.org');
+
+define('STU_EMBER_ENABLED', true);
+define('STU_EMBER_USER_ID', 1);
+define('STU_EMBER_CHARACTER_ID', 'ember');
+define('STU_EMBER_CHARACTER_NAME', 'Ember');
+define('STU_EMBER_MODEL', 'ember-coreui:latest');
+define('STU_EMBER_OLLAMA_URL', 'http://127.0.0.1:11434/api/chat');
+define('STU_EMBER_LOCK_NAMESPACE', 'ember_coreui');
+define('STU_EMBER_NUM_PREDICT', 6500);
+define('STU_EMBER_TIMEOUT', 600);
+define('STU_EMBER_TIMEOUT_RETRY', 600);
+define('STU_EMBER_MAX_REPLY_CHARS', 60000);
+
+define('STU_EMBER_MEMORY_ENABLED', true);
+define('STU_EMBER_REFLECT_ENABLED', true);
+define('STU_EMBER_LORE_ENABLED', true);
+define('STU_EMBER_WEB_ENABLED', true);
+define('STU_EMBER_WEB_URL', 'http://127.0.0.1:18889/search');
+define('STU_EMBER_BROWSE_ENABLED', true);
+define('STU_EMBER_BROWSE_MAX_STEPS', 12);
+define('STU_EMBER_BROWSE_AGENT_TIMEOUT', 420);
+define('STU_EMBER_BROWSE_REPORT_TIMEOUT', 420);
+define('STU_EMBER_BROWSE_AGENT_RETRIES', 0);
+define('STU_EMBER_BROWSE_FRAME_QUALITY', 45);
+define('STU_EMBER_BROWSE_FRAME_BURST', 3);
+define('STU_EMBER_BROWSE_FRAME_INTERVAL_MS', 240);
+define('STU_EMBER_BROWSE_FRAME_RETENTION_HOURS', 24);
+
+define('STU_EMBER_VIDEO_FRAMES', 6);
+define('STU_EMBER_VIDEO_FRAME_PX', 512);
+define('STU_EMBER_PDF_MAX_PAGES', 4);
+define('STU_EMBER_PDF_PAGE_PX', 1024);
+
+define('STU_ALLOW_REGISTRATION', false);
+define('STU_DEBUG', false);
+
+// Optionaler, experimenteller Cloud-Adapter. Der Schlüssel bleibt serverseitig.
+// define('STU_EXTERNAL_API_KEY', 'REPLACE_WITH_SERVER_SIDE_SECRET');
