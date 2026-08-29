@@ -4,10 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f0f4fa" />
-  <meta name="application-version" content="0.3.2-alpha" />
+  <meta name="application-version" content="0.4.1-alpha" />
   <title>Ember CoreUI - Admin Core</title>
-  <link rel="stylesheet" href="../css/admin.css?v=0.3.2-alpha" />
-  <script src="../js/console-gate.js?v=0.3.2-alpha"></script>
+  <link rel="stylesheet" href="../css/admin.css?v=0.4.1-alpha" />
+  <script src="../js/console-gate.js?v=0.4.1-alpha"></script>
 </head>
 <body>
   <div class="admin-field" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -17,7 +17,7 @@
       <img src="../images/starlight_unit_studios_logo_transparent_v030.png" alt="Starlight Unit Studios" draggable="false" />
       <div><span>PROJECT STΛRLIɢHT // N-73</span><h1>ADMIN CORE</h1></div>
     </div>
-    <div class="admin-identity"><span id="adminIdentity">AUTH...</span><strong>v0.3.2-alpha</strong></div>
+    <div class="admin-identity"><span id="adminIdentity">AUTH...</span><strong>v0.4.1-alpha</strong></div>
   </header>
 
   <div class="admin-shell">
@@ -42,6 +42,7 @@
           <article><span>NACHRICHTEN</span><strong data-stat="messages">...</strong></article>
           <article><span>MEMORIES</span><strong data-stat="memories">...</strong></article>
           <article><span>LORE-CHUNKS</span><strong data-stat="lore_chunks">...</strong></article>
+          <article><span>USER-RAG-CHUNKS</span><strong data-stat="user_knowledge_chunks">...</strong></article>
           <article><span>BROWSE AKTIV</span><strong data-stat="browse_active">...</strong></article>
         </div>
         <div class="admin-callout"><b>ISOLATION AKTIV</b><p>Dieses Panel verwaltet ausschließlich das eigene CoreUI-Schema. Game, Homepage, Global-Chat und Repack-Admin werden nicht angesprochen.</p></div>
@@ -49,6 +50,13 @@
 
       <section class="admin-panel" data-panel-view="users" hidden>
         <header class="panel-head"><div><span>SEKTOR 01</span><h2>BENUTZER UND RECHTE</h2></div><button id="reloadUsers">NEU LADEN</button></header>
+        <form class="admin-form user-create-form" id="adminUserForm">
+          <label>ANZEIGENAME<input id="newUserDisplayName" type="text" maxlength="64" required autocomplete="off" /></label>
+          <label>LOGIN-E-MAIL<input id="newUserEmail" type="email" maxlength="254" required autocomplete="off" /></label>
+          <label>STARTPASSWORT<input id="newUserPassword" type="password" minlength="12" maxlength="1024" required autocomplete="new-password" /></label>
+          <label>ROLLE<select id="newUserLevel"><option value="4">4 // USER</option><option value="3">3 // CHAT-MOD</option><option value="2">2 // MOD</option><option value="1">1 // ADMIN</option></select></label>
+          <div class="form-actions wide"><button type="submit">BENUTZER ANLEGEN</button><span class="form-hint">Das Konto erhält automatisch ein eigenes Profil, einen privaten Operator und funktionierende Sitzungen.</span></div>
+        </form>
         <div class="toolbar"><input id="userSearch" type="search" placeholder="E-Mail oder Charakter suchen..." /><button id="searchUsers">SUCHEN</button></div>
         <div class="table-wrap"><table><thead><tr><th>ID</th><th>KONTO</th><th>ROLLE</th><th>SPERRE BIS</th><th>SITZUNGEN</th><th>AKTION</th></tr></thead><tbody id="userRows"></tbody></table></div>
       </section>
@@ -110,6 +118,6 @@
   </div>
 
   <footer class="admin-footer"><span>© 2026 STARLIGHT UNIT STUDIOS</span><i></i><span>EMBER COREUI // ADMIN N-73</span></footer>
-  <script src="../js/admin.js?v=0.3.2-alpha"></script>
+  <script src="../js/admin.js?v=0.4.1-alpha"></script>
 </body>
 </html>

@@ -29,6 +29,17 @@ install_runtime_file() {
   install -m 0644 "$source_file" "$target_file"
 }
 
+ensure_private_storage_dirs() {
+  local profile_dir="$PROJECT_ROOT/var/profile_media"
+  local knowledge_dir="$PROJECT_ROOT/var/knowledge_uploads"
+  if (( EUID == 0 )); then
+    install -d -m 0770 -o 33 -g 33 "$profile_dir" "$knowledge_dir"
+    return
+  fi
+  mkdir -p "$profile_dir" "$knowledge_dir"
+  chmod 0770 "$profile_dir" "$knowledge_dir" 2>/dev/null || true
+}
+
 [[ -f "$ENV_FILE" ]] || {
   printf '[Ember CoreUI] FEHLER: var/compose.env fehlt. Fuehre scripts/install.sh aus.\n' >&2
   exit 1
@@ -89,6 +100,7 @@ case "$STACK_ACTION" in
     exit 0
     ;;
   up|start|restart)
+    ensure_private_storage_dirs
     render_runtime_files
     ;;
 esac

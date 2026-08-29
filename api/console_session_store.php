@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/console_attachment_store.php';
+
 /**
  * Persistente CoreUI-Sitzungslogik.
  *
@@ -231,10 +233,20 @@ function coreui_console_session_delete_tx(PDO $pdo, int $uid, string $sessionId)
   $stMedia = $pdo->prepare(
     "SELECT DISTINCT cm.uuid, cm.rel_path
        FROM stu_console_media cm
-       JOIN stu_chat_messages m ON m.file_uuid=cm.uuid
-      WHERE cm.user_id=? AND m.channel='console' AND m.user_id=? AND m.session_id=?"
+       JOIN (
+         SELECT m.file_uuid AS media_uuid
+           FROM stu_chat_messages m
+          WHERE m.channel='console' AND m.user_id=? AND m.session_id=?
+            AND m.file_uuid IS NOT NULL AND m.file_uuid<>''
+         UNION
+         SELECT a.media_uuid
+           FROM stu_console_message_attachments a
+           JOIN stu_chat_messages m ON m.id=a.message_id
+          WHERE m.channel='console' AND m.user_id=? AND m.session_id=?
+       ) refs ON refs.media_uuid=cm.uuid
+      WHERE cm.user_id=?"
   );
-  $stMedia->execute([$uid, $uid, $sessionId]);
+  $stMedia->execute([$uid, $sessionId, $uid, $sessionId, $uid]);
   $mediaCandidates = $stMedia->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
   $counts = [
@@ -285,12 +297,16 @@ function coreui_console_session_delete_tx(PDO $pdo, int $uid, string $sessionId)
   $counts['messages_deleted'] = $stDeleteMessages->rowCount();
 
   $orphanedMediaPaths = [];
-  $stMediaRefs = $pdo->prepare('SELECT COUNT(*) FROM stu_chat_messages WHERE file_uuid=?');
+  $stMediaRefs = $pdo->prepare(
+    'SELECT '
+    . '(SELECT COUNT(*) FROM stu_chat_messages WHERE file_uuid=?) + '
+    . '(SELECT COUNT(*) FROM stu_console_message_attachments WHERE media_uuid=?)'
+  );
   $stDeleteMedia = $pdo->prepare('DELETE FROM stu_console_media WHERE uuid=? AND user_id=? LIMIT 1');
   foreach ($mediaCandidates as $media) {
     $uuid = trim((string)($media['uuid'] ?? ''));
     if ($uuid === '') continue;
-    $stMediaRefs->execute([$uuid]);
+    $stMediaRefs->execute([$uuid, $uuid]);
     if ((int)$stMediaRefs->fetchColumn() > 0) continue;
     $stDeleteMedia->execute([$uuid, $uid]);
     if ($stDeleteMedia->rowCount() > 0) {

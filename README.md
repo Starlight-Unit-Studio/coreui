@@ -2,22 +2,19 @@
 
 Ember CoreUI ist ein eigenstaendiges WebUI fuer einen lokalen E.M.B.E.R.-Kern. Bis zur finalen Aufnahme in den STU-Repack besitzt es eine eigene Versionierung und einen eigenen Release-Zyklus.
 
-Aktuelle Version: `0.3.2-alpha`
-
-## 🚀 Installation
-
-Führe einfach diesen Befehl in deinem Linux-Terminal aus, um den automatischen Setup-Prozess zu starten:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/pschildgen87-code/coreui/main/setup.sh -o /tmp/coreui-setup.sh && bash /tmp/coreui-setup.sh
-```
-
+Aktuelle Version: `0.4.1-alpha`
 
 ## Ergebnis dieses Releases
 
-`0.3.2-alpha` ergaenzt die echten serverseitigen Sitzungen um eine kontrollierte, endgueltige Loeschfunktion. Aktive Unterhaltungen koennen weiterhin nur archiviert werden. Erst in der Archivansicht erscheint `ENDGÜLTIG LÖSCHEN`; Warnung und Texteingabe schuetzen vor einem versehentlichen Klick. Der Server entfernt die Sitzung zusammen mit ihren Nachrichten, Reaktionen, abgeschlossenen Browser-Recherchen, Schritten, Frames und nicht mehr referenzierten Upload-Datensaetzen in einer SQL-Transaktion.
+`0.4.1-alpha` erweitert die kontobezogenen Einstellungen um echte Kontosicherheit und Datenportabilitaet. Benutzer koennen ihr Passwort nach erneuter Pruefung des aktuellen Passworts aendern, aktive Geraete-Anmeldungen sehen und widerrufen sowie ihre privaten CoreUI-Daten als JSON exportieren. Login-Sitzungen sind dabei technisch und sichtbar von Chat-Sitzungen getrennt.
 
-Die in `0.3.1-alpha` eingefuehrten echten Sitzungs-Scopes, Turn-Zuordnungen und verlustfreien Altverlaeufe bleiben erhalten. Game, Homepage, Apache, KeyHelp, Host-PHP, Repack-Pfade und die bestehende STU-Datenbank bleiben unberuehrt.
+Die freie Texteingabe fuer Ollama-Modellnamen wurde durch eine sichere Auswahlliste ersetzt. CoreUI liest ausschliesslich die lokal installierten Modelle aus der betreiberkonfigurierten Ollama-Instanz und prueft die Auswahl vor dem Speichern erneut. Ein leerer Wert verwendet weiterhin den Serverstandard.
+
+Direkt in den Einstellungen koennen TXT-, Markdown-, Text-PDF- und DOCX-Dateien als privates RAG-Lite-Wissen hochgeladen, extrahiert und gechunkt werden. Quellen, Originaldateien und Chunks sind immer an den authentifizierten Benutzer gebunden und bleiben vom global kuratierten Studio-Kanon getrennt. Das Admin Core kann neue Benutzer mit Startpasswort, Rolle, eigenem Operator und eigenem Profil anlegen.
+
+Der Nachrichten-Composer akzeptiert bis zu zehn Dateien pro Turn. Die geordnete Liste bleibt beim Neuladen erhalten, wird benutzergebunden an genau die Nachricht gekoppelt und beim endgueltigen Loeschen einer Sitzung referenzsicher bereinigt. Textanhaenge teilen sich ein begrenztes Kontextbudget; Bild-, Video- und Scan-PDF-Eingaben besitzen zusaetzlich ein gemeinsames Vision-Limit.
+
+Die echten Sitzungs-Scopes, Turn-Zuordnungen, verlustfreien Altverlaeufe und die kontrollierte endgueltige Sitzungsloeschung aus `0.3.1-alpha` und `0.3.2-alpha` bleiben unveraendert enthalten. Game, Homepage, Apache, KeyHelp, Host-PHP, Repack-Pfade und die bestehende STU-Datenbank bleiben unberuehrt.
 
 ## Echte Sitzungen statt Demo-Zeiger
 
@@ -47,7 +44,7 @@ CoreUI trennt die fluechtige interne Modellanalyse strikt von der sichtbaren Obe
 - SSE liefert waehrend der Generierung nur feste Statusstufen wie `KONTEXT WIRD ABGEGLICHEN` und `ANTWORT WIRD FORMULIERT`.
 - `message.content` und `message.thinking` werden vollstaendig gesammelt und erst nach der gemeinsamen Sicherheitspruefung verarbeitet.
 - Englische und deutsche Prompt-, Analyse-, Entwurfs- und Selbstkorrektur-Muster werden vor SSE, Datenbank und History abgefangen.
-- Neue `thinking_content`-Werte enthalten nur den sicheren Abschlussstatus.
+- Neue `thinking_content`-Werte enthalten bei aktivem Thinking nur den sicheren Abschlussstatus; bei deaktiviertem Thinking bleiben sie leer.
 - Der Fetch-Endpunkt ersetzt alte Raw-Werte vor der JSON-Ausgabe fail-closed.
 - Der Browser besitzt eine zusaetzliche Whitelist und schreibt keinen beliebigen Thinking-Text in den DOM.
 - Das Antwortbudget wird pro Benutzer an Ollama uebergeben. Ein erkanntes Tokenlimit setzt an der vorhandenen Antwort fort, statt die gesamte Generierung neu zu beginnen.
@@ -66,17 +63,27 @@ Der Befehl veraendert weder die Game-Datenbank noch den Global-Chat.
 
 Nur Ollama wird als bereits vorhandene lokale Modell-Schnittstelle gemeinsam benutzt. CoreUI erzeugt dafuer das getrennte Modell `ember-coreui:latest`. Ein vorhandenes STU-Modell wie `gemma4:26b` wird weder ersetzt noch umkonfiguriert.
 
-## Benutzerprofil und CoreUI-Einstellungen
+## Profile, KI-Einstellungen und privates Wissen
 
-`settings.html` verbindet lokale Anzeigeoptionen mit einem echten serverseitigen KI-Profil:
+`settings.html` verbindet lokale Anzeigeoptionen mit einem echten serverseitigen Benutzer- und KI-Profil:
 
+- eigener sichtbarer Benutzername, ohne Aenderung der Login-E-Mail oder internen Benutzer-ID
+- privates Benutzerprofilbild als serverseitig neu gerenderte PNG-Datei
+- eigener sichtbarer CoreAI-Name und separates CoreAI-Profilbild pro Konto
 - eigener System-Prompt fuer Stil und Arbeitsweise innerhalb der unveraenderten CoreUI-Sicherheits- und Identitaetsregeln
 - Memory ein oder aus und einstellbares Memory-Limit
+- Modell-Thinking je Konto ein oder aus; rohe Gedankengaenge bleiben in beiden Stellungen privat
 - Antwortbudget von 256 bis 16384 Ollama-Tokens
 - Temperatur von 0,1 bis 1,5
+- optionaler lokaler Ollama-Modelltag, der im Chatpfad wirklich verwendet wird
 - eigene sichtbare Memory-Fakten anlegen und loeschen
+- private RAG-Lite-Quellen direkt hochladen, chunkweise verwenden und vollstaendig loeschen
 - Konto, Berechtigungsstufe, Health-Matrix, Modell und Version
 - lokaler Referenzbetrieb mit Gemma 4 und Ollama
+
+Profilbilder werden nicht als frei erreichbare statische Dateien ausgeliefert. Der private Medienendpunkt prueft die Sitzung und liefert immer nur den aktuellen Avatar des angemeldeten Kontos. JPEG- und PNG-Uploads werden dekodiert, zentral quadratisch zugeschnitten, auf maximal 512 Pixel begrenzt und als neue PNG-Datei ohne fremde Metadaten gespeichert.
+
+RAG-Lite akzeptiert `.txt`, `.md`, `.pdf` und `.docx`. PDFs benoetigen fuer diesen Einstellungsimport eine echte Textebene; Scan-PDFs ohne auslesbaren Text werden klar abgewiesen. Standardmaessig gelten 20 MiB je Datei, 40 Quellen und insgesamt 5.000.000 extrahierte Zeichen pro Konto. Kontospezifische MariaDB-Locks verhindern, dass parallele Uploads diese Quoten gemeinsam umgehen. Dokumentinhalte werden im Prompt ausdruecklich als nicht vertrauenswuerdige Daten und niemals als Systemanweisung markiert.
 
 Der vorbereitete externe Provider-Adapter bleibt standardmaessig deaktiviert. API-Schluessel werden nie im Browser gespeichert. Erst eine spaetere serverseitig getestete Implementierung kann ihn freischalten; es gibt kein Kompatibilitaetsversprechen fuer beliebige Cloud-Anbieter.
 
@@ -85,6 +92,7 @@ Der vorbereitete externe Provider-Adapter bleibt standardmaessig deaktiviert. AP
 `admin/index.html` ist nur fuer Berechtigungsstufe 0 und 1 erreichbar und arbeitet ausschliesslich gegen die CoreUI-Datenbank. Enthalten sind:
 
 - Uebersicht fuer Konten, Sitzungen, Nachrichten, Memories, Lore, Browse-Jobs und Logs
+- neue Benutzerkonten mit Anzeigename, Login-E-Mail, Startpasswort und zulaessiger Rolle anlegen
 - Benutzerrechte, zeitlich begrenzte Sperren und Sperrgruende
 - Memory CRUD fuer globale, Benutzer- und Charakter-Sichtbarkeit
 - Lore-Quellen und Chunk-Suche
@@ -122,6 +130,9 @@ Bei `sudo ./scripts/stack.sh up -d --force-recreate php web` erfolgen Runtime-Re
 | Modell | Eigenes Ollama-Modell `ember-coreui:latest` |
 | Login-Sessions | Eigener Cookie-Name `EMBERCOREUISESSID` |
 | Chat-Sitzungen | Eigene `session_id`, exakte History und Turn-Zuordnung in der CoreUI-Datenbank |
+| Profile | Kontobezogene Namen und private Medienmetadaten in der CoreUI-Datenbank |
+| Profilbilder | Authentifizierte Auslieferung aus `var/profile_media`, kein direkter Webpfad |
+| Privates RAG-Lite | Benutzergebundene Quellen und Chunks in Migration 004, Originale unter `var/knowledge_uploads` |
 | Locks | Eigener Namespace `ember_coreui:*` |
 | Laufzeitdaten | Lokale Ordner `var/`, `logs/`, `uploads/` und `assets/chat_media/` |
 | PDF-Seitenbilder | Eigener kurzlebiger Runtime-Pfad `var/pdf_pages` |
@@ -192,12 +203,12 @@ Das Archiv dauerhaft nach `/opt/ember-coreui` verschieben:
 cd /tmp
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl unzip
-export COREUI_ARCHIVE_URL='https://DEIN-SERVER/EMBER_COREUI_0_3_2_ALPHA.zip'
-curl -fL "$COREUI_ARCHIVE_URL" -o EMBER_COREUI_0_3_2_ALPHA.zip
-curl -fL "$COREUI_ARCHIVE_URL.sha256" -o EMBER_COREUI_0_3_2_ALPHA.zip.sha256
-sha256sum -c EMBER_COREUI_0_3_2_ALPHA.zip.sha256
-unzip -q EMBER_COREUI_0_3_2_ALPHA.zip
-sudo mv EMBER_COREUI_0_3_2_ALPHA /opt/ember-coreui
+export COREUI_ARCHIVE_URL='https://DEIN-SERVER/EMBER_COREUI_0_4_1_ALPHA.zip'
+curl -fL "$COREUI_ARCHIVE_URL" -o EMBER_COREUI_0_4_1_ALPHA.zip
+curl -fL "$COREUI_ARCHIVE_URL.sha256" -o EMBER_COREUI_0_4_1_ALPHA.zip.sha256
+sha256sum -c EMBER_COREUI_0_4_1_ALPHA.zip.sha256
+unzip -q EMBER_COREUI_0_4_1_ALPHA.zip
+sudo mv EMBER_COREUI_0_4_1_ALPHA /opt/ember-coreui
 cd /opt/ember-coreui
 sudo chmod 0750 scripts/*.sh
 sudo ./scripts/install.sh
@@ -211,14 +222,14 @@ Der Installer fragt nach:
 
 Anschliessend werden ausschliesslich der eigene Compose-Stack, die eigene Datenbank, das eigene CoreUI-Modell und die lokalen Projektdateien eingerichtet.
 
-## Update auf 0.3.2-alpha
+## Update auf 0.4.1-alpha
 
 Die vorhandene Datenbank, Uploads, Sitzungen und Zugangsdaten bleiben erhalten. Das neue Paket wird nur ueber die statischen Projektdateien gelegt; Runtime-Ordner werden bewusst ausgeschlossen.
 
 ```bash
 cd /home/users/game/tmp
-sha256sum -c EMBER_COREUI_0_3_2_ALPHA.zip.sha256
-unzip -q -o EMBER_COREUI_0_3_2_ALPHA.zip
+sha256sum -c EMBER_COREUI_0_4_1_ALPHA.zip.sha256
+unzip -q -o EMBER_COREUI_0_4_1_ALPHA.zip
 sudo apt-get update
 sudo apt-get install -y rsync
 
@@ -229,20 +240,18 @@ sudo rsync -a \
   --exclude='uploads/' \
   --exclude='assets/chat_media/' \
   --exclude='assets/profile_photos/' \
-  EMBER_COREUI_0_3_2_ALPHA/ /opt/ember-coreui/
+  EMBER_COREUI_0_4_1_ALPHA/ /opt/ember-coreui/
 
-sudo install -d -m 0770 -o 33 -g 33 /opt/ember-coreui/var/ember_frames
-sudo install -d -m 0770 -o 33 -g 33 /opt/ember-coreui/var/pdf_pages
 cd /opt/ember-coreui
-sudo ./scripts/stack.sh migrate
-sudo ./scripts/stack.sh up -d --force-recreate browse php web
-sudo ./scripts/stack.sh scrub-thinking
+sudo ./scripts/stack.sh up -d --force-recreate php web
 sudo ./scripts/preflight.sh
 ```
 
-`migrate` legt die Benutzer-KI- und Admin-Tabellen an, erweitert die private Nachrichtenspalte auf `MEDIUMTEXT` und aktiviert die echte Sitzungsstruktur. Der Befehl ist idempotent und arbeitet nur in der isolierten CoreUI-Datenbank. Nicht eindeutig trennbare Alt-Nachrichten bleiben im wiederhergestellten Verlauf erhalten. `scrub-thinking` ersetzt historische Raw-Thinking-Werte durch den sicheren festen Status.
+`stack.sh up` erneuert die statische Runtime-Konfiguration, legt fehlende private Speicherordner mit den passenden Containerrechten an und wendet alle ausstehenden Migrationen automatisch an. Migration `006_account_security` ergaenzt Passwort- und Login-Zeitpunkte sowie widerrufbare, gehashte SQL-Anmeldetokens. Bestehende PHP-Logins werden beim ersten authentifizierten Aufruf transparent in die neue Sitzungsschicht uebernommen. Alle Aenderungen bleiben in der isolierten CoreUI-Datenbank; Benutzer, Chat-Sitzungen, Nachrichten, Memories, Lore und Uploads bleiben erhalten.
 
-Ein erneutes Erzeugen des Modells, ein neuer Lore-Import oder ein Account-Bootstrap sind nicht erforderlich. Die vorhandene `api/config.local.php` bleibt erhalten. Selbst ein dort verbliebener `STU_EMBER_MAX_REPLY_CHARS`-Altwert von 7200 kann das neue Benutzerbudget nicht mehr unter die sichere CoreUI-Untergrenze klemmen. Bei sehr alten Staenden vor `0.2.3-alpha` muss das PHP-Image einmal mit `sudo ./scripts/stack.sh build --no-cache php` neu gebaut werden, damit Poppler vorhanden ist.
+Ein erneutes Erzeugen des Modells, ein neuer Lore-Import oder ein Account-Bootstrap sind nicht erforderlich. Die vorhandene `api/config.local.php` und die produktive Adresse `https://coreui.starlight-unit.de` bleiben erhalten. Bei sehr alten Staenden vor `0.2.3-alpha` muss das PHP-Image einmal mit `sudo ./scripts/stack.sh build --no-cache php` neu gebaut werden, damit Poppler, GD, ZIP und die benoetigten PHP-Erweiterungen vorhanden sind.
+
+Nach dem Update sollten Anmeldung, Passwortwechsel, Anzeige der aktuellen Geraete-Anmeldung, ein zweiter Browserlogin, dessen Widerruf, JSON-Kontoexport und die Ollama-Modellliste geprueft werden. Danach weiterhin den Thinking-Schalter in beiden Stellungen, eine Nachricht mit zehn kleinen Testdateien, Sitzungsreload, RAG-Lite und endgueltige Sitzungsloeschung testen.
 
 ## Testen ohne Eingriff in bestehende Domains
 
@@ -420,6 +429,8 @@ sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/video-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/pdf-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/thinking-sanitize-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/reply-pipeline-selftest.php
+sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/session-selftest.php
+sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/profile-knowledge-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/logo-alpha-selftest.php
 sudo ./scripts/ollama-parallel-report.sh
 sudo grep -E 'ember_(video|pdf)_|ember_vision_payload' logs/stu_error.log | tail -n 30
@@ -457,7 +468,9 @@ sudo tar -C /opt -czf /var/backups/ember-coreui/files.tgz \
   ember-coreui/var/compose.env \
   ember-coreui/assets/chat_media \
   ember-coreui/uploads \
-  ember-coreui/var/console_media
+  ember-coreui/var/console_media \
+  ember-coreui/var/profile_media \
+  ember-coreui/var/knowledge_uploads
 ```
 
 ## Nativer Installer fuer einen leeren Einzelserver
@@ -499,7 +512,7 @@ Ember CoreUI-Versionen sind nicht mit Repack-Versionen gleichzusetzen. Der Mobil
 
 ## Copyright und rechtliche Finalisierung
 
-Copyright: `© 2026 Patrick Schildgen · Starlight Unit Studios · Lizenziert unter CC BY-NC-SA 4.0`
+Copyright: `© 2026 Starlight Unit Studios. Alle Rechte vorbehalten.`
 
 Das Studio-Logo wird aus der bereitgestellten Originaldatei verwendet. Fuer die helle CoreUI-Oberflaeche wurde ausschliesslich der schwarze Hintergrund transparent freigestellt; Motiv, Wortlaut, Proportionen und vorhandene dunkle Konturen bleiben erhalten. Die Lizenzen der lokal mitgelieferten Schriften sind getrennt unter `assets/fonts/LICENSES.md` dokumentiert.
 
@@ -507,4 +520,4 @@ Ein vollstaendiges deutsches Impressum und eine abschliessende Datenschutzerklae
 
 ## Alpha-Status
 
-`0.3.2-alpha` stellt echte, dauerhaft getrennte CoreUI-Chat-Sitzungen samt sicherem Archiv und endgueltiger SQL-Loeschung bereit. Die koexistenzsichere Installationsarchitektur, vollstaendig gepruefte Antwortausgabe, fortsetzbaren Ollama-Antworten, Benutzer-KI-Profile und das isolierte Admin Core bleiben enthalten. PDF-Dateien mit Textebene werden direkt gelesen, Scan-PDFs verwenden eine begrenzte Vision-Stichprobe. Die Browser-Agentenansicht zeigt echte Frame-Bursts und bleibt ebenfalls an die ausloesende Sitzung gebunden. Interne Modellgedanken verlassen die Servergrenze nicht. Video- und Scan-Erkennung bleiben von der Qualitaet und den Vision-Faehigkeiten des verwendeten Gemma-4-Modells abhaengig. Der externe Provider-Adapter ist nur vorbereitet und noch nicht fuer produktive Nutzung freigeschaltet.
+`0.4.1-alpha` ergaenzt widerrufbare Login-Sitzungen, sicheren Passwortwechsel, privaten JSON-Kontoexport und eine gegen Ollama validierte Modellliste. Echte Chat-Sitzungen, Profile, private Avatare, CoreAI-Rufname, schaltbares Thinking, bis zu zehn persistente Nachrichtenanhaenge, Benutzeranlage, RAG-Lite, Antwortschutz und Admin Core bleiben enthalten. Passwort-Hashes, Login-Tokens, private Serverpfade und interne Thinking-Inhalte werden nicht exportiert. Der externe Provider-Adapter bleibt vorbereitet und ist nicht fuer produktive Nutzung freigeschaltet.

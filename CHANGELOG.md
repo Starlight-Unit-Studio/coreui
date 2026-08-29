@@ -2,6 +2,85 @@
 
 Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versioniert.
 
+## v0.4.1-alpha - 29.08.2026
+
+- Kontosicherheitsbereich in den Benutzereinstellungen ergaenzt. Er trennt Geraete-Anmeldungen klar von den bereits vorhandenen Chat-Sitzungen.
+- Sicheren Passwortwechsel mit aktuellem Passwort, Mindestlaenge 12, Bestaetigung, Rate-Limit, Passwort-Hashing und Audit eingefuehrt.
+- Nach einem Passwortwechsel werden alle vorhandenen Login-Sitzungen widerrufen und ausschliesslich fuer das aktuelle Geraet ein frisches Token ausgegeben.
+- Neue SQL-Tabelle `stu_auth_sessions` fuer widerrufbare Anmeldungen ergaenzt. In der Datenbank liegt nur SHA-256 des zufaelligen Tokens, niemals das Roh-Token.
+- Bestehende authentifizierte PHP-Sitzungen werden beim ersten Aufruf transparent in die SQL-Schicht uebernommen.
+- Aktive Anmeldungen zeigen Geraetetyp, Browser, letzte Aktivitaet und Ablaufzeit. Token und Token-Hash werden nie an den Browser gesendet.
+- Einzelwiderruf einer fremden eigenen Anmeldung sowie Sammelwiderruf aller anderen Geraete umgesetzt. Die aktuelle Sitzung kann nicht versehentlich ueber den Einzelwiderruf entfernt werden.
+- SQL-Anmeldungen laufen nach 30 Tagen Inaktivitaet ab und werden bei Aktivitaet hoechstens einmal pro Minute aktualisiert.
+- Passwort-Reset widerruft nun ebenfalls alle aktiven Login-Sitzungen.
+- Privaten JSON-Kontoexport ergaenzt. Enthalten sind Konto-Metadaten, Profil, Avatar-Daten, KI-Einstellungen, eigene Charaktere, eigene Memories, private RAG-Quellen und Chunks, Chat-Sitzungen, Nachrichten sowie Anhangmetadaten.
+- Passwort-Hashes, Reset-Codes, Login-Token, Token-Hashes, interne Thinking-Inhalte, private Serverpfade und hochgeladene Dokumentbinaerdaten sind vom Export ausgeschlossen.
+- Jede Exportabfrage ist serverseitig an die authentifizierte `user_id` gebunden. Globaler Studio-Kanon wird nicht als persoenlicher Besitz exportiert.
+- Freie Texteingabe fuer Ollama-Modellnamen durch eine echte Auswahlliste der lokal installierten Modelle ersetzt.
+- Der Modellkatalog wird nur von der betreiberkonfigurierten `STU_EMBER_OLLAMA_URL` abgeleitet. Benutzer koennen weder Host noch Protokoll beeinflussen; HTTP-Redirects sind deaktiviert.
+- Eine Modellwahl wird unmittelbar vor dem Speichern erneut gegen `/api/tags` geprueft. Nicht installierte oder ungueltige Modellnamen werden abgelehnt.
+- Serverstandard bleibt als explizite Option erhalten. Bereits gespeicherte, inzwischen entfernte Modelle werden sichtbar als nicht mehr installiert markiert.
+- Nginx-Allowlists fuer Compose und Native um `account_security.php`, `account_export.php` und `models.php` erweitert.
+- Migration `006_account_security` ergaenzt `password_changed_at`, `last_login_at` und die neue Auth-Sitzungstabelle mit Benutzer-Fremdschluessel und Aktivindex.
+- Healthcheck, Compose-Preflight, Native-Preflight und beide Installer auf Migration 006 und die neuen Endpunkte erweitert.
+- Neuer Account-Security-Selftest prueft Tokenabschirmung, CSRF- und Passwortgrenzen, Exportausschluesse, Modellvalidierung sowie SQL-Listen- und Widerrufslogik in einer zurueckgerollten Testtransaktion.
+- PHP-Grenze `max_file_uploads` fuer Compose und Native auf zehn angeglichen. Die bestehende produktive Anhanglogik bleibt weiterhin bei maximal zehn Dateien je Nachricht.
+- Versionsparameter, Healthcheck, README, TXT-Changelog-Archiv und Uebergabeprotokoll auf `0.4.1-alpha` aktualisiert.
+- Produktive Adresse bleibt `https://coreui.starlight-unit.de`. Die fruehere Adresse `webui.starlight-unit.de` ist nur noch historischer Kontext.
+- Game, Homepage, KeyHelp-VHosts, Apache, STU-Repack, Game-Datenbank, bestehende CoreUI-Konfiguration und persistente Nutzerdaten bleiben unveraendert.
+
+## v0.4.0-alpha - 29.08.2026
+
+- Bisher teilweise lokale Einstellungsseite zu einem echten kontobezogenen Konfigurationsbereich ausgebaut. Profil, KI-Laufzeitwerte, Memory und privates Wissen werden serverseitig dem authentifizierten Benutzer zugeordnet.
+- Eigenes CoreUI-Profil je Benutzer mit sichtbarem Anzeigenamen eingefuehrt. Die Login-E-Mail, numerische Benutzer-ID und stabile interne Operator-ID bleiben bei einer Namensaenderung unveraendert.
+- Frei waehlbaren CoreAI-Anzeigenamen je Konto ergaenzt. Die sichtbare Bezeichnung wird in Chatblasen, Denkstatus, Tippanzeige und Eingabeplatzhalter verwendet, ohne Embers technische Identitaet oder Sicherheitsregeln umzuschreiben.
+- Zwei getrennte private Avatar-Slots aufgenommen: Benutzer und CoreAI. Beide koennen in den Einstellungen hochgeladen, ersetzt und geloescht werden.
+- Avatarannahme auf PNG und JPEG bis 4 MiB begrenzt. Abmessungen, Pixelmenge, MIME-Typ und echte Dekodierbarkeit werden serverseitig geprueft.
+- Hochgeladene Bilder werden zentral quadratisch zugeschnitten, auf maximal 512 mal 512 Pixel skaliert, neu als PNG kodiert und ohne fremde Bildmetadaten gespeichert.
+- Avatar-Dateien aus dem statischen Webroot herausgehalten. `profile_media.php` liefert nur den Avatar des angemeldeten Kontos mit privatem Cache-Verhalten aus.
+- Zufallsbasierte Medien-ID als exakten Cache-Buster verwendet. Auch zwei unmittelbar aufeinanderfolgende Avatar-Uploads zeigen sicher den neuesten Stand.
+- Neue Profilendpunkte `profile.php` und `profile_media.php` samt gemeinsamem `profile_store.php` hinzugefuegt. Schreiboperationen verlangen Authentifizierung und CoreUI-CSRF-Token.
+- Automatische Altaccount-Provisionierung eingebaut. Bereits vorhandene Benutzer erhalten beim naechsten Login ein Profil und, falls bisher keiner existiert, einen stabilen privaten Operator.
+- Gemeinsames transaktionales Account-Provisioning fuer Registrierung und Admin Core eingefuehrt. Neue Benutzer starten nicht mehr ohne Charakter- und Profildaten.
+- Admin Core um eine echte Benutzeranlage mit Anzeigename, Login-E-Mail, Startpasswort und Rolle erweitert. System-Admin kann Level 1 bis 4, Admin kann nur niedrigere Rollen Level 2 bis 4 vergeben.
+- Startpasswoerter aus dem Admin Core auf mindestens 12 Zeichen begrenzt. Passwortwerte werden weder im Audit noch in API-Antworten gespeichert oder ausgegeben.
+- Benutzerliste um Profilname und internen Operator erweitert. Suche findet jetzt Login-E-Mail, sichtbaren Namen und Operatornamen.
+- Einstellungsseite um einen optionalen lokalen Ollama-Modelltag erweitert. Der gespeicherte `model_override` wird nun im gemeinsamen Chatpfad tatsaechlich ausgewertet; leer verwendet weiterhin den Serverstandard.
+- System-Prompt, Memory-Schalter, Memory-Limit, Antwortbudget und Temperatur bleiben pro Benutzer gespeichert und werden gemeinsam mit Profil und Modellwahl geladen.
+- Kontobezogenen Modell-Thinking-Schalter ergaenzt. CoreUI sendet den offiziellen Ollama-Parameter `think` bei Hauptantworten als `true` oder `false`, statt nur die Anzeige zu verstecken.
+- Bei deaktiviertem Thinking werden keine Denkstatus-Ereignisse und kein Denkstatus in neuen Verlaufszeilen gespeichert. Die bestehende Schutzschranke bleibt auch bei aktiviertem Thinking bestehen: Rohe Modellgedanken verlassen den Server nicht.
+- Composer auf bis zu zehn Dateien pro Nachricht erweitert. Mehrfachauswahl, sequentieller Upload mit Fortschritt, einzelne Entfernung vor dem Senden und Wiederherstellung der Auswahl bei einem Sendefehler sind enthalten.
+- Vor dem Senden entfernte Uploads werden ueber einen CSRF-geschuetzten Eigentuemercall geloescht, sofern keine Nachricht sie inzwischen referenziert. Zeilensperren schliessen das Rennen zwischen Entfernen und gleichzeitigem Nachrichten-INSERT.
+- Neue Zuordnungstabelle `stu_console_message_attachments` speichert Anhaenge geordnet und benutzergebunden. `file_uuid` bleibt nur fuer Altclients und bereits vorhandene Einzeleintraege erhalten.
+- Nachrichtenverlauf und optimistische Clientzeilen liefern jetzt ein `attachments`-Array. Alte Clients koennen weiterhin das erste Element ueber das kompatible Feld `attachment` lesen.
+- Serverseitige Eigentumspruefung fuer jede Anhang-UUID eingebaut. Fremde, fehlende oder mehr als zehn UUIDs werden vor dem Nachrichten-INSERT abgelehnt; Nachricht und Zuordnungen werden gemeinsam transaktional gespeichert.
+- Gemeinsame Anhangsauswertung auf bis zu zehn Text-, Dokument- oder Mediendateien erweitert. Das Textbudget wird kontrolliert aufgeteilt und Vision-Eingaben werden auf hoechstens 16 Bilder, Frames oder PDF-Seiten begrenzt.
+- Sitzungsloeschung um Mehrfachanhaenge erweitert. Zuordnungen werden per Fremdschluessel entfernt und Mediendateien nur geloescht, wenn weder alte `file_uuid`- noch neue 1:n-Referenzen verbleiben.
+- Externe OpenAI-kompatible Provider bleiben als deaktivierter Adapter vorbereitet. Der lokale Gemma-4- und Ollama-Pfad bleibt Referenzbetrieb; API-Schluessel gelangen weiterhin nie in Browser oder Datenbankeinstellungen.
+- Privates RAG-Lite direkt in den Benutzereinstellungen eingefuehrt. TXT-, Markdown-, Text-PDF- und DOCX-Dateien koennen hochgeladen, gelesen, gechunkt, gelistet und vollstaendig geloescht werden.
+- Textnormalisierung, kontrollierte Unicode-Konvertierung und Chunking mit standardmaessig 1400 Zeichen sowie 180 Zeichen Ueberlappung umgesetzt.
+- PDF-Import verwendet lokal `pdftotext` mit begrenzter Laufzeit. Scan-PDFs ohne Textebene werden eindeutig abgelehnt, statt einen erfundenen Dokumentinhalt zu erzeugen.
+- DOCX-Import liest ausschliesslich `word/document.xml`, deaktiviert externe XML-Netzwerkzugriffe und begrenzt XML-Groesse sowie Absatzanzahl.
+- Private Wissensquellen standardmaessig auf 20 MiB je Datei, 40 Quellen, 5.000.000 Zeichen und 1200 Chunks je Einzeldokument begrenzt. Betreiber koennen die Hauptquoten ueber isolierte App-Settings steuern.
+- Kontospezifischen MariaDB-Lock um Quotenpruefung und Persistenz gelegt. Gleichzeitige Uploads desselben Benutzers koennen die Quelle- oder Zeichenquote nicht gemeinsam umgehen.
+- Originaldateien unter `var/knowledge_uploads` gespeichert und nie direkt durch Nginx ausgeliefert. Quellenmetadaten und Chunks liegen in eigenen CoreUI-Tabellen.
+- RAG-Suche filtert in Volltext- und LIKE-Fallback immer nach `user_id` und Quelle. Ein Benutzer kann keine Chunks eines anderen Kontos finden oder loeschen.
+- Privates Benutzerwissen klar vom globalen Studio-Kanon in `ember_knowledge_chunks` getrennt. Uploads veraendern weder Bibel- noch Kompendium-Importe.
+- Relevante private Chunks in den Modellprompt aufgenommen und ausdruecklich als nicht vertrauenswuerdige Daten markiert. Dokumentanweisungen erhalten keine Systemprioritaet.
+- Quellenloeschung entfernt Metadaten und Chunks in einer SQL-Transaktion und danach die gespeicherte Originaldatei. Die Oberflaeche aktualisiert Zaehler und Liste aus der Serverantwort.
+- Migration `004_profiles_knowledge` hinzugefuegt. Sie erstellt Profile, Profilmedien, private Wissensquellen und private Chunks mit Benutzer- und Quellindizes, Fremdschluesseln und Volltextindex.
+- Migration `005_thinking_attachments` hinzugefuegt. Sie ergaenzt den Thinking-Schalter, erstellt die 1:n-Anhangzuordnung und uebernimmt bestehende `file_uuid`-Eintraege verlustfrei.
+- App-Defaults fuer RAG-Quellenzahl, Dateigroesse und Gesamtzeichen in Migration 004 aufgenommen, ohne vorhandene Betreiberwerte zu ueberschreiben.
+- Neue private Speicherpfade `var/profile_media` und `var/knowledge_uploads` als eigene beschreibbare PHP-Volumes eingebunden. Der Webcontainer besitzt keinen direkten Mount fuer diese Dateien.
+- `stack.sh` legt die neuen privaten Verzeichnisse bei `up`, `start` und `restart` mit passenden Containerrechten an. Das funktioniert auch beim normalen Update, obwohl `var/` absichtlich vom `rsync` ausgeschlossen bleibt.
+- Compose- und Native-Nginx-Allowlists um Profil-, Medien- und Knowledge-Endpunkte erweitert. Unauthentifizierte Routenpruefungen erwarten bewusst HTTP 401.
+- Healthcheck um Migrationen 004 und 005, alle neuen Tabellen, die Thinking-Spalte und beide privaten Schreibpfade erweitert.
+- Eigenen transaktionalen Profil- und Knowledge-Selftest hinzugefuegt. Er prueft Account-Provisioning, Namen, Chunker, Volltextabruf und besonders die Trennung zweier Benutzer und rollt seine Testdaten vollstaendig zurueck.
+- Reply-Pipeline- und Sitzungs-Selftests um Thinking-Wahl, Zehn-Dateien-Grenze, persistente Zuordnung sowie deren transaktionale Loeschung erweitert. Der Preflight prueft zusaetzlich PHP-Erweiterungen, Routen, Storage-Rechte und die vollstaendige Verdrahtung der 0.4.0-Funktionen.
+- Nativen Fallback-Installer auf Migration 004 und die neuen privaten Speicherpfade angeglichen. Standard-Compose- und Native-Neuinstallation besitzen damit denselben Schema- und Funktionsstand.
+- README, TXT-Changelog-Archiv und Uebergabeprotokoll auf `0.4.0-alpha` sowie die produktive Adresse `https://coreui.starlight-unit.de` aktualisiert.
+- Echte Sitzungen, archivgeschuetzte endgueltige Loeschung, Thinking-Schranke, lange Ollama-Antworten, Browse-Frames, Game, Homepage, KeyHelp, Apache, Host-PHP, Repack-Pfade und bestehende STU-Datenbank bleiben unveraendert erhalten.
+
 ## v0.3.2-alpha - 27.08.2026
 
 - Endgueltige Sitzungsloeschung als eigenstaendige Serverfunktion ergaenzt. Die bisherige Aktion `delete` archivierte lediglich; `delete_permanently` fuehrt nun eine echte SQL-Loeschung aus.

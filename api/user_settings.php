@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/ai_settings.php';
+require_once __DIR__ . '/model_catalog.php';
 
 $pdo = stu_pdo();
 $uid = stu_require_user_id();
@@ -32,6 +33,19 @@ stu_require_csrf();
 
 $body = stu_read_json_body();
 try {
+  $requestedModel = trim((string)($body['model_override'] ?? ''));
+  if ($requestedModel !== '') {
+    if (!coreui_model_name_valid($requestedModel)) {
+      stu_json(['ok'=>false, 'error'=>'invalid_model_name'], 400);
+    }
+    try {
+      if (!coreui_ollama_model_exists($requestedModel)) {
+        stu_json(['ok'=>false, 'error'=>'model_not_available'], 400);
+      }
+    } catch (RuntimeException $catalogError) {
+      stu_json(['ok'=>false, 'error'=>$catalogError->getMessage()], 503);
+    }
+  }
   $settings = coreui_ai_settings_save($pdo, $uid, $body);
   stu_json([
     'ok' => true,

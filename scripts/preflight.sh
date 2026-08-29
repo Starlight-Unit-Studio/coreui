@@ -81,14 +81,31 @@ UI_FILES=(
   js/settings.js
   js/admin.js
   api/user_settings.php
+  api/model_catalog.php
+  api/models.php
+  api/auth_session_store.php
+  api/account_security.php
+  api/account_export.php
   api/admin.php
   api/ai_settings.php
+  api/account_store.php
+  api/profile_store.php
+  api/profile.php
+  api/profile_media.php
+  api/knowledge_store.php
+  api/knowledge.php
   api/console_session_store.php
+  api/console_attachment_store.php
   api/console_sessions.php
   api/console_messages.php
   database/migrations/002_coreui_management.sql
   database/migrations/003_console_sessions.sql
+  database/migrations/004_profiles_knowledge.sql
+  database/migrations/005_thinking_attachments.sql
+  database/migrations/006_account_security.sql
   scripts/session-selftest.php
+  scripts/profile-knowledge-selftest.php
+  scripts/account-security-selftest.php
   images/starlight_unit_studios_logo_transparent_v030.png
 )
 for ui_file in "${UI_FILES[@]}"; do
@@ -112,6 +129,32 @@ if grep -Fq "sse_send('token'" "$PROJECT_ROOT/api/console_stream.php"; then
   fail 'Der SSE-Endpunkt sendet noch ungepruefte Modell-Tokens an den Browser.'
 else
   ok 'SSE-Ausgaben passieren erst nach der serverseitigen Antwortpruefung.'
+fi
+
+if grep -Fq "model_override: aiModelOverride" "$PROJECT_ROOT/js/settings.js" \
+    && grep -Fq "coreui_private_knowledge_block" "$PROJECT_ROOT/api/chat.php" \
+    && grep -Fq "user_create" "$PROJECT_ROOT/api/admin.php"; then
+  ok 'Funktionale Modellwahl, privates RAG-Lite und Benutzeranlage sind paketiert.'
+else
+  fail 'Mindestens eine neue 0.4.0-Funktion ist nicht vollstaendig verdrahtet.'
+fi
+
+if grep -Fq "thinking_enabled: aiThinkingEnabled" "$PROJECT_ROOT/js/settings.js" \
+    && grep -Fq "'think'    => ember_thinking_enabled()" "$PROJECT_ROOT/api/console_stream.php" \
+    && grep -Fq 'MAX_MESSAGE_ATTACHMENTS = 10' "$PROJECT_ROOT/js/console-app.js" \
+    && grep -Fq 'stu_console_message_attachments' "$PROJECT_ROOT/database/migrations/005_thinking_attachments.sql"; then
+  ok 'Thinking-Schalter und bis zu zehn persistente Nachrichtenanhaenge sind paketiert.'
+else
+  fail 'Thinking-Schalter oder Mehrfachanhaenge sind unvollstaendig paketiert.'
+fi
+
+if grep -Fq 'coreui_ollama_model_exists' "$PROJECT_ROOT/api/user_settings.php" \
+    && grep -Fq 'password_change' "$PROJECT_ROOT/api/account_security.php" \
+    && grep -Fq 'thinking_content_exported' "$PROJECT_ROOT/api/account_export.php" \
+    && grep -Fq 'loadAccountSecurity()' "$PROJECT_ROOT/js/settings.js"; then
+  ok 'Kontosicherheit, sicherer Datenexport und validierte Ollama-Modellwahl sind paketiert.'
+else
+  fail 'Mindestens eine neue 0.4.1-Funktion ist nicht vollstaendig verdrahtet.'
 fi
 
 if (( FAILURES > 0 )); then
@@ -182,6 +225,30 @@ if (( ${#COMPOSE_CMD[@]} > 0 )); then
     fail 'Migration 003 fehlt. Fuehre scripts/stack.sh migrate aus.'
   fi
 
+  if compose exec -T php php -r \
+      'require "/var/www/coreui/api/db.php"; $p=stu_pdo(); $p->query("SELECT user_id,display_name,assistant_name FROM stu_coreui_profiles LIMIT 0"); $p->query("SELECT user_id,slot FROM stu_coreui_profile_media LIMIT 0"); $p->query("SELECT uuid,user_id,status FROM stu_user_knowledge_sources LIMIT 0"); $p->query("SELECT source_uuid,user_id,chunk_text FROM stu_user_knowledge_chunks LIMIT 0");' \
+      >/dev/null 2>&1; then
+    ok 'Migration 004: Profile, CoreAI-Identitaet und privates RAG-Lite sind bereit.'
+  else
+    fail 'Migration 004 fehlt. Fuehre scripts/stack.sh migrate aus.'
+  fi
+
+  if compose exec -T php php -r \
+      'require "/var/www/coreui/api/db.php"; $p=stu_pdo(); $p->query("SELECT thinking_enabled FROM stu_user_ai_settings LIMIT 0"); $p->query("SELECT message_id,media_uuid,user_id,position FROM stu_console_message_attachments LIMIT 0");' \
+      >/dev/null 2>&1; then
+    ok 'Migration 005: Thinking-Wahl und persistente Mehrfachanhaenge sind bereit.'
+  else
+    fail 'Migration 005 fehlt. Fuehre scripts/stack.sh migrate aus.'
+  fi
+
+  if compose exec -T php php -r \
+      'require "/var/www/coreui/api/db.php"; $p=stu_pdo(); $p->query("SELECT password_changed_at,last_login_at FROM stu_users LIMIT 0"); $p->query("SELECT token_hash,expires_at,revoked_at FROM stu_auth_sessions LIMIT 0");' \
+      >/dev/null 2>&1; then
+    ok 'Migration 006: widerrufbare Anmeldungen und Passwortzeitpunkte sind bereit.'
+  else
+    fail 'Migration 006 fehlt. Fuehre scripts/stack.sh migrate aus.'
+  fi
+
   for extension_name in curl dom gd mbstring pdo_mysql zip; do
     if compose exec -T php php -m 2>/dev/null | grep -Fxq "$extension_name"; then
       ok "PHP-Erweiterung aktiv: $extension_name"
@@ -224,6 +291,24 @@ if (( ${#COMPOSE_CMD[@]} > 0 )); then
     fail "$session_selftest"
   fi
 
+  profile_knowledge_selftest=''
+  if profile_knowledge_selftest="$(compose exec -T -u 33:33 php php scripts/profile-knowledge-selftest.php 2>&1)"; then
+    profile_knowledge_selftest="${profile_knowledge_selftest//$'\r'/}"
+    ok "$profile_knowledge_selftest"
+  else
+    profile_knowledge_selftest="${profile_knowledge_selftest//$'\r'/}"
+    fail "$profile_knowledge_selftest"
+  fi
+
+  account_security_selftest=''
+  if account_security_selftest="$(compose exec -T -u 33:33 php php scripts/account-security-selftest.php 2>&1)"; then
+    account_security_selftest="${account_security_selftest//$'\r'/}"
+    ok "$account_security_selftest"
+  else
+    account_security_selftest="${account_security_selftest//$'\r'/}"
+    fail "$account_security_selftest"
+  fi
+
   logo_selftest=''
   if logo_selftest="$(compose exec -T -u 33:33 php php scripts/logo-alpha-selftest.php 2>&1)"; then
     logo_selftest="${logo_selftest//$'\r'/}"
@@ -264,6 +349,8 @@ if (( ${#COMPOSE_CMD[@]} > 0 )); then
     /var/www/coreui/logs \
     /var/www/coreui/var/cache \
     /var/www/coreui/var/console_media \
+    /var/www/coreui/var/profile_media \
+    /var/www/coreui/var/knowledge_uploads \
     /var/www/coreui/var/ember_frames \
     /var/www/coreui/var/pdf_pages \
     /var/www/coreui/uploads/ember_browse \
@@ -323,6 +410,16 @@ if [[ "$SESSION_ROUTE_STATUS" == '401' || "$SESSION_ROUTE_STATUS" == '400' ]]; t
 else
   fail "Sitzungs-History-Endpunkt nicht korrekt geroutet (HTTP ${SESSION_ROUTE_STATUS:-000})."
 fi
+
+for private_route in profile knowledge profile_media account_security account_export models; do
+  route_status="$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' \
+    "http://127.0.0.1:${COREUI_HTTP_PORT}/api/${private_route}.php" 2>/dev/null || true)"
+  if [[ "$route_status" == '401' ]]; then
+    ok "Privater CoreUI-Endpunkt korrekt geroutet: ${private_route}.php"
+  else
+    fail "CoreUI-Endpunkt ${private_route}.php nicht korrekt geroutet (HTTP ${route_status:-000})."
+  fi
+done
 
 if command -v ollama >/dev/null 2>&1 \
     && ollama show "${COREUI_MODEL_NAME}" >/dev/null 2>&1; then

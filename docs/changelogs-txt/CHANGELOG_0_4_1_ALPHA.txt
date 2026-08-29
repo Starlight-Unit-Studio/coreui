@@ -1,0 +1,79 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.4.1-alpha
+DATUM:   29.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Die Benutzereinstellungen besitzen jetzt einen echten Bereich fuer Kontosicherheit. Geraete-Anmeldungen werden ausdruecklich von den vorhandenen Chat-Sitzungen unterschieden.
+* Benutzer koennen ihr Passwort direkt in CoreUI aendern. Dafuer sind das aktuelle Passwort, ein neues Passwort mit mindestens 12 Zeichen und eine identische Bestaetigung erforderlich.
+* Der Passwortwechsel ist durch die bestehende authentifizierte Sitzung, CoreUI-CSRF und ein eigenes Rate-Limit geschuetzt.
+* Das aktuelle Passwort wird mit password_verify geprueft. Das neue Passwort wird ausschliesslich als PASSWORD_DEFAULT-Hash gespeichert.
+* Ein identisches altes und neues Passwort wird abgelehnt.
+* Nach erfolgreichem Passwortwechsel werden saemtliche bisherigen Login-Sitzungen des Kontos widerrufen.
+* Fuer das aktuell verwendete Geraet wird nach dem Passwortwechsel eine neue PHP-Sitzungs-ID und ein neues SQL-Anmeldetoken erzeugt.
+* Schlaegt die Erzeugung des neuen Tokens nach der bereits abgeschlossenen Passwortaenderung fehl, wird die lokale Sitzung sicher beendet und eine erneute Anmeldung verlangt.
+* Passwort-Reset ueber Token oder Code widerruft ebenfalls alle bestehenden Login-Sitzungen.
+* Neue Migration 006_account_security ergaenzt password_changed_at und last_login_at in stu_users.
+* Migration 006 erstellt stu_auth_sessions mit Benutzerzuordnung, Geraetebezeichnung, User-Agent, Erstellungszeit, letzter Aktivitaet, Ablaufzeit und Widerrufsstatus.
+* Das zufaellige 256-Bit-Anmeldetoken bleibt ausschliesslich in der geschuetzten PHP-Sitzung. MariaDB erhaelt nur den SHA-256-Hash.
+* Aktive SQL-Anmeldungen werden bei jedem authentifizierten Request validiert. Widerrufene oder abgelaufene Tokens verlieren sofort den Zugriff.
+* Die letzte Aktivitaet und die rollende Ablaufzeit werden hoechstens einmal pro Minute geschrieben, damit normale UI-Aufrufe keine unnoetige Datenbanklast erzeugen.
+* Login-Sitzungen laufen nach 30 Tagen ohne Aktivitaet ab.
+* Bereits vor dem Update bestehende authentifizierte PHP-Sitzungen werden beim ersten geschuetzten Aufruf transparent in die neue SQL-Schicht uebernommen.
+* Die Einstellungsseite listet bis zu 50 aktive Anmeldungen mit Geraet, Browser, letzter Aktivitaet und Ablaufzeit.
+* Die aktuelle Anmeldung wird sichtbar als dieses Geraet markiert.
+* Eine andere eigene Anmeldung kann einzeln widerrufen werden. Der Endpunkt verlangt Benutzerbesitz und akzeptiert die aktuelle Sitzung nicht als Einzelziel.
+* Mit einer eigenen Sammelaktion koennen alle anderen Geraete gleichzeitig abgemeldet werden.
+* Token-Hashes werden vor jeder Sitzungsantwort aus den SQL-Zeilen entfernt und gelangen niemals in DOM, JSON-Export oder Auditdetails.
+* Sicherheitsaktionen werden bestmoeglich im bestehenden stu_admin_audit protokolliert, ohne Passwort oder Token zu speichern.
+* Ein privater JSON-Kontoexport wurde direkt in den Einstellungen aufgenommen.
+* Der Export enthaelt Konto-Metadaten, sichtbares Profil, beide Avatar-Slots inklusive Bilddaten, persoenliche KI-Einstellungen, eigene Charaktere, eigene und charakterbezogene Memories, private RAG-Quellen, private RAG-Chunks, Chat-Sitzungen, Chat-Nachrichten und Anhangmetadaten.
+* Der Export enthaelt keine globalen Studio-Memories und keinen global kuratierten Knowledge-Kanon als angeblich persoenliche Daten.
+* Passwort-Hashes, Passwort-Reset-Codes, Roh-Tokens, Token-Hashes, interne Thinking-Inhalte, gespeicherte Serverpfade und hochgeladene Dokumentbinaerdaten werden nicht exportiert.
+* Chatnachrichten werden ausschliesslich aus channel console und mit der authentifizierten user_id gelesen.
+* Anhangzuordnungen werden nochmals ueber die eigene Nachricht mit dem Benutzer verknuepft.
+* Jede weitere Exportabfrage besitzt einen direkten user_id-Filter oder verwendet ausschliesslich Charakter-IDs desselben Benutzers.
+* Der JSON-Download verwendet UTF-8, eine eindeutige Zeitstempel-Datei, no-store und nosniff.
+* Der freie Text fuer model_override wurde durch eine sichere Ollama-Auswahlliste ersetzt.
+* models.php liest die lokal installierten Modelle ueber Ollamas /api/tags-Endpunkt.
+* Die Tags-URL wird ausschliesslich aus der betreiberkontrollierten STU_EMBER_OLLAMA_URL abgeleitet. Benutzerinput kann weder Zielhost noch Protokoll festlegen.
+* Modellkatalogaufrufe folgen keinen HTTP-Redirects, verwenden kurze Verbindungs- und Gesamtlaufzeiten und erwarten eine gueltige JSON-Modellliste.
+* Modellnamen werden auf eine begrenzte Ollama-kompatible Zeichenmenge und maximal 160 Zeichen reduziert.
+* Vor dem Speichern wird ein nicht leerer Modellwert erneut gegen die aktuelle Ollama-Liste geprueft.
+* Nicht installierte Modelle liefern model_not_available. Ein nicht erreichbarer Katalog speichert keinen ungeprueften neuen Modellwert.
+* Ein leerer Auswahlwert verwendet weiterhin den sicheren Serverstandard STU_EMBER_MODEL.
+* Ein zuvor gespeichertes, inzwischen entferntes Modell bleibt sichtbar als nicht mehr installiert markiert, bis der Benutzer einen verfuegbaren Wert oder den Serverstandard auswaehlt.
+* Compose- und Native-Nginx-Allowlists wurden um account_security.php, account_export.php und models.php erweitert.
+* Healthcheck prueft die Auth-Sitzungstabelle, die beiden neuen Benutzerspalten und den Migrationseintrag 006_account_security.
+* Compose- und Native-Installer verlangen die neue Migrationsdatei. Der Native-Installer importiert sie in derselben Reihenfolge wie der automatische Compose-Migrationspfad.
+* Compose- und Native-Preflight pruefen neue Dateien, Funktionsverdrahtung, Schema, private Endpunktrouten und den neuen Selftest.
+* Der Account-Security-Selftest kontrolliert statisch CSRF, Passwortpruefung, Tokenabschirmung, Exportausschluesse, Benutzer-Scope und Modellvalidierung.
+* Mit lokaler Serverkonfiguration erzeugt der Selftest zusaetzlich zwei echte Test-Anmeldungen, prueft aktuelle Sitzung, Einzelwiderruf und Gesamtwiderruf und rollt alle SQL-Testdaten vollstaendig zurueck.
+* max_file_uploads wurde in Compose-PHP und im Native-PHP-Profil auf zehn angeglichen. Die bereits vorhandene Anhanglogik begrenzt weiterhin Client, API, SQL-Positionen und Modellkontext auf maximal zehn Dateien pro Nachricht.
+* Versionsparameter verhindern alte CSS- und JavaScript-Caches nach dem Update.
+* README, Markdown-Changelog, TXT-Changelog-Archiv und Uebergabeprotokoll beschreiben jetzt den Stand 0.4.1-alpha.
+* Die produktive Adresse bleibt https://coreui.starlight-unit.de. webui.starlight-unit.de bleibt nur als veraltete historische Adresse dokumentiert.
+* Game, Homepage, STU-Repack, KeyHelp, Apache, Host-PHP, Game-Datenbank und die erhaltene CoreUI-Konfiguration werden nicht veraendert.
+
+MIGRATION UND SPEICHER
+
+* Neue SQL-Migration: database/migrations/006_account_security.sql
+* Neue Tabelle: stu_auth_sessions
+* Neue Spalten: stu_users.password_changed_at und stu_users.last_login_at
+* Roh-Tokens werden nicht in MariaDB gespeichert.
+* Bestehende Chat-Sitzungen, Nachrichten, Uploads, Profile, Memories, RAG-Daten und Konten bleiben erhalten.
+* stack.sh wendet Migration 006 beim normalen up, start oder restart automatisch an.
+
+SICHERHEITSGRENZEN
+
+* Passwortwechsel und Sitzungswiderruf verlangen Authentifizierung und CSRF.
+* Modellwahl akzeptiert nur aktuell von der konfigurierten lokalen Ollama-Instanz gemeldete Tags.
+* Kontoexport ist rein benutzergebunden und schliesst Geheimnisse, interne Modellanalyse und Serverpfade aus.
+* Externe Cloud-Provider bleiben deaktiviert und erhalten durch dieses Release keine neue Freigabe.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.4.1-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

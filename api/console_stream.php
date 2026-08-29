@@ -13,7 +13,8 @@ declare(strict_types=1);
 // serverseitig trotzdem zu Ende (ignore_user_abort) und legt sie in der DB ab -
 // die Console kann sie dann per normalem Poll abholen (Fallback).
 //
-// stream:true ist UNABHAENGIG von think:true - Modelfile-Thinking bleibt unberuehrt.
+// stream:true und think:true/false sind getrennte Ollama-Felder. Der Stream
+// bleibt aktiv, waehrend der Benutzer Thinking kontobezogen schalten kann.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // chat.php als Funktionsbibliothek einbinden (Dispatch wird per STU_CHAT_LIB uebersprungen).
@@ -39,12 +40,21 @@ function sse_send(string $event, $data): void {
   @flush();
 }
 function sse_comment(string $c): void { echo ': ' . $c . "\n\n"; @flush(); }
+function console_stream_progress(bool $enabled, string $stage): void {
+  if (!$enabled) return;
+  sse_send('progress', [
+    'stage' => $stage,
+    'text' => ember_public_thinking_status($stage),
+  ]);
+}
 
 // ── Auth + PDO (liest Session) ──
 try {
   $uid = stu_require_user_id();
   $pdo = stu_pdo();
   stu_enforce_maintenance($pdo, (int)$uid);
+  if (function_exists('coreui_ai_runtime_apply')) coreui_ai_runtime_apply($pdo, (int)$uid);
+  $thinkingEnabled = ember_thinking_enabled();
 } catch (Throwable $e) {
   sse_send('error', ['error' => 'auth']);
   exit;
@@ -67,22 +77,32 @@ if ($afterId <= 0 || trim($character_id) === '' || $sessionId === '') {
 try {
   coreui_console_session_require($pdo, (int)$uid, $sessionId, true);
   $stTurn = $pdo->prepare(
-    "SELECT message FROM stu_chat_messages
+    "SELECT id, message, file_uuid, image_url FROM stu_chat_messages
      WHERE id = ? AND channel = 'console' AND user_id = ? AND character_id = ?
        AND session_id = ?
      LIMIT 1"
   );
   $stTurn->execute([$afterId, (int)$uid, $character_id, $sessionId]);
-  $userMsgRaw = $stTurn->fetchColumn();
+  $turnRow = $stTurn->fetch(PDO::FETCH_ASSOC);
+  $userMsgRaw = is_array($turnRow) ? ($turnRow['message'] ?? null) : null;
 } catch (Throwable $eTurn) {
   sse_send('error', ['error' => 'turn_lookup_failed']);
   exit;
 }
-if (!is_string($userMsgRaw) || trim($userMsgRaw) === '') {
+if (!is_string($userMsgRaw)) {
   sse_send('error', ['error' => 'turn_not_found']);
   exit;
 }
 $message = trim(chat_clean_console_message($userMsgRaw));
+$attachmentIds = coreui_console_attachment_ids_for_message(
+  $pdo,
+  $afterId,
+  (int)$uid,
+  is_array($turnRow) ? (string)($turnRow['file_uuid'] ?? '') : null
+);
+if ($attachmentIds !== []) {
+  $message .= ($message !== '' ? ' ' : '') . coreui_console_attachment_marker_text($attachmentIds);
+}
 
 // v1.1.1.94: Bild-Marker aus der Nachricht ziehen. Die Console hatte bisher KEINEN
 // Vision-Pfad: an ember_build_chat_prompt() und ember_generate_reply() wurde beide Male
@@ -98,6 +118,12 @@ if (preg_match('~\[img:([^\]]{1,512})\]~i', $message, $im)) {
   }
   $message = trim(str_replace((string)$im[0], '', $message));
 }
+if ($imageUrl === null && $attachmentIds === [] && is_array($turnRow)) {
+  $legacyImage = trim((string)($turnRow['image_url'] ?? ''));
+  if (preg_match('~^/(?:[^/]+/)*assets/chat_media/[A-Za-z0-9._-]+$~', $legacyImage)) {
+    $imageUrl = $legacyImage;
+  }
+}
 
 // Ein Bild ohne Begleittext ist eine gueltige Nachricht.
 if ($message === '' && $imageUrl === null) { sse_send('error', ['error' => 'empty']); exit; }
@@ -106,10 +132,12 @@ if ($message === '' && $imageUrl === null) { sse_send('error', ['error' => 'empt
 // Generierung feststehen, weil der Streaming-Pfad kein images-Feld sendet.
 // PDFs mit Textebene werden im synchronen Pfad weiterhin direkt als Text gelesen.
 $isVisionTurn = ($imageUrl !== null);
-if (!$isVisionTurn && preg_match('~\[file:([a-f0-9]{32})\]~i', $message, $fm)) {
-  if (function_exists('ember_attach_needs_vision_path')
-      && ember_attach_needs_vision_path($pdo, strtolower((string)$fm[1]))) {
-    $isVisionTurn = true;
+if (!$isVisionTurn && function_exists('ember_attach_needs_vision_path')) {
+  foreach ($attachmentIds as $attachmentId) {
+    if (ember_attach_needs_vision_path($pdo, $attachmentId, (int)$uid)) {
+      $isVisionTurn = true;
+      break;
+    }
   }
 }
 
@@ -167,9 +195,9 @@ try {
         }
         sse_send('done', [
           'text'     => $existingText,
-          'thinking' => ember_public_thinking_from_storage(
-            isset($existing['thinking_content']) ? (string)$existing['thinking_content'] : null
-          ),
+          'thinking' => $thinkingEnabled
+            ? ember_public_thinking_from_storage(isset($existing['thinking_content']) ? (string)$existing['thinking_content'] : null)
+            : '',
           'elapsed'  => 0,
           'id'       => (int)$existing['id'],
           'session_id' => $sessionId,
@@ -193,10 +221,7 @@ try {
   ember_console_afk_announce($pdo);
 
   ember_prepare_background_runtime();
-  sse_send('progress', [
-    'stage' => 'request',
-    'text'  => ember_public_thinking_status('request'),
-  ]);
+  console_stream_progress($thinkingEnabled, 'request');
 
   // v1.1.1.94: Vision-Turns nehmen NICHT den Streaming-Pfad. console_stream_ollama()
   // baut den Payload ohne images-Feld, ein Bild kaeme dort gar nicht an. Stattdessen
@@ -205,10 +230,7 @@ try {
   // wuerde nur eine RAG-Abfrage kosten.
   if ($isVisionTurn) {
     sse_comment('vision-sync');
-    sse_send('progress', [
-      'stage' => 'context',
-      'text'  => ember_public_thinking_status('context'),
-    ]);
+    console_stream_progress($thinkingEnabled, 'context');
     $acc = ['thinking' => '', 'content' => ''];
   } else {
     // Prompt bauen - identische Ember-Stimme wie ueberall (shared builder).
@@ -216,14 +238,8 @@ try {
     $sys   = (string)($built['sys'] ?? '');
     $u     = (string)($built['u'] ?? '');
     $model = (string)($built['model'] ?? ember_model());
-    sse_send('progress', [
-      'stage' => 'context',
-      'text'  => ember_public_thinking_status('context'),
-    ]);
-    sse_send('progress', [
-      'stage' => 'compose',
-      'text'  => ember_public_thinking_status('compose'),
-    ]);
+    console_stream_progress($thinkingEnabled, 'context');
+    console_stream_progress($thinkingEnabled, 'compose');
 
     // Streaming-Call: akkumuliert alle Modellfragmente ausschliesslich serverintern.
     // Erst die vollstaendige, validierte Antwort darf den Browser erreichen.
@@ -238,10 +254,7 @@ try {
       $thinkingAll = trim((string)$tm[1]);
     }
   }
-  sse_send('progress', [
-    'stage' => 'validate',
-    'text'  => ember_public_thinking_status('validate'),
-  ]);
+  console_stream_progress($thinkingEnabled, 'validate');
   $reply = ember_sanitize_public_reply($contentAll, $thinkingAll);
 
   // Tool-Marker ([WEB:]/[BROWSE:]/[PY]) werden weiterhin vom gemeinsamen
@@ -257,10 +270,7 @@ try {
       && !empty($acc['ok'])
       && !empty($acc['done'])
       && !empty($acc['truncated'])) {
-    sse_send('progress', [
-      'stage' => 'compose',
-      'text'  => ember_public_thinking_status('compose'),
-    ]);
+    console_stream_progress($thinkingEnabled, 'compose');
     $continued = console_stream_continue_truncated($model, $sys, $u, $reply, $thinkingAll, $acc);
     $reply = (string)($continued['reply'] ?? $reply);
     $thinkingAll = (string)($continued['thinking'] ?? $thinkingAll);
@@ -275,10 +285,7 @@ try {
   $streamUnsafe = empty($acc['ok'])
     || empty($acc['done']);
   if ($hasMarker || $reply === '' || $streamUnsafe) {
-    sse_send('progress', [
-      'stage' => 'tool',
-      'text'  => ember_public_thinking_status('tool'),
-    ]);
+    console_stream_progress($thinkingEnabled, 'tool');
     // v1.1.1.94: $imageUrl statt hart null -> Vision funktioniert jetzt auch in der Console.
     $fallback = ember_generate_reply($pdo, $char, $message, $imageUrl, 'console', (int)$uid, $sessionId);
     $enqueued = ember_browse_consume_request($pdo, $channel, (int)$uid, $sessionId, $afterId);
@@ -319,14 +326,16 @@ try {
     $reply = trim((string)preg_replace('~\[/?PY\]~i', '', $reply));
   }
   $replyFinal = $reply;
-  $thinkingPublic = ($replyFinal !== '') ? ember_public_thinking_status('complete') : '';
+  $thinkingPublic = ($thinkingEnabled && $replyFinal !== '')
+    ? ember_public_thinking_status('complete')
+    : '';
 
   if ($replyFinal !== '') {
     $emberMsgId = ember_insert(
       $pdo,
       $replyFinal,
       $channel,
-      $thinkingPublic,
+      $thinkingPublic !== '' ? $thinkingPublic : null,
       (int)$uid,
       $sessionId,
       $afterId
@@ -382,7 +391,7 @@ exit;
 // ─────────────────────────────────────────────────────────────────────────────
 // Streaming-Ollama-Call: NDJSON -> SSE. Optionen spiegeln ember_call_ollama()
 // (Gemma4-Defaults), damit Embers Stimme im Stream identisch zum Sync-Pfad ist.
-// Setzt KEIN 'think' - Modelfile-Thinking gilt; Gemma4 liefert thinking parallel.
+// Der kontobezogene Thinking-Schalter wird als echter Ollama-Parameter gesendet.
 // ─────────────────────────────────────────────────────────────────────────────
 function console_stream_ollama(string $model, string $systemPrompt, string $userPrompt): array {
   $url       = ember_url();
@@ -414,6 +423,7 @@ function console_stream_ollama(string $model, string $systemPrompt, string $user
   $payload = [
     'model'    => $model,
     'stream'   => true,
+    'think'    => ember_thinking_enabled(),
     'messages' => $messages,
     'options'  => $options,
   ];

@@ -22,8 +22,18 @@ $GLOBALS['COREUI_AI_RUNTIME_SETTINGS'] = [
   'num_predict' => 6500,
   'temperature' => 1.0,
   'memory_enabled' => true,
+  'thinking_enabled' => false,
   'memory_limit' => 16,
+  'model_override' => 'gemma4-selftest:latest',
 ];
+
+if (ember_model() !== 'gemma4-selftest:latest') {
+  reply_test_fail('Der gespeicherte lokale Modelltag wird nicht fuer Ollama verwendet.');
+}
+
+if (ember_thinking_enabled() !== false) {
+  reply_test_fail('Der kontobezogene Thinking-Schalter erreicht den Modellpfad nicht.');
+}
 
 if (ember_num_predict() !== 6500 || ember_num_predict_for_model('ember-coreui:latest') !== 6500) {
   reply_test_fail('Das Benutzerbudget wird nicht unveraendert an Ollama weitergegeben.');
@@ -58,8 +68,12 @@ foreach (['console_stream_continue_truncated', 'continuation_segments', 'CURLOPT
 if (str_contains($streamSource, "|| !empty(\$acc['truncated']);")) {
   reply_test_fail('Ein Tokenlimit startet weiterhin die komplette Anfrage neu.');
 }
-if (str_contains($streamSource, "\$_GET['msg']") || !str_contains($streamSource, 'SELECT message FROM stu_chat_messages')) {
+if (str_contains($streamSource, "\$_GET['msg']") || !str_contains($streamSource, 'SELECT id, message, file_uuid, image_url FROM stu_chat_messages')) {
   reply_test_fail('Der SSE-Pfad transportiert lange oder vertrauliche Nachrichten weiterhin in der URL.');
+}
+if (!str_contains($streamSource, "'think'    => ember_thinking_enabled()")
+    || !str_contains($streamSource, "console_stream_progress(\$thinkingEnabled")) {
+  reply_test_fail('Thinking wird im SSE-Pfad nicht serverseitig aktiviert oder deaktiviert.');
 }
 
 $clientSource = (string)file_get_contents(dirname(__DIR__) . '/js/console-app.js');
@@ -69,6 +83,14 @@ if (str_contains($clientSource, "'&msg='")) {
 $appHtml = (string)file_get_contents(dirname(__DIR__) . '/app.html');
 if (!str_contains($appHtml, 'maxlength="12000"')) {
   reply_test_fail('Das CoreUI-Eingabefeld besitzt weiterhin ein altes Kurzlimit.');
+}
+if (!str_contains($appHtml, 'id="fileInput"') || !str_contains($appHtml, 'multiple')) {
+  reply_test_fail('Die Dateiauswahl erlaubt keine Mehrfachauswahl.');
+}
+
+if (!str_contains($clientSource, 'MAX_MESSAGE_ATTACHMENTS = 10')
+    || !str_contains($clientSource, 'attachment_uuids:')) {
+  reply_test_fail('Die Nachrichtenanhaenge sind nicht auf zehn begrenzt und persistent verdrahtet.');
 }
 
 $chatSource = (string)file_get_contents(dirname(__DIR__) . '/api/chat.php');
@@ -83,4 +105,4 @@ if (!str_contains($migration, 'ALTER TABLE stu_chat_messages MODIFY COLUMN messa
   reply_test_fail('Die Nachrichtenspalte ist nicht fuer lange Antworten migriert.');
 }
 
-fwrite(STDOUT, "Reply-Pipeline-Selftest OK: Budget, Fortsetzung und MEDIUMTEXT aktiv.\n");
+fwrite(STDOUT, "Reply-Pipeline-Selftest OK: Budget, Thinking-Wahl, zehn Anhaenge, Fortsetzung und MEDIUMTEXT aktiv.\n");

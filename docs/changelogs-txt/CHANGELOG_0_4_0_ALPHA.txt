@@ -1,0 +1,83 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+
+VERSION: 0.4.0-alpha
+DATUM:   29.08.2026
+STATUS:  ALPHA
+
+AENDERUNGEN
+
+* Die bisher nur teilweise lokale Einstellungsseite wurde zu einem echten kontobezogenen Konfigurationsbereich ausgebaut. Profil, KI-Laufzeitwerte, Memory und privates Wissen werden serverseitig dem authentifizierten Benutzer zugeordnet.
+* Jeder Benutzer besitzt jetzt ein eigenes CoreUI-Profil mit sichtbarem Anzeigenamen. Login-E-Mail, numerische Benutzer-ID und stabile interne Operator-ID bleiben bei einer Namensaenderung unveraendert.
+* Ein frei waehlbarer CoreAI-Anzeigename wurde je Konto ergaenzt. Die sichtbare Bezeichnung wird in Chatblasen, Denkstatus, Tippanzeige und Eingabeplatzhalter verwendet, ohne Embers technische Identitaet oder Sicherheitsregeln umzuschreiben.
+* Zwei getrennte private Avatar-Slots wurden aufgenommen: Benutzer und CoreAI. Beide Bilder koennen in den Einstellungen hochgeladen, ersetzt und geloescht werden.
+* Avatarannahme ist auf PNG und JPEG bis 4 MiB begrenzt. Abmessungen, Pixelmenge, MIME-Typ und echte Dekodierbarkeit werden serverseitig geprueft.
+* Hochgeladene Bilder werden zentral quadratisch zugeschnitten, auf maximal 512 mal 512 Pixel skaliert, neu als PNG kodiert und ohne fremde Bildmetadaten gespeichert.
+* Avatar-Dateien liegen ausserhalb des statischen Webpfads. profile_media.php prueft die Sitzung und liefert nur den aktuellen Avatar des angemeldeten Kontos aus.
+* Die zufaellige Medien-ID dient als exakter Cache-Buster. Auch zwei unmittelbar aufeinanderfolgende Uploads zeigen sicher das neueste Bild.
+* Die neuen Endpunkte profile.php und profile_media.php sowie der gemeinsame Profil-Speicher wurden ergaenzt. Jede schreibende Profilaktion verlangt Authentifizierung und CoreUI-CSRF-Token.
+* Bereits vorhandene Benutzer werden beim naechsten Login automatisch vervollstaendigt. Falls Profil oder privater Operator fehlen, werden sie transaktional angelegt.
+* Registrierung und Admin Core verwenden jetzt denselben Account-Provisioning-Pfad. Neue Benutzer starten dadurch nicht mehr ohne Charakter-, KV- und Profildaten.
+* Das Admin Core kann neue Benutzer mit Anzeigename, Login-E-Mail, Startpasswort und Rolle anlegen.
+* System-Administratoren koennen Rollen Level 1 bis 4 vergeben. Administratoren Level 1 koennen nur niedrigere Rollen Level 2 bis 4 anlegen. Level 0 wird niemals ueber die Oberflaeche erzeugt.
+* Startpasswoerter im Admin Core muessen mindestens 12 Zeichen besitzen. Sie werden weder in Auditdetails noch in API-Antworten geschrieben.
+* Die Benutzerliste zeigt Profilname, Login-E-Mail und privaten Operator. Die Suche beruecksichtigt alle drei Felder.
+* Der optionale lokale Ollama-Modelltag in den Benutzereinstellungen ist jetzt funktional. model_override wird im gemeinsamen Chatpfad tatsaechlich ausgewertet; ein leeres Feld nutzt weiterhin den Serverstandard.
+* Eigener System-Prompt, Memory-Schalter, Memory-Limit, Antwortbudget und Temperatur bleiben pro Benutzer gespeichert und werden mit Profil und Modellwahl geladen.
+* Ein echter kontobezogener Thinking-Schalter wurde ergaenzt. Hauptantworten senden den offiziellen Ollama-Parameter think als true oder false; die Einstellung versteckt also nicht nur eine Oberflaeche.
+* Bei deaktiviertem Thinking sendet CoreUI keine Denkstatus-Ereignisse und speichert fuer neue Antworten keinen Denkstatus. Bei aktiviertem Thinking bleiben rohe Gedankengaenge weiterhin strikt serverintern.
+* Pro Nachricht koennen bis zu zehn Dateien gemeinsam ausgewaehlt und nacheinander hochgeladen werden. Der Composer zeigt Fortschritt, fertige Anhaenge und eine einzelne Entfernen-Schaltflaeche pro Datei.
+* Vor dem Senden entfernte Uploads werden CSRF-geschuetzt aufgeraeumt, solange keine Nachricht sie bereits referenziert. SQL-Zeilensperren verhindern ein Rennen mit einem gleichzeitig laufenden Nachrichten-INSERT.
+* Die Auswahl wird serverseitig nochmals auf zehn UUIDs begrenzt. Jede Datei muss dem angemeldeten Benutzer gehoeren; fremde oder nicht mehr vorhandene Uploads werden vor dem Nachrichten-INSERT abgelehnt.
+* Nachricht und geordnete Anhangliste werden in einer gemeinsamen SQL-Transaktion gespeichert. Ein Teilfehler kann dadurch keine Nachricht ohne Zuordnungen oder unvollstaendige Anhangliste hinterlassen.
+* Der Verlauf liefert ein attachments-Array in stabiler Reihenfolge. Das bisherige Feld attachment und stu_chat_messages.file_uuid bleiben als Abwaertskompatibilitaet fuer Altclients und alte Eintraege erhalten.
+* Text- und Dokumentanhaenge werden gemeinsam in den Modellkontext aufgenommen. Das Gesamtbudget wird kontrolliert aufgeteilt, damit zehn Dateien den Prompt nicht unbeschraenkt vergroessern.
+* Bilder, Videoframes und gerasterte Scan-PDF-Seiten aus mehreren Anhaengen werden zusammengefuehrt und auf hoechstens 16 Vision-Eingaben je Turn begrenzt.
+* Die endgueltige Sitzungsloeschung kennt neue und alte Anhangreferenzen. Mediendateien werden erst entfernt, wenn nach dem Nachrichten-DELETE keine Referenz mehr besteht.
+* Der externe OpenAI-kompatible Provider bleibt ein deaktivierter Adapter. Lokales Gemma 4 ueber Ollama ist weiterhin der Referenzbetrieb. API-Schluessel werden nicht im Browser gespeichert.
+* Privates RAG-Lite wurde direkt in den Einstellungen eingefuehrt. TXT-, Markdown-, Text-PDF- und DOCX-Dateien koennen hochgeladen, extrahiert, gechunkt, gelistet und geloescht werden.
+* Text wird kontrolliert nach UTF-8 normalisiert. Der Chunker verwendet standardmaessig 1400 Zeichen Zielgroesse und 180 Zeichen Ueberlappung.
+* PDF-Import verwendet lokal pdftotext mit begrenzter Laufzeit. Scan-PDFs ohne Textebene werden eindeutig abgelehnt, statt einen Dokumentinhalt zu erfinden.
+* DOCX-Import liest nur word/document.xml, deaktiviert externe XML-Netzwerkzugriffe und begrenzt XML-Groesse sowie Absatzanzahl.
+* Standardquoten sind 20 MiB je Datei, 40 Quellen und 5.000.000 extrahierte Zeichen pro Konto. Ein einzelnes Dokument darf maximal 1200 Chunks erzeugen.
+* Ein kontospezifischer MariaDB-Lock schuetzt Quotenpruefung und Persistenz. Gleichzeitige Uploads desselben Benutzers koennen die Limits nicht gemeinsam umgehen.
+* Originaldateien werden privat unter var/knowledge_uploads gespeichert und nicht direkt durch Nginx ausgeliefert.
+* Private Quellenmetadaten und Chunks liegen in eigenen CoreUI-Tabellen. Volltextsuche und LIKE-Fallback filtern immer nach dem authentifizierten user_id.
+* Ein Benutzer kann weder Chunks eines anderen Kontos abrufen noch dessen Quellen loeschen. Ein eigener Selftest prueft diese Trennung mit zwei echten Testkonten.
+* Privates Benutzerwissen bleibt vom global kuratierten Studio-Kanon in ember_knowledge_chunks getrennt. Uploads veraendern weder Bibel- noch Kompendium-Importe.
+* Relevante private Chunks werden in den Modellprompt aufgenommen und klar als nicht vertrauenswuerdige Daten gekennzeichnet. Dokumentanweisungen erhalten keine Systemprioritaet.
+* Die Quellenloeschung entfernt Chunks und Metadaten transaktional. Nach erfolgreichem Commit wird auch die gespeicherte Originaldatei entfernt.
+* Migration 004_profiles_knowledge erstellt Profile, Profilmedien, private Wissensquellen und private Chunks mit Benutzer- und Quellindizes, Fremdschluesseln und Volltextindex.
+* Migration 005_thinking_attachments ergaenzt thinking_enabled, erstellt stu_console_message_attachments und uebernimmt bestehende file_uuid-Eintraege verlustfrei in die neue 1:n-Zuordnung.
+* Migration 004 legt Standardwerte fuer Quellenzahl, Dateigroesse und Gesamtzeichen an, ohne vorhandene Betreiberwerte zu ueberschreiben.
+* Die privaten Speicherpfade var/profile_media und var/knowledge_uploads wurden als beschreibbare PHP-Volumes eingebunden. Der Webcontainer besitzt keinen direkten Dateimount darauf.
+* stack.sh erzeugt die neuen privaten Verzeichnisse bei up, start und restart mit passenden Containerrechten. Das funktioniert auch bei Updates, bei denen var bewusst vom rsync ausgeschlossen bleibt.
+* Compose- und Native-Nginx-Allowlists enthalten die neuen Profil-, Medien- und Knowledge-Endpunkte.
+* Healthcheck und Preflight pruefen Migrationen 004 und 005, alle neuen Tabellen, die Thinking-Spalte, Routen und privaten Schreibpfade.
+* Der neue Profil- und Knowledge-Selftest validiert Account-Provisioning, sichtbare Namen, Chunker, Retrieval und Benutzerisolation innerhalb einer vollstaendig zurueckgerollten SQL-Transaktion.
+* Reply-Pipeline- und Sitzungs-Selftests pruefen nun zusaetzlich Modellwahl, Thinking-Wahl, Zehn-Dateien-Grenze, persistente Zuordnungen und deren Loeschung.
+* Der native Fallback-Installer importiert jetzt ebenfalls Migration 004. Compose- und Native-Neuinstallationen besitzen damit denselben Schema- und Funktionsstand.
+* README, TXT-Changelog-Archiv und Uebergabeprotokoll wurden auf 0.4.0-alpha und die produktive Adresse https://coreui.starlight-unit.de aktualisiert.
+* Echte Sitzungen, archivgeschuetzte endgueltige Loeschung, Thinking-Schranke, lange Ollama-Antworten, Browse-Frames, Game, Homepage, KeyHelp, Apache, Host-PHP, Repack-Pfade und die bestehende STU-Datenbank bleiben unveraendert erhalten.
+
+MIGRATION UND SPEICHER
+
+* Neue SQL-Migration: database/migrations/004_profiles_knowledge.sql
+* Neue SQL-Migration: database/migrations/005_thinking_attachments.sql
+* Neue Tabellen: stu_coreui_profiles, stu_coreui_profile_media, stu_user_knowledge_sources, stu_user_knowledge_chunks und stu_console_message_attachments
+* Neue Spalte: stu_user_ai_settings.thinking_enabled
+* Neue private Dateipfade: var/profile_media und var/knowledge_uploads
+* stack.sh wendet die Migration beim normalen up, start oder restart automatisch an.
+* Bestehende Konten, Sitzungen, Nachrichten, Memories, Lore, Uploads und lokale Konfiguration bleiben erhalten.
+
+SICHERHEITSGRENZEN
+
+* Profilbilder und Wissensdateien werden nicht als freie statische URLs angeboten.
+* Profil- und Knowledge-Schreibvorgaenge verlangen Sitzung und CSRF-Schutz.
+* Jede Knowledge-Abfrage und Loeschung ist serverseitig auf user_id begrenzt.
+* Dokumentinhalt wird als untrusted data behandelt und erhaelt keine Systemprioritaet.
+* Externe Provider und Cloud-API-Schluessel bleiben deaktiviert beziehungsweise ausschliesslich serverseitig vorgesehen.
+
+HINWEIS
+
+Dieses Dokument beschreibt genau den Stand 0.4.0-alpha. Spaetere Korrekturen sind in den nachfolgenden Versionsdateien dokumentiert.

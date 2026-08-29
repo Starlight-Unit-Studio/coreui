@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/console_session_store.php';
 
 // -----------------------------------------------------------------------------
 // STU Console - Datei-Upload (v1.1.1.89)
@@ -21,6 +22,57 @@ $uid    = stu_get_user_id();
 
 if (!$uid) stu_json(['ok'=>false,'error'=>'not_authenticated'], 401);
 if ($method !== 'POST') stu_json(['ok'=>false,'error'=>'method_not_allowed'], 405);
+
+// Ein vor dem Senden bewusst entfernter Upload kann sofort aufgeraeumt werden.
+// Sobald irgendeine Nachricht die UUID referenziert, ist die Loeschung gesperrt.
+$contentType = strtolower((string)($_SERVER['CONTENT_TYPE'] ?? ''));
+if (str_contains($contentType, 'application/json')) {
+  $deleteBody = stu_read_json_body();
+  if (($deleteBody['action'] ?? '') === 'delete_unreferenced') {
+    stu_require_csrf();
+    $uuid = strtolower(trim((string)($deleteBody['uuid'] ?? '')));
+    if (!preg_match('~^[a-f0-9]{32}$~', $uuid)) {
+      stu_json(['ok'=>false,'error'=>'invalid_uuid'], 400);
+    }
+
+    $relativePath = null;
+    $deleted = false;
+    $pdo->beginTransaction();
+    try {
+      $stMedia = $pdo->prepare('SELECT rel_path FROM stu_console_media WHERE uuid=? AND user_id=? LIMIT 1 FOR UPDATE');
+      $stMedia->execute([$uuid, (int)$uid]);
+      $relativePath = $stMedia->fetchColumn();
+      if (!is_string($relativePath) || $relativePath === '') {
+        $pdo->rollBack();
+        stu_json(['ok'=>true,'deleted'=>false,'missing'=>true]);
+      }
+
+      $referenceCount = 0;
+      $stLegacy = $pdo->prepare('SELECT COUNT(*) FROM stu_chat_messages WHERE file_uuid=?');
+      $stLegacy->execute([$uuid]);
+      $referenceCount += (int)$stLegacy->fetchColumn();
+      if (coreui_console_attachment_schema_ready($pdo)) {
+        $stReferences = $pdo->prepare('SELECT COUNT(*) FROM stu_console_message_attachments WHERE media_uuid=?');
+        $stReferences->execute([$uuid]);
+        $referenceCount += (int)$stReferences->fetchColumn();
+      }
+      if ($referenceCount > 0) {
+        $pdo->rollBack();
+        stu_json(['ok'=>false,'error'=>'attachment_in_use'], 409);
+      }
+
+      $stDelete = $pdo->prepare('DELETE FROM stu_console_media WHERE uuid=? AND user_id=? LIMIT 1');
+      $stDelete->execute([$uuid, (int)$uid]);
+      $deleted = $stDelete->rowCount() === 1;
+      $pdo->commit();
+    } catch (Throwable $eDelete) {
+      if ($pdo->inTransaction()) $pdo->rollBack();
+      throw $eDelete;
+    }
+    $files = coreui_console_session_delete_media_files([(string)$relativePath]);
+    stu_json(['ok'=>true,'deleted'=>$deleted] + $files);
+  }
+}
 
 // --- Limits ------------------------------------------------------------------
 const CONSOLE_MAX_IMAGE_BYTES = 8   * 1024 * 1024;   // 8 MB
@@ -48,9 +100,9 @@ function console_media_ensure_schema(PDO $pdo): void {
   try {
     $pdo->exec(
       "CREATE TABLE IF NOT EXISTS stu_console_media (
-        id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         uuid VARCHAR(64) NOT NULL,
-        user_id INT NOT NULL,
+        user_id BIGINT UNSIGNED NOT NULL,
         character_id VARCHAR(64) NULL,
         kind VARCHAR(16) NOT NULL DEFAULT 'document',
         orig_name VARCHAR(255) NOT NULL,
@@ -198,5 +250,5 @@ stu_json([
   'size'      => $size,
   'image_url' => $publicUrl,                                  // nur bei Bildern gesetzt
   'url'       => $publicUrl ?? stu_public_path('api/console_media.php?uuid=' . $uuid),
-  'marker'    => ($kind === 'image') ? ('[img:' . $publicUrl . ']') : ('[file:' . $uuid . ']'),
+  'marker'    => '[file:' . $uuid . ']',
 ]);

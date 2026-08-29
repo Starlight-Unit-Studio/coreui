@@ -44,6 +44,8 @@ services:
       - ./logs:/var/www/coreui/logs
       - ./var/cache:/var/www/coreui/var/cache
       - ./var/console_media:/var/www/coreui/var/console_media
+      - ./var/profile_media:/var/www/coreui/var/profile_media
+      - ./var/knowledge_uploads:/var/www/coreui/var/knowledge_uploads
       - ./var/ember_py:/var/www/coreui/var/ember_py
       - ./var/ember_frames:/var/www/coreui/var/ember_frames
       - ./var/pdf_pages:/var/www/coreui/var/pdf_pages

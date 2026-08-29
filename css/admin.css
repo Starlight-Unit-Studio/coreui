@@ -165,7 +165,8 @@ td button, .memory-admin-item button { min-height:30px; cursor:pointer; border:1
 .admin-form { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:16px; padding:14px; border:1px solid rgba(91,146,255,.15); background:rgba(91,146,255,.035); }
 .admin-form label { display:flex; min-width:0; flex-direction:column; gap:6px; color:var(--muted); font-family:"Share Tech Mono",monospace; font-size:7px; letter-spacing:.08em; }
 .admin-form .wide, .runtime-divider { grid-column:1 / -1; }
-.form-actions { display:flex; gap:8px; }
+.form-actions { display:flex; align-items:center; gap:10px; }
+.form-hint { color:var(--muted); font-family:"Share Tech Mono",monospace; font-size:7px; line-height:1.45; }
 .admin-form label.check { min-height:41px; flex-direction:row; align-items:center; gap:9px; padding:9px 11px; border:1px solid rgba(91,146,255,.18); background:rgba(255,255,255,.54); }
 .admin-form label.check input { width:17px; min-height:17px; height:17px; }
 .runtime-divider { margin:7px 0; border-top:1px solid rgba(226,155,57,.25); color:var(--amb); font-family:"Share Tech Mono",monospace; font-size:8px; letter-spacing:.1em; }

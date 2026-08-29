@@ -237,6 +237,8 @@ prepare_permissions() {
     "$PROJECT_ROOT/logs" \
     "$PROJECT_ROOT/var/cache" \
     "$PROJECT_ROOT/var/console_media" \
+    "$PROJECT_ROOT/var/profile_media" \
+    "$PROJECT_ROOT/var/knowledge_uploads" \
     "$PROJECT_ROOT/var/ember_py" \
     "$PROJECT_ROOT/var/ember_frames" \
     "$PROJECT_ROOT/var/pdf_pages" \
@@ -435,6 +437,9 @@ ensure_ollama_model() {
 [[ -f "$PROJECT_ROOT/database/migrations/001_core.sql" ]] || die 'SQL-Basisschema fehlt.'
 [[ -f "$PROJECT_ROOT/database/migrations/002_coreui_management.sql" ]] || die 'SQL-Verwaltungsschema fehlt.'
 [[ -f "$PROJECT_ROOT/database/migrations/003_console_sessions.sql" ]] || die 'SQL-Sitzungsschema fehlt.'
+[[ -f "$PROJECT_ROOT/database/migrations/004_profiles_knowledge.sql" ]] || die 'SQL-Profil- und Knowledge-Schema fehlt.'
+[[ -f "$PROJECT_ROOT/database/migrations/005_thinking_attachments.sql" ]] || die 'SQL-Thinking- und Anhangschema fehlt.'
+[[ -f "$PROJECT_ROOT/database/migrations/006_account_security.sql" ]] || die 'SQL-Kontosicherheitsschema fehlt.'
 [[ "$PROJECT_ROOT" =~ ^/[A-Za-z0-9._/-]+$ ]] || die 'Der Projektpfad enthaelt nicht unterstuetzte Zeichen.'
 [[ "$PROJECT_ROOT" != /root/* ]] || die 'Bitte das Paket dauerhaft nach /opt/ember-coreui verschieben.'
 [[ "$PROJECT_ROOT" != /home/* ]] || die 'Bitte das Paket dauerhaft nach /opt/ember-coreui verschieben.'

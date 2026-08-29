@@ -118,6 +118,13 @@ try {
   $stKv->execute([$adminId, 'stu_characters', json_encode([$character], JSON_UNESCAPED_UNICODE)]);
   $stKv->execute([$adminId, 'stu_active_character_id', $characterId]);
 
+  $stProfile = $pdo->prepare(
+    "INSERT INTO stu_coreui_profiles (user_id, display_name, assistant_name, created_at, updated_at)
+     VALUES (?, ?, 'Ember', NOW(), NOW())
+     ON DUPLICATE KEY UPDATE display_name = VALUES(display_name), updated_at = NOW()"
+  );
+  $stProfile->execute([$adminId, $name]);
+
   $pdo->exec(
     "INSERT INTO stu_app_settings (k, value, updated_at)
      VALUES ('maintenance_enabled', '0', NOW())
