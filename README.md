@@ -186,7 +186,7 @@ CoreUI ersetzt spaeter die alte STU-Console, nicht den Global-Chat im Game. Die 
 - Root- oder sudo-Zugriff per SSH
 - Docker oder Erlaubnis, Docker automatisch zu installieren
 - Lokales Ollama oder Erlaubnis, Ollama automatisch zu installieren
-- Genuegend RAM, VRAM und Speicher fuer den ausgewaehlten Gemma-4-Tag
+- Genuegend RAM und Speicher fuer den ausgewaehlten Gemma-4-Tag
 - Ausgehender Internetzugriff waehrend des ersten Image-Builds
 
 Ollamas Linux-Anleitung: <https://docs.ollama.com/linux>
