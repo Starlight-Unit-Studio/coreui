@@ -9,6 +9,12 @@
 !/var/console_media/
 /var/console_media/*
 !/var/console_media/.gitkeep
+!/var/profile_media/
+/var/profile_media/*
+!/var/profile_media/.gitkeep
+!/var/knowledge_uploads/
+/var/knowledge_uploads/*
+!/var/knowledge_uploads/.gitkeep
 !/var/ember_py/
 /var/ember_py/*
 !/var/ember_py/.gitkeep

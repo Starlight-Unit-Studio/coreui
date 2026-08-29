@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth_session_store.php';
 
 // --- API crash shielding (returns JSON instead of a blank HTTP 500 page) ---
 // Enable verbose error payloads by defining STU_DEBUG=true in config.local.php or env STU_DEBUG=1
@@ -177,7 +178,19 @@ function stu_require_csrf(?string $token = null): void {
 function stu_get_user_id(): ?int {
   stu_start_session();
   $uid = $_SESSION['stu_uid'] ?? null;
-  return is_int($uid) ? $uid : null;
+  if (!is_int($uid) || $uid <= 0) return null;
+  if (!empty($_SESSION['stu_logged_in']) && function_exists('coreui_auth_session_validate_current')) {
+    try {
+      if (!coreui_auth_session_validate_current(stu_pdo(), $uid)) {
+        stu_logout(false);
+        return null;
+      }
+    } catch (Throwable $e) {
+      // Bei einem Datenbankausfall entscheidet der eigentliche Endpunkt ueber
+      // die Fehlermeldung. Ein Ausfall darf nicht still alle Cookies loeschen.
+    }
+  }
+  return $uid;
 }
 
 function stu_set_user_id(int $uid): void {
@@ -229,8 +242,16 @@ function stu_is_logged_in(): bool {
   return !empty($_SESSION['stu_logged_in']) && !!stu_get_user_id();
 }
 
-function stu_logout(): void {
+function stu_logout(bool $revokeSession = true): void {
   stu_start_session();
+  $uid = isset($_SESSION['stu_uid']) && is_int($_SESSION['stu_uid'])
+    ? (int)$_SESSION['stu_uid']
+    : 0;
+  if ($revokeSession && $uid > 0 && function_exists('coreui_auth_session_revoke_current')) {
+    try {
+      coreui_auth_session_revoke_current(stu_pdo(), $uid, 'logout');
+    } catch (Throwable $e) {}
+  }
   $_SESSION = [];
   if (ini_get('session.use_cookies')) {
     $params = session_get_cookie_params();

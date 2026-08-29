@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 function coreui_ai_settings_schema_ready(PDO $pdo): bool {
   try {
-    $pdo->query('SELECT user_id FROM stu_user_ai_settings LIMIT 1');
+    $pdo->query('SELECT user_id, thinking_enabled FROM stu_user_ai_settings LIMIT 1');
     return true;
   } catch (Throwable $e) {
     return false;
@@ -37,6 +37,7 @@ function coreui_ai_settings_defaults(PDO $pdo): array {
   return [
     'system_prompt' => '',
     'memory_enabled' => $memoryDefault,
+    'thinking_enabled' => true,
     'memory_limit' => max(0, min(60, $memoryLimit)),
     'num_predict' => max(256, min(16384, $numPredict)),
     'temperature' => max(0.1, min(1.5, $temperature)),
@@ -104,6 +105,11 @@ function coreui_ai_settings_normalise(PDO $pdo, array $input): array {
       FILTER_VALIDATE_BOOLEAN,
       FILTER_NULL_ON_FAILURE
     ) ?? (bool)$defaults['memory_enabled'],
+    'thinking_enabled' => filter_var(
+      $input['thinking_enabled'] ?? $defaults['thinking_enabled'],
+      FILTER_VALIDATE_BOOLEAN,
+      FILTER_NULL_ON_FAILURE
+    ) ?? (bool)$defaults['thinking_enabled'],
     'memory_limit' => max(0, min(60, (int)($input['memory_limit'] ?? $defaults['memory_limit']))),
     'num_predict' => max(256, min(16384, (int)($input['num_predict'] ?? $defaults['num_predict']))),
     'temperature' => max(0.1, min(1.5, (float)($input['temperature'] ?? $defaults['temperature']))),
@@ -118,7 +124,7 @@ function coreui_ai_settings_load(PDO $pdo, int $uid): array {
 
   try {
     $st = $pdo->prepare(
-      'SELECT system_prompt, memory_enabled, memory_limit, num_predict, temperature, provider, model_override '
+      'SELECT system_prompt, memory_enabled, thinking_enabled, memory_limit, num_predict, temperature, provider, model_override '
       . 'FROM stu_user_ai_settings WHERE user_id = ? LIMIT 1'
     );
     $st->execute([$uid]);
@@ -133,22 +139,24 @@ function coreui_ai_settings_load(PDO $pdo, int $uid): array {
 function coreui_ai_settings_save(PDO $pdo, int $uid, array $input): array {
   if ($uid <= 0) throw new InvalidArgumentException('invalid_user');
   if (!coreui_ai_settings_schema_ready($pdo)) {
-    throw new RuntimeException('missing_schema_002');
+    throw new RuntimeException('missing_schema_005');
   }
 
   $value = coreui_ai_settings_normalise($pdo, $input);
   $st = $pdo->prepare(
     'INSERT INTO stu_user_ai_settings '
-    . '(user_id, system_prompt, memory_enabled, memory_limit, num_predict, temperature, provider, model_override, updated_at) '
-    . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW()) '
+    . '(user_id, system_prompt, memory_enabled, thinking_enabled, memory_limit, num_predict, temperature, provider, model_override, updated_at) '
+    . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()) '
     . 'ON DUPLICATE KEY UPDATE system_prompt = VALUES(system_prompt), memory_enabled = VALUES(memory_enabled), '
-    . 'memory_limit = VALUES(memory_limit), num_predict = VALUES(num_predict), temperature = VALUES(temperature), '
+    . 'thinking_enabled = VALUES(thinking_enabled), memory_limit = VALUES(memory_limit), '
+    . 'num_predict = VALUES(num_predict), temperature = VALUES(temperature), '
     . 'provider = VALUES(provider), model_override = VALUES(model_override), updated_at = NOW()'
   );
   $st->execute([
     $uid,
     $value['system_prompt'],
     $value['memory_enabled'] ? 1 : 0,
+    $value['thinking_enabled'] ? 1 : 0,
     $value['memory_limit'],
     $value['num_predict'],
     $value['temperature'],

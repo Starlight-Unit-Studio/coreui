@@ -11,11 +11,11 @@
   />
   <meta name="theme-color" content="#f0f4fa" />
   <meta name="color-scheme" content="light" />
-  <meta name="application-version" content="0.3.2-alpha" />
+  <meta name="application-version" content="0.4.1-alpha" />
   <title>Project STΛRLIɢHT: Ember CoreUI</title>
-  <link rel="stylesheet" href="./css/console.css?v=0.3.2-alpha" />
-  <script src="./js/console-gate.js?v=0.3.2-alpha"></script>
-  <script src="./js/coreui-preferences.js?v=0.3.2-alpha"></script>
+  <link rel="stylesheet" href="./css/console.css?v=0.4.1-alpha" />
+  <script src="./js/console-gate.js?v=0.4.1-alpha"></script>
+  <script src="./js/coreui-preferences.js?v=0.4.1-alpha"></script>
 </head>
 <body class="app-body coreui-body">
   <input
@@ -132,7 +132,7 @@
         <div class="brand-copy">
           <div class="brand-kicker">PROJECT STΛRLIɢHT</div>
           <div class="brand-title">EMBER <span>COREUI</span></div>
-          <div class="brand-signature">AYAL'REN MATRIX // N-73 // v0.3.2-alpha</div>
+          <div class="brand-signature">AYAL'REN MATRIX // N-73 // v0.4.1-alpha</div>
         </div>
       </div>
 
@@ -309,16 +309,16 @@
         </div>
       </div>
 
-      <div class="composer-attach" id="attachChip" hidden>
-        <span class="attach-icon" id="attachIcon" aria-hidden="true">📎</span>
+      <div class="composer-attachments" id="attachList" hidden aria-label="Ausgewählte Anhänge"></div>
+      <div class="composer-upload-state" id="attachUploadState" hidden role="status" aria-live="polite">
+        <span class="attach-icon" aria-hidden="true">⇧</span>
         <span class="attach-meta">
-          <span class="attach-name" id="attachName"></span>
-          <span class="attach-sub" id="attachSub"></span>
+          <span class="attach-name" id="attachUploadName">DATEI WIRD HOCHGELADEN</span>
+          <span class="attach-sub" id="attachUploadSub"></span>
         </span>
-        <span class="attach-bar" id="attachBar" hidden>
+        <span class="attach-bar" id="attachBar">
           <span class="attach-bar-fill" id="attachBarFill"></span>
         </span>
-        <button class="attach-remove" id="attachRemove" type="button" aria-label="Anhang entfernen">×</button>
       </div>
 
       <div class="composer-frame">
@@ -330,10 +330,11 @@
             type="file"
             id="fileInput"
             hidden
+            multiple
             accept="image/*,video/*,audio/*,.pdf,.txt,.md,.csv,.json,.log,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.7z,.tar,.gz"
           />
 
-          <button class="composer-attach-btn" id="btnAttach" type="button" aria-label="Datei oder Bild anhängen">
+          <button class="composer-attach-btn" id="btnAttach" type="button" aria-label="Bis zu zehn Dateien oder Bilder anhängen">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
@@ -371,6 +372,6 @@
     </footer>
   </div>
 
-  <script src="./js/console-app.js?v=0.3.2-alpha"></script>
+  <script src="./js/console-app.js?v=0.4.1-alpha"></script>
 </body>
 </html>

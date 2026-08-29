@@ -3,6 +3,7 @@
   'use strict';
 
   var csrfToken = '';
+  var actorLevel = 4;
   var flashTimer = 0;
   var runtimeState = {};
   var flash = document.getElementById('adminFlash');
@@ -102,8 +103,8 @@
         var row = document.createElement('tr');
         row.appendChild(el('td', '', user.id));
         var account = el('td');
-        account.appendChild(el('strong', '', user.username || 'ohne E-Mail'));
-        account.appendChild(el('small', '', user.character_name ? (' // ' + user.character_name) : ''));
+        account.appendChild(el('strong', '', user.display_name || user.username || 'ohne E-Mail'));
+        account.appendChild(el('small', '', (user.username || '') + (user.character_name ? (' // ' + user.character_name) : '')));
         row.appendChild(account);
 
         var levelCell = el('td');
@@ -146,6 +147,29 @@
         tbody.appendChild(row);
       });
     }).catch(function (error) { show('Benutzer: ' + error.message, true); });
+  }
+
+  function createUser(event) {
+    event.preventDefault();
+    var button = document.querySelector('#adminUserForm button[type="submit"]');
+    if (button) button.disabled = true;
+    post('user_create', {
+      display_name: document.getElementById('newUserDisplayName').value,
+      username: document.getElementById('newUserEmail').value,
+      password: document.getElementById('newUserPassword').value,
+      permission_level: Number(document.getElementById('newUserLevel').value) || 4
+    }).then(function (data) {
+      document.getElementById('adminUserForm').reset();
+      show('Benutzer #' + data.user.id + ' wurde mit eigenem CoreUI-Profil angelegt.');
+      return Promise.all([loadUsers(), loadOverview()]);
+    }).catch(function (error) {
+      var labels = {
+        username_taken: 'Diese Login-E-Mail ist bereits vergeben.',
+        invalid_password: 'Das Startpasswort muss mindestens 12 Zeichen lang sein.',
+        protected_account: 'Diese Rolle darf dein Administrationskonto nicht vergeben.'
+      };
+      show(labels[error.message] || ('Benutzeranlage: ' + error.message), true);
+    }).finally(function () { if (button) button.disabled = false; });
   }
 
   function resetMemoryForm() {
@@ -330,6 +354,7 @@
     document.getElementById('refreshOverview').addEventListener('click', loadOverview);
     document.getElementById('reloadUsers').addEventListener('click', loadUsers);
     document.getElementById('searchUsers').addEventListener('click', loadUsers);
+    document.getElementById('adminUserForm').addEventListener('submit', createUser);
     document.getElementById('reloadAdminMemories').addEventListener('click', loadMemories);
     document.getElementById('searchAdminMemories').addEventListener('click', loadMemories);
     document.getElementById('adminMemoryForm').addEventListener('submit', saveMemory);
@@ -350,6 +375,9 @@
         return Promise.reject(new Error('forbidden'));
       }
       csrfToken = data.csrf_token || '';
+      actorLevel = Number(data.permission_level);
+      var adminOption = document.querySelector('#newUserLevel option[value="1"]');
+      if (adminOption && actorLevel > 0) adminOption.disabled = true;
       if (identity) identity.textContent = (data.username || 'ADMIN') + ' // LV.' + data.permission_level;
       bind();
       var initial = location.hash.replace(/^#/, '') || 'overview';

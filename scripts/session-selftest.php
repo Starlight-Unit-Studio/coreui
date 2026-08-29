@@ -15,6 +15,7 @@ function session_test_expect(bool $condition, string $message): void {
 }
 
 $migration = session_test_read($root . '/database/migrations/003_console_sessions.sql');
+$attachmentMigration = session_test_read($root . '/database/migrations/005_thinking_attachments.sql');
 $store = session_test_read($root . '/api/console_session_store.php');
 $messages = session_test_read($root . '/api/console_messages.php');
 $stream = session_test_read($root . '/api/console_stream.php');
@@ -24,6 +25,7 @@ $worker = session_test_read($root . '/tools/ember_browse_worker.py');
 $sessions = session_test_read($root . '/api/console_sessions.php');
 
 session_test_expect(str_contains($migration, '003_console_sessions'), 'Migration 003 fehlt.');
+session_test_expect(str_contains($attachmentMigration, 'stu_console_message_attachments'), 'Migration 005 fuer Mehrfachanhaenge fehlt.');
 session_test_expect(str_contains($migration, 'session_id VARCHAR(40)'), 'session_id-Migration fehlt.');
 session_test_expect(str_contains($migration, 'reply_to_id BIGINT'), 'reply_to_id-Migration fehlt.');
 session_test_expect(str_contains($migration, 'WIEDERHERGESTELLTER VERLAUF'), 'Legacy-Verlauf wird nicht erhalten.');
@@ -39,6 +41,7 @@ session_test_expect(str_contains($store, 'DELETE s FROM stu_ember_browse_steps')
 session_test_expect(str_contains($store, 'DELETE FROM stu_ember_browse_jobs'), 'Browserjobs werden beim Sitzungsloeschen nicht entfernt.');
 session_test_expect(str_contains($store, 'DELETE FROM stu_chat_messages'), 'Nachrichten werden beim Sitzungsloeschen nicht entfernt.');
 session_test_expect(str_contains($store, 'DELETE FROM stu_console_media'), 'Verwaiste Upload-Datensaetze werden beim Sitzungsloeschen nicht entfernt.');
+session_test_expect(str_contains($store, 'stu_console_message_attachments'), 'Mehrfachanhaenge werden beim Sitzungsloeschen nicht beruecksichtigt.');
 session_test_expect(str_contains($store, "'uploads/ember_browse/job_'"), 'Browse-Screenshots werden beim Sitzungsloeschen nicht bereinigt.');
 session_test_expect(str_contains($sessions, "hash_equals('DELETE:' . \$sessionId"), 'Serverseitige Loeschbestaetigung fehlt.');
 session_test_expect(!str_contains($sessions, "\$action === 'delete' || \$action === 'archive'"), 'Delete ist noch faelschlich nur ein Archiv-Alias.');
@@ -56,6 +59,8 @@ session_test_expect(!str_contains($client, 'activeIdx'), 'Client verwendet noch 
 session_test_expect(!str_contains($client, 'since - 80'), 'Client verwendet noch das fehlerhafte Demo-Verlaufsfenster.');
 session_test_expect(str_contains($client, '/console_messages.php?session_id='), 'Client nutzt nicht den isolierten History-Endpunkt.');
 session_test_expect(str_contains($client, 'session_id:   sessionId'), 'Client sendet keine session_id.');
+session_test_expect(str_contains($client, 'MAX_MESSAGE_ATTACHMENTS = 10'), 'Client begrenzt Nachrichtenanhaenge nicht auf zehn.');
+session_test_expect(str_contains($client, 'attachment_uuids:'), 'Client sendet die persistente Anhangliste nicht.');
 session_test_expect(str_contains($client, "Number(m.reply_to_id) === Number(userMsgId)"), 'Client ordnet Antworten nicht dem exakten Turn zu.');
 session_test_expect(str_contains($client, "Number(m.reply_to_id) === pendingTurnId"), 'Hintergrund-Poll kann noch eine fremde Antwort als eigenen Turn abschliessen.');
 session_test_expect(str_contains($client, 'Der zuletzt bestaetigte Verlauf bleibt sichtbar.'), 'Ein Ladefehler kann den bestaetigten Verlauf noch optisch verdraengen.');
@@ -79,6 +84,8 @@ if (is_file($config)) {
     $st = $pdo->prepare('SELECT COUNT(*) FROM stu_schema_migrations WHERE version=?');
     $st->execute(['003_console_sessions']);
     session_test_expect((int)$st->fetchColumn() === 1, 'Migration 003 ist in der Datenbank nicht registriert.');
+    $st->execute(['005_thinking_attachments']);
+    session_test_expect((int)$st->fetchColumn() === 1, 'Migration 005 ist in der Datenbank nicht registriert.');
 
     // Funktionaler DB-Test mit vollstaendigem Rollback. Keine Testzeile bleibt
     // in der produktiven CoreUI-Datenbank bestehen.
@@ -154,15 +161,27 @@ if (is_file($config)) {
       }
       session_test_expect($activeDeleteRejected, 'DB-Test: Eine aktive Sitzung konnte dauerhaft geloescht werden.');
 
-      $mediaUuid = 'selftest_' . $suffix;
+      $mediaUuid = bin2hex(random_bytes(16));
+      $mediaUuidTwo = bin2hex(random_bytes(16));
       $stMedia = $pdo->prepare(
         'INSERT INTO stu_console_media '
         . '(uuid,user_id,character_id,kind,orig_name,stored_name,rel_path,public_url,mime_type,file_size,created_at) '
         . "VALUES (?,?,?,'document','selftest.txt',?,? ,NULL,'text/plain',8,NOW())"
       );
       $storedName = $mediaUuid . '.txt';
+      $storedNameTwo = $mediaUuidTwo . '.txt';
       $stMedia->execute([$mediaUuid, $testUid, 'selftest-user', $storedName, 'var/console_media/' . $storedName]);
+      $stMedia->execute([$mediaUuidTwo, $testUid, 'selftest-user', $storedNameTwo, 'var/console_media/' . $storedNameTwo]);
       $pdo->prepare('UPDATE stu_chat_messages SET file_uuid=? WHERE id=?')->execute([$mediaUuid, $turnA]);
+      $stMessageAttachment = $pdo->prepare(
+        'INSERT INTO stu_console_message_attachments '
+        . '(message_id,media_uuid,user_id,position,created_at) VALUES (?,?,?,?,NOW())'
+      );
+      $stMessageAttachment->execute([$turnA, $mediaUuid, $testUid, 0]);
+      $stMessageAttachment->execute([$turnA, $mediaUuidTwo, $testUid, 1]);
+      $stAttachmentCount = $pdo->prepare('SELECT COUNT(*) FROM stu_console_message_attachments WHERE message_id=?');
+      $stAttachmentCount->execute([$turnA]);
+      session_test_expect((int)$stAttachmentCount->fetchColumn() === 2, 'DB-Test: Mehrfachanhaenge wurden nicht gemeinsam gespeichert.');
 
       $stReaction = $pdo->prepare(
         "INSERT INTO stu_chat_reactions (message_id,channel,alliance_id,user_id,character_id,emoji,created_at)
@@ -205,9 +224,10 @@ if (is_file($config)) {
       session_test_expect((int)($deleteResult['browse_jobs_deleted'] ?? -1) === 1, 'DB-Test: Browserjob wurde nicht geloescht.');
       session_test_expect((int)($deleteResult['browse_steps_deleted'] ?? -1) === 1, 'DB-Test: Browserschritt wurde nicht geloescht.');
       session_test_expect((int)($deleteResult['browse_frames_deleted'] ?? -1) === 1, 'DB-Test: Browserframe wurde nicht geloescht.');
-      session_test_expect((int)($deleteResult['media_records_deleted'] ?? -1) === 1, 'DB-Test: Verwaister Upload-Datensatz wurde nicht geloescht.');
+      session_test_expect((int)($deleteResult['media_records_deleted'] ?? -1) === 2, 'DB-Test: Mehrere verwaiste Upload-Datensaetze wurden nicht geloescht.');
       $deleteFilePaths = is_array($deleteResult['file_paths'] ?? null) ? $deleteResult['file_paths'] : [];
       session_test_expect(in_array('var/console_media/' . $storedName, $deleteFilePaths, true), 'DB-Test: Verwaiste Upload-Datei wurde nicht zur Bereinigung vorgemerkt.');
+      session_test_expect(in_array('var/console_media/' . $storedNameTwo, $deleteFilePaths, true), 'DB-Test: Zweite Upload-Datei wurde nicht zur Bereinigung vorgemerkt.');
       session_test_expect(in_array('uploads/ember_browse/job_' . $jobId . '.png', $deleteFilePaths, true), 'DB-Test: Browse-Screenshot wurde nicht zur Bereinigung vorgemerkt.');
 
       $stGone = $pdo->prepare('SELECT COUNT(*) FROM stu_console_sessions WHERE id=? AND user_id=?');
@@ -226,6 +246,11 @@ if (is_file($config)) {
       $stMediaGone = $pdo->prepare('SELECT COUNT(*) FROM stu_console_media WHERE uuid=?');
       $stMediaGone->execute([$mediaUuid]);
       session_test_expect((int)$stMediaGone->fetchColumn() === 0, 'DB-Test: Upload-Datensatz blieb erhalten.');
+      $stMediaGone->execute([$mediaUuidTwo]);
+      session_test_expect((int)$stMediaGone->fetchColumn() === 0, 'DB-Test: Zweiter Upload-Datensatz blieb erhalten.');
+      $stAttachmentGone = $pdo->prepare('SELECT COUNT(*) FROM stu_console_message_attachments WHERE message_id=?');
+      $stAttachmentGone->execute([$turnA]);
+      session_test_expect((int)$stAttachmentGone->fetchColumn() === 0, 'DB-Test: Anhang-Zuordnung blieb erhalten.');
     } finally {
       if ($pdo->inTransaction()) $pdo->rollBack();
     }
@@ -240,4 +265,4 @@ if ($failures) {
   exit(1);
 }
 
-echo 'Sitzungs-Selftest: echte Scopes, Turn-Zuordnung, Archiv-Restore, transaktionale SQL-Loeschung und Client-Rennen abgesichert.';
+echo 'Sitzungs-Selftest: echte Scopes, Turn-Zuordnung, Mehrfachanhaenge, Archiv-Restore, SQL-Loeschung und Client-Rennen abgesichert.';

@@ -70,8 +70,42 @@ $hasMore = count($rows) > $limit;
 if ($hasMore) array_pop($rows);
 if ($descending) $rows = array_reverse($rows);
 
+$attachmentMap = [];
+$messageIds = array_values(array_filter(array_map(
+  static fn(array $row): int => (int)($row['id'] ?? 0),
+  $rows
+)));
+if ($messageIds !== [] && coreui_console_attachment_schema_ready($pdo)) {
+  $placeholders = implode(',', array_fill(0, count($messageIds), '?'));
+  $stAttachments = $pdo->prepare(
+    'SELECT a.message_id, a.media_uuid, a.position, cm.kind, cm.orig_name, '
+    . 'cm.mime_type, cm.file_size, cm.public_url '
+    . 'FROM stu_console_message_attachments a '
+    . 'JOIN stu_console_media cm ON cm.uuid=a.media_uuid AND cm.user_id=a.user_id '
+    . 'WHERE a.user_id=? AND a.message_id IN (' . $placeholders . ') '
+    . 'ORDER BY a.message_id ASC, a.position ASC'
+  );
+  $stAttachments->execute(array_merge([(int)$uid], $messageIds));
+  foreach (($stAttachments->fetchAll(PDO::FETCH_ASSOC) ?: []) as $media) {
+    $messageId = (int)($media['message_id'] ?? 0);
+    $uuid = (string)($media['media_uuid'] ?? '');
+    if ($messageId <= 0 || $uuid === '') continue;
+    if (!isset($attachmentMap[$messageId])) $attachmentMap[$messageId] = [];
+    $attachmentMap[$messageId][] = [
+      'uuid' => $uuid,
+      'kind' => (string)($media['kind'] ?? 'document'),
+      'name' => (string)($media['orig_name'] ?? 'Datei'),
+      'mime' => (string)($media['mime_type'] ?? ''),
+      'size' => (int)($media['file_size'] ?? 0),
+      'url' => stu_public_path('api/console_media.php?uuid=' . rawurlencode($uuid)),
+      'image_url' => $media['public_url'] ?: null,
+    ];
+  }
+}
+
 $emberCid = strtolower(ember_character_id());
 $emberName = strtolower(ember_character_name());
+$showThinking = (bool)(coreui_ai_settings_load($pdo, (int)$uid)['thinking_enabled'] ?? true);
 $maxId = 0;
 $oldestId = 0;
 
@@ -90,15 +124,15 @@ foreach ($rows as &$row) {
     $text = $safe !== '' ? $safe : 'Diese ältere Antwort wurde vom CoreUI-Sicherheitsfilter ausgeblendet.';
   }
   $row['message'] = $text;
-  $row['thinking_content'] = $isEmber
+  $row['thinking_content'] = ($isEmber && $showThinking)
     ? ember_public_thinking_from_storage(isset($row['thinking_content']) ? (string)$row['thinking_content'] : null)
     : null;
 
-  $attachment = null;
+  $attachments = $attachmentMap[$id] ?? [];
   $fileUuid = trim((string)($row['file_uuid'] ?? ''));
   $imageUrl = trim((string)($row['image_url'] ?? ''));
-  if ($fileUuid !== '' && !empty($row['attachment_name'])) {
-    $attachment = [
+  if ($attachments === [] && $fileUuid !== '' && !empty($row['attachment_name'])) {
+    $attachments[] = [
       'uuid' => $fileUuid,
       'kind' => (string)($row['attachment_kind'] ?? 'document'),
       'name' => (string)$row['attachment_name'],
@@ -107,8 +141,8 @@ foreach ($rows as &$row) {
       'url' => stu_public_path('api/console_media.php?uuid=' . rawurlencode($fileUuid)),
       'image_url' => $row['attachment_public_url'] ?: null,
     ];
-  } elseif ($imageUrl !== '') {
-    $attachment = [
+  } elseif ($attachments === [] && $imageUrl !== '') {
+    $attachments[] = [
       'uuid' => null,
       'kind' => 'image',
       'name' => 'Bild',
@@ -118,7 +152,8 @@ foreach ($rows as &$row) {
       'image_url' => $imageUrl,
     ];
   }
-  $row['attachment'] = $attachment;
+  $row['attachments'] = $attachments;
+  $row['attachment'] = $attachments[0] ?? null;
   unset(
     $row['attachment_kind'], $row['attachment_name'], $row['attachment_mime'],
     $row['attachment_size'], $row['attachment_public_url']
@@ -138,4 +173,3 @@ stu_json([
   'has_more_before' => $descending ? $hasMore : false,
   'has_more_after' => !$descending ? $hasMore : false,
 ]);
-

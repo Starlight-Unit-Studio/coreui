@@ -49,11 +49,29 @@ UI_FILES=(
   js/settings.js
   js/admin.js
   css/admin.css
+  api/ai_settings.php
+  api/model_catalog.php
+  api/models.php
+  api/auth_session_store.php
+  api/account_security.php
+  api/account_export.php
+  api/console_attachment_store.php
   api/console_session_store.php
   api/console_sessions.php
   api/console_messages.php
+  api/account_store.php
+  api/profile_store.php
+  api/profile.php
+  api/profile_media.php
+  api/knowledge_store.php
+  api/knowledge.php
   database/migrations/003_console_sessions.sql
+  database/migrations/004_profiles_knowledge.sql
+  database/migrations/005_thinking_attachments.sql
+  database/migrations/006_account_security.sql
   scripts/session-selftest.php
+  scripts/profile-knowledge-selftest.php
+  scripts/account-security-selftest.php
   images/starlight_unit_studios_logo_transparent_v030.png
 )
 for ui_file in "${UI_FILES[@]}"; do
@@ -71,6 +89,32 @@ if grep -Fq "action: 'delete_permanently'" "$PROJECT_ROOT/js/console-app.js" \
   ok 'Archivgeschuetzte, transaktionale Sitzungsloeschung ist paketiert.'
 else
   fail 'Die sichere Sitzungsloeschung ist unvollstaendig paketiert.'
+fi
+
+if grep -Fq "model_override: aiModelOverride" "$PROJECT_ROOT/js/settings.js" \
+    && grep -Fq "coreui_private_knowledge_block" "$PROJECT_ROOT/api/chat.php" \
+    && grep -Fq "user_create" "$PROJECT_ROOT/api/admin.php"; then
+  ok 'Funktionale Modellwahl, privates RAG-Lite und Benutzeranlage sind paketiert.'
+else
+  fail 'Mindestens eine neue 0.4.0-Funktion ist nicht vollstaendig verdrahtet.'
+fi
+
+if grep -Fq "thinking_enabled: aiThinkingEnabled" "$PROJECT_ROOT/js/settings.js" \
+    && grep -Fq "'think'    => ember_thinking_enabled()" "$PROJECT_ROOT/api/console_stream.php" \
+    && grep -Fq 'MAX_MESSAGE_ATTACHMENTS = 10' "$PROJECT_ROOT/js/console-app.js" \
+    && grep -Fq 'stu_console_message_attachments' "$PROJECT_ROOT/database/migrations/005_thinking_attachments.sql"; then
+  ok 'Thinking-Schalter und bis zu zehn persistente Nachrichtenanhaenge sind paketiert.'
+else
+  fail 'Thinking-Schalter oder Mehrfachanhaenge sind unvollstaendig paketiert.'
+fi
+
+if grep -Fq 'coreui_ollama_model_exists' "$PROJECT_ROOT/api/user_settings.php" \
+    && grep -Fq 'password_change' "$PROJECT_ROOT/api/account_security.php" \
+    && grep -Fq 'thinking_content_exported' "$PROJECT_ROOT/api/account_export.php" \
+    && grep -Fq 'loadAccountSecurity()' "$PROJECT_ROOT/js/settings.js"; then
+  ok 'Kontosicherheit, sicherer Datenexport und validierte Ollama-Modellwahl sind paketiert.'
+else
+  fail 'Mindestens eine neue 0.4.1-Funktion ist nicht vollstaendig verdrahtet.'
 fi
 
 for command_name in curl mariadb nginx pdfinfo pdftoppm pdftotext php; do
@@ -128,6 +172,24 @@ if command -v php >/dev/null 2>&1; then
     fail "$session_selftest"
   fi
 
+  profile_knowledge_selftest=''
+  if profile_knowledge_selftest="$(runuser -u www-data -- php "$PROJECT_ROOT/scripts/profile-knowledge-selftest.php" 2>&1)"; then
+    profile_knowledge_selftest="${profile_knowledge_selftest//$'\r'/}"
+    ok "$profile_knowledge_selftest"
+  else
+    profile_knowledge_selftest="${profile_knowledge_selftest//$'\r'/}"
+    fail "$profile_knowledge_selftest"
+  fi
+
+  account_security_selftest=''
+  if account_security_selftest="$(runuser -u www-data -- php "$PROJECT_ROOT/scripts/account-security-selftest.php" 2>&1)"; then
+    account_security_selftest="${account_security_selftest//$'\r'/}"
+    ok "$account_security_selftest"
+  else
+    account_security_selftest="${account_security_selftest//$'\r'/}"
+    fail "$account_security_selftest"
+  fi
+
   logo_selftest=''
   if logo_selftest="$(runuser -u www-data -- php "$PROJECT_ROOT/scripts/logo-alpha-selftest.php" 2>&1)"; then
     logo_selftest="${logo_selftest//$'\r'/}"
@@ -154,6 +216,24 @@ if command -v php >/dev/null 2>&1; then
       ok 'Migration 003: echte Sitzungen und Turn-Zuordnung sind bereit.'
     else
       fail 'Migration 003 fehlt.'
+    fi
+
+    if php -r "require '$PROJECT_ROOT/api/db.php'; \$p=stu_pdo(); \$p->query('SELECT user_id,display_name,assistant_name FROM stu_coreui_profiles LIMIT 0'); \$p->query('SELECT user_id,slot FROM stu_coreui_profile_media LIMIT 0'); \$p->query('SELECT uuid,user_id,status FROM stu_user_knowledge_sources LIMIT 0'); \$p->query('SELECT source_uuid,user_id,chunk_text FROM stu_user_knowledge_chunks LIMIT 0');" >/dev/null 2>&1; then
+      ok 'Migration 004: Profile, CoreAI-Identitaet und privates RAG-Lite sind bereit.'
+    else
+      fail 'Migration 004 fehlt.'
+    fi
+
+    if php -r "require '$PROJECT_ROOT/api/db.php'; \$p=stu_pdo(); \$p->query('SELECT thinking_enabled FROM stu_user_ai_settings LIMIT 0'); \$p->query('SELECT message_id,media_uuid,user_id,position FROM stu_console_message_attachments LIMIT 0');" >/dev/null 2>&1; then
+      ok 'Migration 005: Thinking-Wahl und persistente Mehrfachanhaenge sind bereit.'
+    else
+      fail 'Migration 005 fehlt.'
+    fi
+
+    if php -r "require '$PROJECT_ROOT/api/db.php'; \$p=stu_pdo(); \$p->query('SELECT password_changed_at,last_login_at FROM stu_users LIMIT 0'); \$p->query('SELECT token_hash,expires_at,revoked_at FROM stu_auth_sessions LIMIT 0');" >/dev/null 2>&1; then
+      ok 'Migration 006: widerrufbare Anmeldungen und Passwortzeitpunkte sind bereit.'
+    else
+      fail 'Migration 006 fehlt.'
     fi
 
     MODEL_NAME="$(read_constant STU_EMBER_MODEL || true)"
@@ -212,6 +292,8 @@ fi
 for writable_dir in \
   "$PROJECT_ROOT/logs" \
   "$PROJECT_ROOT/var/console_media" \
+  "$PROJECT_ROOT/var/profile_media" \
+  "$PROJECT_ROOT/var/knowledge_uploads" \
   "$PROJECT_ROOT/var/ember_py" \
   "$PROJECT_ROOT/var/ember_frames" \
   "$PROJECT_ROOT/var/pdf_pages" \

@@ -29,6 +29,17 @@ function ember_attach_extract_marker(string $s): ?string {
   return null;
 }
 
+function ember_attach_extract_markers(string $s): array {
+  if (!preg_match_all('/\[file:([a-f0-9]{32})\]/i', $s, $matches)) return [];
+  $ids = [];
+  foreach (($matches[1] ?? []) as $value) {
+    $uuid = strtolower((string)$value);
+    if (!isset($ids[$uuid])) $ids[$uuid] = true;
+    if (count($ids) >= 10) break;
+  }
+  return array_keys($ids);
+}
+
 function ember_attach_strip_marker(string $s): string {
   $s = preg_replace('/\[file:[a-f0-9]{32}\]/i', '', $s);
   return trim((string)preg_replace('~\s{2,}~u', ' ', (string)$s));
@@ -128,17 +139,12 @@ function ember_attach_read_archive(string $path, int $max): ?string {
  * Baut den Anhang-Block fuer $u. Entfernt den Marker aus $msg (per Referenz).
  * Rueckgabe: '' wenn kein Anhang vorhanden oder nicht auffindbar.
  */
-function ember_attachment_block(PDO $pdo, string &$msg, int $uid = 0): string {
-  $uuid = ember_attach_extract_marker($msg);
-  if ($uuid === null) return '';
-
-  // Marker IMMER entfernen, auch wenn die Datei nicht mehr auffindbar ist.
-  // Sonst raetselt Ember weiter ueber den Zeichensalat.
-  $msg = ember_attach_strip_marker($msg);
-
+function ember_attachment_single_block(PDO $pdo, string $uuid, int $uid, int $max): string {
   try {
-    $st = $pdo->prepare("SELECT * FROM stu_console_media WHERE uuid = ? LIMIT 1");
-    $st->execute([$uuid]);
+    $st = $uid > 0
+      ? $pdo->prepare("SELECT * FROM stu_console_media WHERE uuid = ? AND user_id = ? LIMIT 1")
+      : $pdo->prepare("SELECT * FROM stu_console_media WHERE uuid = ? LIMIT 1");
+    $st->execute($uid > 0 ? [$uuid, $uid] : [$uuid]);
     $row = $st->fetch(PDO::FETCH_ASSOC);
   } catch (Throwable $e) {
     ember_debug_log('ember_attach_db_fail', ['uuid' => $uuid, 'message' => $e->getMessage()]);
@@ -159,7 +165,7 @@ function ember_attachment_block(PDO $pdo, string &$msg, int $uid = 0): string {
   $rel  = ltrim((string)($row['rel_path'] ?? ''), '/');
   $path = $base . '/' . $rel;
 
-  $max = ember_attach_max_chars();
+  $max = max(500, $max);
   $body = null;
   $note = '';
 
@@ -191,6 +197,13 @@ function ember_attachment_block(PDO $pdo, string &$msg, int $uid = 0): string {
           . 'und frag nach, worum es geht.';
   } elseif ($kind === 'image') {
     $note = 'Das ist ein Bild und wird dir ueber den Bildpfad separat gezeigt.';
+    $imagePath = trim((string)($row['public_url'] ?? ''));
+    if ($imagePath !== '') {
+      if (!isset($GLOBALS['STU_EMBER_ATTACHMENT_IMAGES']) || !is_array($GLOBALS['STU_EMBER_ATTACHMENT_IMAGES'])) {
+        $GLOBALS['STU_EMBER_ATTACHMENT_IMAGES'] = [];
+      }
+      $GLOBALS['STU_EMBER_ATTACHMENT_IMAGES'][] = $imagePath;
+    }
   } else {
     $ext = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
     if ($kind === 'archive' || in_array($ext, ['zip'], true)) {
@@ -241,6 +254,60 @@ function ember_attachment_block(PDO $pdo, string &$msg, int $uid = 0): string {
   }
   $block .= "--- ENDE ANHANG ---\n";
   return $block;
+}
+
+/**
+ * Loest bis zu zehn Marker in stabiler Reihenfolge auf. Das gemeinsame
+ * Textbudget wird aufgeteilt, damit zehn Dokumente den Modellkontext nicht
+ * unkontrolliert vervielfachen. Vision-Eingaben werden auf insgesamt 16 Bilder,
+ * Videoframes oder PDF-Seiten begrenzt.
+ */
+function ember_attachment_block(PDO $pdo, string &$msg, int $uid = 0): string {
+  $uuids = ember_attach_extract_markers($msg);
+  if ($uuids === []) return '';
+
+  // Marker immer entfernen, auch wenn einzelne Dateien inzwischen fehlen.
+  $msg = ember_attach_strip_marker($msg);
+  unset($GLOBALS['STU_EMBER_ATTACHMENT_IMAGES']);
+  unset($GLOBALS['STU_EMBER_ATTACHMENT_VISION_META']);
+
+  $count = count($uuids);
+  $totalMax = max(
+    ember_attach_max_chars(),
+    min(40000, (int)ember_cfg('STU_EMBER_ATTACH_TOTAL_MAX_CHARS', 16000))
+  );
+  $perFileMax = max(500, min(ember_attach_max_chars(), (int)floor($totalMax / max(1, $count))));
+  $blocks = [];
+
+  foreach ($uuids as $uuid) {
+    unset($GLOBALS['STU_EMBER_VIDEO_FRAMES'], $GLOBALS['STU_EMBER_PDF_PAGES']);
+    $blocks[] = ember_attachment_single_block($pdo, $uuid, $uid, $perFileMax);
+
+    foreach (['STU_EMBER_VIDEO_FRAMES', 'STU_EMBER_PDF_PAGES'] as $globalName) {
+      $vision = $GLOBALS[$globalName] ?? null;
+      if (!is_array($vision) || empty($vision['paths'])) continue;
+      if (!isset($GLOBALS['STU_EMBER_ATTACHMENT_VISION_META']) || !is_array($GLOBALS['STU_EMBER_ATTACHMENT_VISION_META'])) {
+        $GLOBALS['STU_EMBER_ATTACHMENT_VISION_META'] = [];
+      }
+      $GLOBALS['STU_EMBER_ATTACHMENT_VISION_META'][] = $vision + [
+        'type' => $globalName === 'STU_EMBER_VIDEO_FRAMES' ? 'video' : 'pdf',
+      ];
+      if (!isset($GLOBALS['STU_EMBER_ATTACHMENT_IMAGES']) || !is_array($GLOBALS['STU_EMBER_ATTACHMENT_IMAGES'])) {
+        $GLOBALS['STU_EMBER_ATTACHMENT_IMAGES'] = [];
+      }
+      foreach ((array)$vision['paths'] as $path) {
+        $GLOBALS['STU_EMBER_ATTACHMENT_IMAGES'][] = $path;
+      }
+    }
+  }
+
+  $images = $GLOBALS['STU_EMBER_ATTACHMENT_IMAGES'] ?? [];
+  if (is_array($images)) {
+    $images = array_values(array_unique(array_filter($images, 'is_string')));
+    $GLOBALS['STU_EMBER_ATTACHMENT_IMAGES'] = array_slice($images, 0, 16);
+  }
+  unset($GLOBALS['STU_EMBER_VIDEO_FRAMES'], $GLOBALS['STU_EMBER_PDF_PAGES']);
+  return implode('', $blocks);
 }
 
 // -----------------------------------------------------------------------------
@@ -444,19 +511,19 @@ function ember_attach_is_video(PDO $pdo, string $uuid): bool {
 // Der SSE-Tokenpfad kann keine Bilddaten an Ollama senden. Videos und PDFs
 // muessen deshalb in den synchronen Vision-fähigen Antwortpfad wechseln. Bei
 // PDFs entscheidet dort erst pdftotext, ob Seitenbilder wirklich noetig sind.
-function ember_attach_needs_vision_path(PDO $pdo, string $uuid): bool {
+function ember_attach_needs_vision_path(PDO $pdo, string $uuid, int $uid = 0): bool {
   if (!preg_match('~^[a-f0-9]{32}$~', $uuid)) return false;
   try {
-    $st = $pdo->prepare(
-      "SELECT kind, mime_type, orig_name FROM stu_console_media WHERE uuid = ? LIMIT 1"
-    );
-    $st->execute([$uuid]);
+    $st = $uid > 0
+      ? $pdo->prepare("SELECT kind, mime_type, orig_name FROM stu_console_media WHERE uuid = ? AND user_id = ? LIMIT 1")
+      : $pdo->prepare("SELECT kind, mime_type, orig_name FROM stu_console_media WHERE uuid = ? LIMIT 1");
+    $st->execute($uid > 0 ? [$uuid, $uid] : [$uuid]);
     $row = $st->fetch(PDO::FETCH_ASSOC);
   } catch (Throwable $e) {
     return false;
   }
   if (!is_array($row)) return false;
-  if ((string)($row['kind'] ?? '') === 'video') return true;
+  if (in_array((string)($row['kind'] ?? ''), ['image', 'video'], true)) return true;
   $mime = strtolower(trim((string)($row['mime_type'] ?? '')));
   $ext = strtolower((string)pathinfo((string)($row['orig_name'] ?? ''), PATHINFO_EXTENSION));
   return $mime === 'application/pdf' || $ext === 'pdf';

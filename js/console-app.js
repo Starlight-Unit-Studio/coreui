@@ -94,6 +94,11 @@
     uid:          null,
     characterId:  null,
     charName:     null,
+    userDisplayName: null,
+    assistantName: 'Ember',
+    userAvatarUrl: null,
+    assistantAvatarUrl: null,
+    csrfToken:     '',
     sessions:        [],
     activeSessionId: null,
     viewEpoch:       0,
@@ -131,14 +136,16 @@
   // v1.1.1.89 - Anhang
   var fileInput     = document.getElementById('fileInput');
   var btnAttach     = document.getElementById('btnAttach');
-  var attachChip    = document.getElementById('attachChip');
-  var attachName    = document.getElementById('attachName');
-  var attachSub     = document.getElementById('attachSub');
-  var attachIcon    = document.getElementById('attachIcon');
-  var attachRemove  = document.getElementById('attachRemove');
+  var attachList    = document.getElementById('attachList');
+  var attachUploadState = document.getElementById('attachUploadState');
+  var attachUploadName = document.getElementById('attachUploadName');
+  var attachUploadSub = document.getElementById('attachUploadSub');
   var attachBar     = document.getElementById('attachBar');
   var attachBarFill = document.getElementById('attachBarFill');
-  var pendingFile   = null;   // { uuid, kind, name, mime, size, marker, image_url }
+  var MAX_MESSAGE_ATTACHMENTS = 10;
+  var pendingFiles  = [];
+  var uploadQueue   = [];
+  var uploadCurrentFile = null;
   var uploadXhr     = null;
   var btnNewSession = document.getElementById('btnNewSession');
   var btnSettings   = document.getElementById('btnSettings');
@@ -472,11 +479,11 @@
   function renderMessageRecord(m) {
     var text = m.message || '';
     if (m.is_ember === true || isEmberMsg(m)) {
-      appendMessageEl('ember', text, 'Ember', m.thinking_content || null, m.attachment || null, m.created_at);
+      appendMessageEl('ember', text, state.assistantName, m.thinking_content || null, m.attachments || m.attachment || null, m.created_at);
     } else if (String(m.character_name || '').toLowerCase() === 'system' || String(m.character_id || '').toLowerCase() === 'system') {
       appendMessageEl('system', text);
     } else {
-      appendMessageEl('user', stripEmberPrefix(text), m.character_name || state.charName, null, m.attachment || null, m.created_at);
+      appendMessageEl('user', stripEmberPrefix(text), state.userDisplayName || m.character_name || state.charName, null, m.attachments || m.attachment || null, m.created_at);
     }
   }
 
@@ -569,6 +576,22 @@
     return text.replace(/^@ember\s*/i, '');
   }
 
+  function profileInitials(value, fallback) {
+    var clean = String(value || '').trim();
+    if (!clean) return fallback;
+    var parts = clean.split(/\s+/).filter(Boolean);
+    if (parts.length > 1) return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    return clean.substring(0, 2).toUpperCase();
+  }
+
+  function applyMessageAvatar(element, role, name) {
+    var isUser = role === 'user';
+    var url = isUser ? state.userAvatarUrl : state.assistantAvatarUrl;
+    element.textContent = profileInitials(name, isUser ? 'DU' : 'EM');
+    element.classList.toggle('has-image', !!url);
+    element.style.backgroundImage = url ? ('url("' + String(url).replace(/"/g, '%22') + '")') : '';
+  }
+
   // ── DOM: Nachricht einfügen ──────────────────────────────
   function appendMessageEl(role, text, name, thinkingText, attachment, createdAt) {
     var row = document.createElement('div');
@@ -586,9 +609,9 @@
     // Avatar
     var avatar = document.createElement('div');
     avatar.className = 'msg-avatar';
-    avatar.textContent = role === 'user'
-      ? (name || state.charName || 'DU').substring(0, 2).toUpperCase()
-      : 'EM';
+    applyMessageAvatar(avatar, role, role === 'user'
+      ? (name || state.userDisplayName || state.charName || 'DU')
+      : (state.assistantName || 'Ember'));
     row.appendChild(avatar);
 
     // Content wrapper
@@ -631,19 +654,22 @@
     var nameEl = document.createElement('div');
     nameEl.className = 'msg-name';
     nameEl.textContent = role === 'user'
-      ? (name || state.charName || 'DU').toUpperCase()
-      : 'EMBER';
+      ? (name || state.userDisplayName || state.charName || 'DU').toUpperCase()
+      : (state.assistantName || 'Ember').toUpperCase();
     content.appendChild(nameEl);
 
     var bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
     bubble.textContent = text;
-    // Leere Blase unterdruecken, wenn nur ein Anhang gesendet wurde
-    if (text || !attachment) content.appendChild(bubble);
+    var attachments = Array.isArray(attachment) ? attachment : (attachment ? [attachment] : []);
+    // Leere Blase unterdruecken, wenn nur Anhaenge gesendet wurden.
+    if (text || attachments.length === 0) content.appendChild(bubble);
 
     // v1.1.1.89: Anhang darstellen. Bilder direkt, alles andere als Karte
     // mit Link auf den authentifizierten Auslieferungs-Endpunkt.
-    if (attachment) content.appendChild(buildAttachmentEl(attachment));
+    attachments.slice(0, MAX_MESSAGE_ATTACHMENTS).forEach(function (item) {
+      content.appendChild(buildAttachmentEl(item));
+    });
 
     // Zeitstempel
     var timeEl = document.createElement('div');
@@ -770,7 +796,7 @@
     thinkRow.className = 'msg-row ember';
     var thinkAvatar = document.createElement('div');
     thinkAvatar.className = 'msg-avatar';
-    thinkAvatar.textContent = 'EM';
+    applyMessageAvatar(thinkAvatar, 'ember', state.assistantName || 'Ember');
     thinkRow.appendChild(thinkAvatar);
     var thinkContent = document.createElement('div');
     thinkContent.className = 'msg-content';
@@ -806,13 +832,13 @@
     row.className = 'msg-row ember';
     var avatar = document.createElement('div');
     avatar.className = 'msg-avatar';
-    avatar.textContent = 'EM';
+    applyMessageAvatar(avatar, 'ember', state.assistantName || 'Ember');
     row.appendChild(avatar);
     var content = document.createElement('div');
     content.className = 'msg-content';
     var nameEl = document.createElement('div');
     nameEl.className = 'msg-name';
-    nameEl.textContent = 'EMBER';
+    nameEl.textContent = (state.assistantName || 'Ember').toUpperCase();
     content.appendChild(nameEl);
     var bubble = document.createElement('div');
     bubble.className = 'msg-bubble';
@@ -918,22 +944,94 @@
     return (n / 1073741824).toFixed(2) + ' GB';
   }
 
-  function clearAttachment() {
-    if (uploadXhr) { try { uploadXhr.abort(); } catch (e) {} uploadXhr = null; }
-    pendingFile = null;
-    if (fileInput) fileInput.value = '';
-    if (attachChip) attachChip.hidden = true;
-    if (attachBar) attachBar.hidden = true;
-    if (attachBarFill) attachBarFill.style.width = '0%';
-    if (btnAttach) btnAttach.disabled = false;
+  function attachmentSlotsUsed() {
+    return pendingFiles.length + uploadQueue.length + (uploadCurrentFile ? 1 : 0);
   }
 
-  function showAttachChip(name, sub, kind) {
-    if (!attachChip) return;
-    attachChip.hidden = false;
-    if (attachName) attachName.textContent = name;
-    if (attachSub) attachSub.textContent = sub;
-    if (attachIcon) attachIcon.textContent = KIND_ICON[kind] || '\uD83D\uDCCE';
+  function renderAttachmentList() {
+    if (!attachList) return;
+    attachList.innerHTML = '';
+    pendingFiles.forEach(function (item, index) {
+      var chip = document.createElement('div');
+      chip.className = 'composer-attach';
+
+      var icon = document.createElement('span');
+      icon.className = 'attach-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = KIND_ICON[item.kind] || '\uD83D\uDCCE';
+
+      var meta = document.createElement('span');
+      meta.className = 'attach-meta';
+      var name = document.createElement('span');
+      name.className = 'attach-name';
+      name.textContent = item.name || 'Datei';
+      var sub = document.createElement('span');
+      sub.className = 'attach-sub';
+      sub.textContent = formatBytes(item.size) + ' \u00b7 bereit';
+      meta.appendChild(name);
+      meta.appendChild(sub);
+
+      var remove = document.createElement('button');
+      remove.className = 'attach-remove';
+      remove.type = 'button';
+      remove.setAttribute('aria-label', (item.name || 'Anhang') + ' entfernen');
+      remove.textContent = '\u00d7';
+      remove.addEventListener('click', function () {
+        var removed = pendingFiles.splice(index, 1)[0] || null;
+        renderAttachmentList();
+        deleteUnreferencedUpload(removed);
+      });
+
+      chip.appendChild(icon);
+      chip.appendChild(meta);
+      chip.appendChild(remove);
+      attachList.appendChild(chip);
+    });
+    attachList.hidden = pendingFiles.length === 0;
+    if (btnAttach) btnAttach.disabled = attachmentSlotsUsed() >= MAX_MESSAGE_ATTACHMENTS;
+  }
+
+  function showUploadState(file, sub) {
+    if (!attachUploadState) return;
+    attachUploadState.hidden = !file;
+    if (attachUploadName) attachUploadName.textContent = file ? file.name : '';
+    if (attachUploadSub) attachUploadSub.textContent = sub || '';
+    if (attachBarFill) attachBarFill.style.width = file ? '0%' : '0%';
+  }
+
+  function clearAttachments() {
+    if (uploadXhr) { try { uploadXhr.abort(); } catch (e) {} uploadXhr = null; }
+    pendingFiles = [];
+    uploadQueue = [];
+    uploadCurrentFile = null;
+    if (fileInput) fileInput.value = '';
+    showUploadState(null, '');
+    renderAttachmentList();
+  }
+
+  function restoreAttachments(items) {
+    (items || []).forEach(function (item) {
+      if (!item || !item.uuid) return;
+      if (pendingFiles.some(function (saved) { return saved.uuid === item.uuid; })) return;
+      if (pendingFiles.length < MAX_MESSAGE_ATTACHMENTS) pendingFiles.push(item);
+    });
+    renderAttachmentList();
+  }
+
+  function deleteUnreferencedUpload(item) {
+    if (!item || !item.uuid || !state.csrfToken) return;
+    fetch(API_BASE + '/console_upload.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CoreUI-CSRF': state.csrfToken
+      },
+      body: JSON.stringify({ action: 'delete_unreferenced', uuid: item.uuid })
+    }).catch(function () {
+      // Die sichtbare Auswahl bleibt entfernt. Ein spaeterer Wartungslauf kann
+      // einen seltenen verwaisten Upload gefahrlos anhand fehlender Referenzen loeschen.
+    });
   }
 
   // Fehlercodes des Endpunkts in Klartext. Ohne das steht bei einem zu grossen
@@ -950,18 +1048,15 @@
     db_insert_failed:          'Datenbankfehler beim Speichern.'
   };
 
-  function uploadFile(file) {
-    if (!file) return;
-    if (state.waitingEmber) {
-      appendMessageEl('system', '\u231b Ember antwortet gerade\u2026 Anhang bitte danach.');
-      scrollToBottom();
+  function processUploadQueue() {
+    if (uploadXhr || uploadCurrentFile || uploadQueue.length === 0) {
+      renderAttachmentList();
       return;
     }
 
-    pendingFile = null;
-    showAttachChip(file.name, 'wird hochgeladen\u2026', 'document');
-    if (attachBar) attachBar.hidden = false;
-    if (attachBarFill) attachBarFill.style.width = '0%';
+    var file = uploadQueue.shift();
+    uploadCurrentFile = file;
+    showUploadState(file, 'wird hochgeladen\u2026');
     if (btnAttach) btnAttach.disabled = true;
 
     var fd = new FormData();
@@ -979,52 +1074,73 @@
       if (!e.lengthComputable || !attachBarFill) return;
       var pct = Math.round((e.loaded / e.total) * 100);
       attachBarFill.style.width = pct + '%';
-      if (attachSub) attachSub.textContent = pct + '% \u00b7 ' + formatBytes(e.loaded) + ' / ' + formatBytes(e.total);
+      if (attachUploadSub) attachUploadSub.textContent = pct + '% \u00b7 ' + formatBytes(e.loaded) + ' / ' + formatBytes(e.total);
     };
 
     xhr.onload = function() {
       uploadXhr = null;
-      if (btnAttach) btnAttach.disabled = false;
-      if (attachBar) attachBar.hidden = true;
+      uploadCurrentFile = null;
+      showUploadState(null, '');
       var d = null;
       try { d = JSON.parse(xhr.responseText || '{}'); } catch (e) { d = null; }
 
       if (xhr.status >= 200 && xhr.status < 300 && d && d.ok) {
-        pendingFile = d;
-        var sub = formatBytes(d.size) + ' \u00b7 bereit';
-        showAttachChip(d.name, sub, d.kind);
+        if (pendingFiles.length < MAX_MESSAGE_ATTACHMENTS) pendingFiles.push(d);
+        renderAttachmentList();
+        processUploadQueue();
         return;
       }
       var code = (d && d.error) || ('HTTP_' + xhr.status);
       var msg = UPLOAD_ERRORS[code] || ('Upload fehlgeschlagen (' + code + ')');
       if (code === 'file_too_large' && d && d.max_mb) msg = 'Datei ist zu gross (max. ' + d.max_mb + ' MB).';
-      clearAttachment();
       appendMessageEl('system', '\u26a0 ' + msg);
       scrollToBottom();
+      renderAttachmentList();
+      processUploadQueue();
     };
 
     xhr.onerror = function() {
       uploadXhr = null;
-      clearAttachment();
+      uploadCurrentFile = null;
+      showUploadState(null, '');
       appendMessageEl('system', '\u26a0 Upload fehlgeschlagen (Verbindung).');
       scrollToBottom();
+      renderAttachmentList();
+      processUploadQueue();
     };
 
     xhr.send(fd);
   }
 
+  function queueFiles(fileList) {
+    var selected = Array.prototype.slice.call(fileList || []);
+    if (!selected.length) return;
+    if (state.waitingEmber) {
+      appendMessageEl('system', '\u231b Ember antwortet gerade\u2026 Anhaenge bitte danach.');
+      scrollToBottom();
+      return;
+    }
+    var free = Math.max(0, MAX_MESSAGE_ATTACHMENTS - attachmentSlotsUsed());
+    if (selected.length > free) {
+      appendMessageEl('system', '\u26a0 Pro Nachricht sind maximal ' + MAX_MESSAGE_ATTACHMENTS + ' Dateien möglich.');
+      scrollToBottom();
+    }
+    selected.slice(0, free).forEach(function (file) { uploadQueue.push(file); });
+    if (fileInput) fileInput.value = '';
+    renderAttachmentList();
+    processUploadQueue();
+  }
+
   if (btnAttach) btnAttach.addEventListener('click', function() { if (fileInput) fileInput.click(); });
   if (fileInput) fileInput.addEventListener('change', function(e) {
-    var f = e.target && e.target.files && e.target.files[0];
-    if (f) uploadFile(f);
+    queueFiles(e.target && e.target.files ? e.target.files : []);
   });
-  if (attachRemove) attachRemove.addEventListener('click', clearAttachment);
 
   // ── Nachricht senden ─────────────────────────────────────
   function sendMessage(text) {
     // v1.1.1.89: Ein Anhang ohne Begleittext ist eine gueltige Nachricht.
-    if ((!text || !text.trim()) && !pendingFile) return;
-    if (uploadXhr) {
+    if ((!text || !text.trim()) && pendingFiles.length === 0) return;
+    if (uploadXhr || uploadCurrentFile || uploadQueue.length > 0) {
       appendMessageEl('system', '\u231b Upload laeuft noch\u2026');
       scrollToBottom();
       return;
@@ -1043,16 +1159,15 @@
     var sessionId = String(ses.id);
 
     var userText = (text || '').trim();
-    var att = pendingFile;
+    var atts = pendingFiles.slice(0, MAX_MESSAGE_ATTACHMENTS);
     var sentCreatedAt = new Date().toISOString();
     inputEl.value = '';
     btnSend.disabled = true;
 
     // @Ember Prefix nur intern - für Anzeige ohne Prefix
     var msgToSend = EMBER_PREFIX + userText;
-    if (att && att.marker) msgToSend += (userText ? ' ' : '') + att.marker;
-    appendMessageEl('user', userText, state.charName, null, att, sentCreatedAt);
-    clearAttachment();
+    appendMessageEl('user', userText, state.userDisplayName || state.charName, null, atts, sentCreatedAt);
+    clearAttachments();
     scrollToBottom();
 
     setStatus('waiting', 'EMBER ANTWORTET\u2026');
@@ -1073,6 +1188,7 @@
         session_id:   sessionId,
         character_id: state.characterId,
         message:      msgToSend,
+        attachment_uuids: atts.map(function (item) { return item.uuid; }),
         ember_client_async: USE_STREAM   // Streaming: Server speichert nur, Stream-Endpunkt generiert
       })
     })
@@ -1086,11 +1202,16 @@
           'muted':               '\u26a0 Charakter stummgeschaltet.',
           'sender_muted':        '\u26a0 Charakter stummgeschaltet.',
           'invalid_message':     '\u26a0 Nachricht ungültig.',
+          'too_many_attachments':'\u26a0 Maximal zehn Dateien pro Nachricht.',
+          'attachment_not_found':'\u26a0 Mindestens ein Anhang ist nicht mehr verfügbar.',
+          'attachment_migration_required':'\u26a0 Die Anhang-Migration fehlt auf dem Server.',
+          'message_store_failed':'\u26a0 Nachricht und Anhänge konnten nicht gespeichert werden.',
           'too_short':           '\u26a0 Nachricht zu kurz.',
           'banned':              '\u26a0 Konto gesperrt.',
           'not_authenticated':   '\u26a0 Sitzung beendet.'
         };
         delete state.pendingBySession[sessionId];
+        restoreAttachments(atts);
         if (isActiveSession(sessionId)) {
           stopCountdown();
           removeTypingIndicator();
@@ -1126,7 +1247,8 @@
           message: EMBER_PREFIX + userText,
           is_ember: false,
           thinking_content: null,
-          attachment: att || null,
+          attachments: atts,
+          attachment: atts[0] || null,
           created_at: sentCreatedAt
         }]);
       }
@@ -1145,6 +1267,7 @@
     })
     .catch(function() {
       delete state.pendingBySession[sessionId];
+      restoreAttachments(atts);
       if (isActiveSession(sessionId)) {
         stopCountdown();
         removeTypingIndicator();
@@ -1489,7 +1612,7 @@
 
     var avatar = document.createElement('div');
     avatar.className = 'msg-avatar';
-    avatar.textContent = 'EM';
+    applyMessageAvatar(avatar, 'ember', state.assistantName || 'Ember');
     row.appendChild(avatar);
 
     var content = document.createElement('div');
@@ -1667,7 +1790,30 @@
       .then(function(d) {
         if (!d.ok) { location.replace('login.html'); return Promise.reject('not_authenticated'); }
         state.uid = d.user_id;
+        state.csrfToken = d.csrf_token || '';
+        state.userDisplayName = d.display_name || null;
+        state.assistantName = d.assistant_name || 'Ember';
+        state.userAvatarUrl = d.avatars && d.avatars.user ? d.avatars.user : null;
+        state.assistantAvatarUrl = d.avatars && d.avatars.assistant ? d.avatars.assistant : null;
+        if (inputEl) inputEl.placeholder = 'Nachricht an ' + state.assistantName + '…';
       });
+  }
+
+  function refreshRuntimeProfile() {
+    if (!state.uid) return Promise.resolve();
+    return fetch(API_BASE + '/profile.php', { credentials: 'include', cache: 'no-store' })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d.ok || !d.profile) return;
+        state.userDisplayName = d.profile.display_name || state.userDisplayName;
+        state.assistantName = d.profile.assistant_name || state.assistantName || 'Ember';
+        state.userAvatarUrl = d.profile.avatars && d.profile.avatars.user ? d.profile.avatars.user : null;
+        state.assistantAvatarUrl = d.profile.avatars && d.profile.avatars.assistant ? d.profile.avatars.assistant : null;
+        if (inputEl) inputEl.placeholder = 'Nachricht an ' + state.assistantName + '…';
+        var ses = activeSession();
+        if (ses && isActiveSession(ses.id)) renderHistory(ses);
+      })
+      .catch(function() {});
   }
 
   function loadCharacter() {
@@ -1759,6 +1905,8 @@
   }
 
   btnLogout.addEventListener('click', doLogout);
+
+  window.addEventListener('pageshow', function () { refreshRuntimeProfile(); });
 
   btnSend.addEventListener('click', function() { sendMessage(inputEl.value); });
   inputEl.addEventListener('keydown', function(e) {

@@ -27,6 +27,12 @@ try {
     'ember_knowledge_chunks',
     'stu_user_ai_settings',
     'stu_admin_audit',
+    'stu_coreui_profiles',
+    'stu_coreui_profile_media',
+    'stu_user_knowledge_sources',
+    'stu_user_knowledge_chunks',
+    'stu_console_message_attachments',
+    'stu_auth_sessions',
   ];
   $missing = [];
   foreach ($required as $table) {
@@ -39,9 +45,18 @@ try {
       $pdo->query('SELECT last_message_id,last_read_message_id,archived_at FROM stu_console_sessions LIMIT 0');
       $pdo->query('SELECT session_id,reply_to_id FROM stu_chat_messages LIMIT 0');
       $pdo->query('SELECT session_id,trigger_message_id FROM stu_ember_browse_jobs LIMIT 0');
+      $pdo->query('SELECT thinking_enabled FROM stu_user_ai_settings LIMIT 0');
+      $pdo->query('SELECT password_changed_at,last_login_at FROM stu_users LIMIT 0');
+      $pdo->query('SELECT token_hash,expires_at,revoked_at FROM stu_auth_sessions LIMIT 0');
       $stMigration = $pdo->prepare('SELECT COUNT(*) FROM stu_schema_migrations WHERE version=?');
       $stMigration->execute(['003_console_sessions']);
       if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_003_console_sessions';
+      $stMigration->execute(['004_profiles_knowledge']);
+      if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_004_profiles_knowledge';
+      $stMigration->execute(['005_thinking_attachments']);
+      if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_005_thinking_attachments';
+      $stMigration->execute(['006_account_security']);
+      if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_006_account_security';
     } catch (Throwable $eSchema) {
       $missing[] = 'console_session_columns';
     }
@@ -69,6 +84,8 @@ $projectRoot = dirname(__DIR__);
 $writableDirs = [
   $projectRoot . '/logs',
   $projectRoot . '/var/console_media',
+  $projectRoot . '/var/profile_media',
+  $projectRoot . '/var/knowledge_uploads',
   $projectRoot . '/var/ember_py',
   $projectRoot . '/var/ember_frames',
   $projectRoot . '/var/pdf_pages',
@@ -87,7 +104,7 @@ http_response_code($ok ? 200 : 503);
 echo json_encode([
   'ok' => $ok,
   'project' => 'Project STΛRLIɢHT: Ember CoreUI',
-  'version' => '0.3.2-alpha',
+  'version' => '0.4.1-alpha',
   'model' => STU_EMBER_MODEL,
   'checks' => $checks,
   'missing_tables' => $missing ?? [],

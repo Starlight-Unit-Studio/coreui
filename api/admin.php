@@ -4,6 +4,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/ai_settings.php';
+require_once __DIR__ . '/account_store.php';
+require_once __DIR__ . '/profile_store.php';
 
 $pdo = stu_pdo();
 $actorId = stu_require_user_id();
@@ -75,6 +77,7 @@ function coreui_admin_get_overview(PDO $pdo, int $actorLevel): void {
     'messages' => coreui_admin_count($pdo, "SELECT COUNT(*) FROM stu_chat_messages WHERE channel = 'console' AND deleted_at IS NULL"),
     'memories' => coreui_admin_count($pdo, 'SELECT COUNT(*) FROM ember_memories'),
     'lore_chunks' => coreui_admin_count($pdo, 'SELECT COUNT(*) FROM ember_knowledge_chunks'),
+    'user_knowledge_chunks' => coreui_admin_count($pdo, 'SELECT COUNT(*) FROM stu_user_knowledge_chunks'),
     'browse_active' => coreui_admin_count($pdo, "SELECT COUNT(*) FROM stu_ember_browse_jobs WHERE status IN ('queued','running')"),
   ];
   $logPath = coreui_admin_log_path();
@@ -98,15 +101,16 @@ if ($method === 'GET') {
     $where = '';
     $params = [];
     if ($q !== '') {
-      $where = 'WHERE u.username LIKE ? OR c.name LIKE ?';
-      $params = ['%' . $q . '%', '%' . $q . '%'];
+      $where = 'WHERE u.username LIKE ? OR c.name LIKE ? OR p.display_name LIKE ?';
+      $params = ['%' . $q . '%', '%' . $q . '%', '%' . $q . '%'];
     }
     $st = $pdo->prepare(
       'SELECT u.id, u.username, u.permission_level, u.banned_until, u.banned_reason, u.created_at, '
-      . 'u.chat_seconds_lifetime, MAX(c.name) AS character_name, COUNT(DISTINCT s.id) AS session_count '
+      . 'u.chat_seconds_lifetime, p.display_name, p.assistant_name, MAX(c.name) AS character_name, COUNT(DISTINCT s.id) AS session_count '
       . 'FROM stu_users u LEFT JOIN stu_characters c ON c.user_id = u.id '
+      . 'LEFT JOIN stu_coreui_profiles p ON p.user_id = u.id '
       . 'LEFT JOIN stu_console_sessions s ON s.user_id = u.id ' . $where
-      . ' GROUP BY u.id, u.username, u.permission_level, u.banned_until, u.banned_reason, u.created_at, u.chat_seconds_lifetime '
+      . ' GROUP BY u.id, u.username, u.permission_level, u.banned_until, u.banned_reason, u.created_at, u.chat_seconds_lifetime, p.display_name, p.assistant_name '
       . 'ORDER BY u.id DESC LIMIT ' . $limit
     );
     $st->execute($params);
@@ -173,6 +177,45 @@ if ($method === 'GET') {
 if ($method !== 'POST') stu_json(['ok' => false, 'error' => 'method_not_allowed'], 405);
 stu_require_csrf();
 $body = stu_read_json_body();
+
+if ($action === 'user_create') {
+  $email = coreui_account_clean_email((string)($body['username'] ?? ''));
+  $password = (string)($body['password'] ?? '');
+  $displayName = coreui_account_clean_display_name(
+    (string)($body['display_name'] ?? ''),
+    coreui_account_default_display_name($email)
+  );
+  $newLevel = max(1, min(4, (int)($body['permission_level'] ?? 4)));
+  if (!coreui_account_valid_email($email)) stu_json(['ok' => false, 'error' => 'invalid_username'], 400);
+  if (strlen($password) < 12 || strlen($password) > 1024) stu_json(['ok' => false, 'error' => 'invalid_password'], 400);
+  if ($actorLevel > 0 && $newLevel <= $actorLevel) stu_json(['ok' => false, 'error' => 'protected_account'], 403);
+  try {
+    $created = coreui_account_create($pdo, $email, $password, $displayName, $newLevel);
+  } catch (RuntimeException $e) {
+    if ($e->getMessage() === 'username_taken') stu_json(['ok' => false, 'error' => 'username_taken'], 409);
+    if ($e->getMessage() === 'missing_schema_004') stu_json(['ok' => false, 'error' => 'missing_schema_004'], 503);
+    if (function_exists('stu__log_error')) {
+      stu__log_error(['type' => 'admin_user_create_failed', 'actor' => $actorId, 'message' => $e->getMessage()]);
+    }
+    stu_json(['ok' => false, 'error' => 'user_create_failed'], 500);
+  } catch (Throwable $e) {
+    if (function_exists('stu__log_error')) {
+      stu__log_error(['type' => 'admin_user_create_failed', 'actor' => $actorId, 'message' => $e->getMessage()]);
+    }
+    stu_json(['ok' => false, 'error' => 'user_create_failed'], 500);
+  }
+  coreui_admin_audit($pdo, $actorId, 'user_create', 'user', (string)$created['user_id'], [
+    'permission_level' => $newLevel,
+    'display_name' => $displayName,
+  ]);
+  stu_json(['ok' => true, 'user' => [
+    'id' => (int)$created['user_id'],
+    'username' => $email,
+    'display_name' => $displayName,
+    'permission_level' => $newLevel,
+    'character_id' => (string)$created['character_id'],
+  ]]);
+}
 
 if ($action === 'user_update') {
   $targetId = (int)($body['user_id'] ?? 0);

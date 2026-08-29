@@ -2,6 +2,8 @@
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/mailer.php';
+require_once __DIR__ . '/account_store.php';
+require_once __DIR__ . '/profile_store.php';
 
 // Simple username/password auth for Alpha.
 // - Session cookie stores stu_uid when logged in.
@@ -28,20 +30,11 @@ function stu_rate_limit(string $bucket, int $max, int $windowSec): void {
 }
 
 function stu_clean_username(string $u): string {
-  $u = trim($u);
-  $u = preg_replace('/\s+/', '', $u);
-  // Emails are case-insensitive.
-  if (strpos($u, '@') !== false) {
-    $u = strtolower($u);
-  }
-  return $u;
+  return coreui_account_clean_email($u);
 }
 
 function stu_valid_username(string $u): bool {
-  // Online-only: we use email as the ONLY account identifier.
-  // Stored in stu_users.username (historical column name).
-  if (strlen($u) < 6 || strlen($u) > 64) return false;
-  return (bool)filter_var($u, FILTER_VALIDATE_EMAIL);
+  return coreui_account_valid_email($u);
 }
 
 if ($action === 'me') {
@@ -55,6 +48,7 @@ if ($action === 'me') {
       $st->execute([$uid]);
       $urow = $st->fetch();
       if ($urow) {
+        coreui_account_ensure($pdo, (int)$uid, (string)($urow['username'] ?? ''));
         $lvl = isset($urow['permission_level']) ? (int)$urow['permission_level'] : 4;
         $_SESSION['stu_perm'] = $lvl;
         $maintenance = stu_maintenance_status($pdo);
@@ -62,10 +56,17 @@ if ($action === 'me') {
           // Keep HTTP 200 here so the login page can stay interactive for Staff users.
           stu_json(stu_maintenance_payload($pdo), 200);
         }
+        $profile = null;
+        try {
+          if (coreui_profile_schema_ready($pdo)) $profile = coreui_profile_load($pdo, (int)$uid);
+        } catch (Throwable $e) {}
         stu_json([
           'ok' => true,
           'user_id' => $uid,
           'username' => $urow['username'] ?? null,
+          'display_name' => is_array($profile) ? ($profile['display_name'] ?? null) : null,
+          'assistant_name' => is_array($profile) ? ($profile['assistant_name'] ?? 'Ember') : 'Ember',
+          'avatars' => is_array($profile) ? ($profile['avatars'] ?? ['user' => null, 'assistant' => null]) : ['user' => null, 'assistant' => null],
           'permission_level' => $lvl,
           'permission_label' => stu_permission_label($lvl),
           'csrf_token' => stu_csrf_token(),
@@ -97,6 +98,10 @@ if ($action === 'register' || $action === 'login') {
   $body = stu_read_json_body();
   $username = stu_clean_username((string)($body['username'] ?? ''));
   $password = (string)($body['password'] ?? '');
+  $displayName = coreui_account_clean_display_name(
+    (string)($body['display_name'] ?? ''),
+    coreui_account_default_display_name($username)
+  );
 
   if (!stu_valid_username($username)) {
     stu_json(['ok' => false, 'error' => 'invalid_username'], 400);
@@ -106,6 +111,9 @@ if ($action === 'register' || $action === 'login') {
   }
 
   $pdo = stu_pdo();
+  if (!coreui_auth_session_schema_ready($pdo)) {
+    stu_json(['ok' => false, 'error' => 'missing_schema_006'], 503);
+  }
 
   if ($action === 'register') {
     $registrationEnabled = defined('STU_ALLOW_REGISTRATION') && STU_ALLOW_REGISTRATION;
@@ -128,27 +136,30 @@ if ($action === 'register' || $action === 'login') {
       stu_json(['ok' => false, 'error' => 'schema_missing_accounts'], 500);
     }
 
-    $stmt = $pdo->prepare('SELECT id FROM stu_users WHERE username = ? LIMIT 1');
-    $stmt->execute([$username]);
-    if ($stmt->fetch()) stu_json(['ok' => false, 'error' => 'username_taken'], 409);
-
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    if (!$hash) stu_json(['ok' => false, 'error' => 'hash_failed'], 500);
-
-  // Default permission level for newly registered accounts: 4 (Normal User)
-try {
-  $ins = $pdo->prepare('INSERT INTO stu_users (guest_key, created_at, username, password_hash, is_guest, permission_level) VALUES (NULL, NOW(), ?, ?, 0, 4)');
-  $ins->execute([$username, $hash]);
-} catch (Throwable $e) {
-  // Backward compatibility if DB has not been migrated yet.
-  $ins = $pdo->prepare('INSERT INTO stu_users (guest_key, created_at, username, password_hash, is_guest) VALUES (NULL, NOW(), ?, ?, 0)');
-  $ins->execute([$username, $hash]);
-}
-    $uid = (int)$pdo->lastInsertId();
+    try {
+      $created = coreui_account_create($pdo, $username, $password, $displayName, 4);
+      $uid = (int)$created['user_id'];
+    } catch (RuntimeException $e) {
+      if ($e->getMessage() === 'username_taken') stu_json(['ok' => false, 'error' => 'username_taken'], 409);
+      if ($e->getMessage() === 'hash_failed') stu_json(['ok' => false, 'error' => 'hash_failed'], 500);
+      if ($e->getMessage() === 'missing_schema_004') stu_json(['ok' => false, 'error' => 'missing_schema_004'], 503);
+      if (function_exists('stu__log_error')) stu__log_error(['type' => 'registration_failed', 'message' => $e->getMessage()]);
+      stu_json(['ok' => false, 'error' => 'registration_failed'], 500);
+    } catch (Throwable $e) {
+      if (function_exists('stu__log_error')) stu__log_error(['type' => 'registration_failed', 'message' => $e->getMessage()]);
+      stu_json(['ok' => false, 'error' => 'registration_failed'], 500);
+    }
 
     session_regenerate_id(true);
     stu_set_user_id($uid);
     $_SESSION['stu_perm'] = 4;
+    try {
+      $pdo->prepare('UPDATE stu_users SET password_changed_at=NOW(), last_login_at=NOW() WHERE id=?')->execute([$uid]);
+      if (coreui_auth_session_schema_ready($pdo)) coreui_auth_session_issue($pdo, $uid);
+    } catch (Throwable $e) {
+      stu_logout(false);
+      stu_json(['ok' => false, 'error' => 'auth_session_failed'], 500);
+    }
     stu_json(['ok' => true, 'user_id' => $uid, 'permission_level' => 4]);
   }
 
@@ -185,6 +196,14 @@ try {
 
   $lvl = isset($row['permission_level']) ? (int)$row['permission_level'] : 4;
   stu_enforce_maintenance($pdo, (int)$row['id'], $lvl);
+  try {
+    coreui_account_ensure($pdo, (int)$row['id'], $username);
+  } catch (Throwable $e) {
+    if (function_exists('stu__log_error')) {
+      stu__log_error(['type' => 'account_provision_failed', 'uid' => (int)$row['id'], 'message' => $e->getMessage()]);
+    }
+    stu_json(['ok' => false, 'error' => $e->getMessage() === 'missing_schema_004' ? 'missing_schema_004' : 'account_provision_failed'], 503);
+  }
 
   // Rehash on login if algo changed
   if (password_needs_rehash((string)$row['password_hash'], PASSWORD_DEFAULT)) {
@@ -198,6 +217,13 @@ try {
   session_regenerate_id(true);
   stu_set_user_id((int)$row['id']);
   $_SESSION['stu_perm'] = $lvl;
+  try {
+    $pdo->prepare('UPDATE stu_users SET last_login_at=NOW() WHERE id=?')->execute([(int)$row['id']]);
+    if (coreui_auth_session_schema_ready($pdo)) coreui_auth_session_issue($pdo, (int)$row['id']);
+  } catch (Throwable $e) {
+    stu_logout(false);
+    stu_json(['ok' => false, 'error' => 'auth_session_failed'], 500);
+  }
   stu_json(['ok' => true, 'user_id' => (int)$row['id'], 'permission_level' => $lvl]);
 }
 
@@ -366,8 +392,13 @@ if ($action === 'reset') {
     $hash = password_hash($newPass, PASSWORD_DEFAULT);
     if (!$hash) stu_json(['ok' => false, 'error' => 'hash_failed'], 500);
 
-    $pdo->prepare('UPDATE stu_users SET password_hash = ? WHERE id = ? LIMIT 1')->execute([$hash, (int)$uid]);
+    try {
+      $pdo->prepare('UPDATE stu_users SET password_hash = ?, password_changed_at=NOW() WHERE id = ? LIMIT 1')->execute([$hash, (int)$uid]);
+    } catch (Throwable $e) {
+      $pdo->prepare('UPDATE stu_users SET password_hash = ? WHERE id = ? LIMIT 1')->execute([$hash, (int)$uid]);
+    }
     $pdo->prepare('UPDATE stu_password_resets SET used_at = NOW() WHERE id = ? LIMIT 1')->execute([(int)$row['id']]);
+    coreui_auth_session_revoke_all($pdo, (int)$uid, 'password_reset');
     stu_json(['ok' => true]);
   }
 
@@ -390,8 +421,13 @@ if ($action === 'reset') {
   $hash = password_hash($newPass, PASSWORD_DEFAULT);
   if (!$hash) stu_json(['ok' => false, 'error' => 'hash_failed'], 500);
 
-  $pdo->prepare('UPDATE stu_users SET password_hash = ? WHERE id = ? LIMIT 1')->execute([$hash, (int)$row['user_id']]);
+  try {
+    $pdo->prepare('UPDATE stu_users SET password_hash = ?, password_changed_at=NOW() WHERE id = ? LIMIT 1')->execute([$hash, (int)$row['user_id']]);
+  } catch (Throwable $e) {
+    $pdo->prepare('UPDATE stu_users SET password_hash = ? WHERE id = ? LIMIT 1')->execute([$hash, (int)$row['user_id']]);
+  }
   $pdo->prepare('UPDATE stu_password_resets SET used_at = NOW() WHERE id = ? LIMIT 1')->execute([(int)$row['id']]);
+  coreui_auth_session_revoke_all($pdo, (int)$row['user_id'], 'password_reset');
 
   stu_json(['ok' => true]);
 }

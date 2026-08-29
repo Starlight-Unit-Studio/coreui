@@ -21,7 +21,7 @@ server {
         return 404;
     }
 
-    location ~ ^/api/(?:auth|chat|console_stream|console_sessions|console_messages|console_browse_stream|console_upload|console_media|storage|memories|user_settings|admin|health)\.php$ {
+    location ~ ^/api/(?:auth|chat|console_stream|console_sessions|console_messages|console_browse_stream|console_upload|console_media|storage|memories|user_settings|profile|profile_media|knowledge|account_security|account_export|models|admin|health)\.php$ {
         try_files $uri =404;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
