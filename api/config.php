@@ -82,10 +82,10 @@ coreui_define('STU_EMBER_LORE_ENABLED', coreui_env_bool('COREUI_LORE_ENABLED', t
 coreui_define('STU_EMBER_LORE_LIMIT', (int)coreui_env('COREUI_LORE_LIMIT', '5'));
 coreui_define('STU_EMBER_LORE_MAX_CHARS', (int)coreui_env('COREUI_LORE_MAX_CHARS', '1800'));
 coreui_define('STU_EMBER_LORE_MIN_QUERY_CHARS', (int)coreui_env('COREUI_LORE_MIN_QUERY_CHARS', '3'));
-coreui_define('STU_EMBER_LORE_DOCS', [
-  'bibel_v10_4' => dirname(__DIR__) . '/docs/S.U. MASTER BIBEL v10.4.docx',
-  'kompendium_v6' => dirname(__DIR__) . '/docs/STU_KOMPENDIUM_V6.docx',
-]);
+// Studio-internes Kanonmaterial wird niemals mit Ember CoreUI ausgeliefert.
+// Operatoren koennen eigene, rechtmaessig bereitgestellte Quellen separat
+// importieren. Das oeffentliche Release enthaelt keine voreingestellten Pfade.
+coreui_define('STU_EMBER_LORE_DOCS', []);
 
 coreui_define('STU_EMBER_WEB_ENABLED', coreui_env_bool('COREUI_WEB_ENABLED', true));
 coreui_define('STU_EMBER_WEB_URL', coreui_env('COREUI_SEARXNG_URL', 'http://127.0.0.1:18889/search'));
@@ -104,7 +104,7 @@ coreui_define('STU_EMBER_BROWSE_FRAME_INTERVAL_MS', (int)coreui_env('COREUI_BROW
 coreui_define('STU_EMBER_BROWSE_FRAME_RETENTION_HOURS', (int)coreui_env('COREUI_BROWSE_FRAME_RETENTION_HOURS', '24'));
 coreui_define('STU_EMBER_BROWSE_SCREENSHOT_DIR', dirname(__DIR__) . '/uploads/ember_browse');
 
-coreui_define('STU_EMBER_PY_ENABLED', coreui_env_bool('COREUI_PY_ENABLED', false));
+coreui_define('STU_EMBER_PY_ENABLED', coreui_env_bool('COREUI_PY_ENABLED', true));
 coreui_define('STU_EMBER_PY_WAIT', (int)coreui_env('COREUI_PY_WAIT', '90'));
 coreui_define('STU_EMBER_PY_MAX_CHARS', (int)coreui_env('COREUI_PY_MAX_CHARS', '2000'));
 coreui_define('STU_EMBER_PY_MAX_CODE_CHARS', (int)coreui_env('COREUI_PY_MAX_CODE_CHARS', '12000'));

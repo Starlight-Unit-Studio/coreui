@@ -124,3 +124,31 @@ services:
       - ./uploads/ember_browse:/var/www/coreui/uploads/ember_browse
       - ./var/browser-home:/tmp/coreui-browser-home
     stop_grace_period: 25s
+
+  pyworker:
+    build:
+      context: .
+      dockerfile: docker/pyworker/Dockerfile
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      COREUI_PROJECT_ROOT: ${COREUI_PROJECT_ROOT:-/opt/ember-coreui}
+      STU_CONFIG: ${COREUI_PROJECT_ROOT:-/opt/ember-coreui}/api/config.local.php
+      STU_EMBER_PY_IMAGE: ember-py:1
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - .:${COREUI_PROJECT_ROOT:-/opt/ember-coreui}:ro
+      - ./var/ember_py:${COREUI_PROJECT_ROOT:-/opt/ember-coreui}/var/ember_py
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - test -S /var/run/docker.sock && kill -0 1
+      interval: 10s
+      timeout: 4s
+      retries: 12
+      start_period: 90s
+    stop_grace_period: 20s

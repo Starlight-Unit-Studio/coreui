@@ -3781,7 +3781,7 @@ function ember_build_chat_prompt(
       $lore = ember_lore_block($pdo, $loreQuery, ember_lore_limit_for_runtime());
     }
   }
-  $privateKnowledgeBlock = function_exists('coreui_private_knowledge_block')
+  $privateKnowledgeBlock = $channel === 'console' && function_exists('coreui_private_knowledge_block')
     ? coreui_private_knowledge_block($pdo, $uid, $cleanLoreQuestion, 4)
     : '';
 
@@ -3955,7 +3955,7 @@ function ember_generate_reply(
       $lore = ember_lore_block($pdo, $loreQuery, ember_lore_limit_for_runtime());
     }
   }
-  $privateKnowledgeBlock = function_exists('coreui_private_knowledge_block')
+  $privateKnowledgeBlock = $channel === 'console' && function_exists('coreui_private_knowledge_block')
     ? coreui_private_knowledge_block($pdo, $uid, $cleanLoreQuestion, 4)
     : '';
 
@@ -7487,7 +7487,10 @@ if ($action === 'send') {
   // Ember reply (global + console channel)
   $doEmber = false;
   $isConsoleChannel = ($channel === 'console');
-  if (($channel === 'global' || $isConsoleChannel) && ember_enabled() && ember_user_id() > 0 && ember_should_reply($message)) {
+  if (($channel === 'global' || $isConsoleChannel)
+      && ember_enabled()
+      && ember_user_id() > 0
+      && ($isConsoleChannel || ember_should_reply($message))) {
     $doEmber = true;
     // Cooldown: global channel hat 12s Sperre, console hat eigene Sperre pro User (4s)
     try {

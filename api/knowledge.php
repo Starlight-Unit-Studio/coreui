@@ -20,7 +20,7 @@ function coreui_knowledge_response(PDO $pdo, int $uid): void {
       'max_sources' => $limits['max_sources'],
       'max_file_mb' => (int)round($limits['max_file_bytes'] / 1048576),
       'max_total_chars' => $limits['max_total_chars'],
-      'formats' => ['txt', 'md', 'pdf', 'docx'],
+      'formats' => ['txt', 'md', 'pdf', 'docx', 'py', 'csv', 'json', 'xml', 'yml', 'yaml', 'ini', 'php', 'js', 'html', 'css', 'sql'],
     ],
     'csrf_token' => stu_csrf_token(),
   ]);

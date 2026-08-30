@@ -287,6 +287,7 @@ COREUI_DB_ROOT_PASS=$DB_ROOT_PASS
 COREUI_MODEL_NAME=$MODEL_NAME
 COREUI_LOCK_NAMESPACE=$LOCK_NAMESPACE
 COREUI_BIND_ADDRESS=$BIND_ADDRESS
+COREUI_PROJECT_ROOT=$PROJECT_ROOT
 COREUI_INSTALL_SEARXNG=$INSTALL_SEARXNG
 COREUI_INSTALL_BROWSE=$INSTALL_BROWSE
 COREUI_SEARXNG_URL=$SEARXNG_URL
@@ -351,7 +352,7 @@ define('STU_EMBER_BROWSE_FRAME_BURST', 3);
 define('STU_EMBER_BROWSE_FRAME_INTERVAL_MS', 240);
 define('STU_EMBER_BROWSE_FRAME_RETENTION_HOURS', 24);
 define('STU_EMBER_BROWSE_SCREENSHOT_DIR', '/var/www/coreui/uploads/ember_browse');
-define('STU_EMBER_PY_ENABLED', false);
+define('STU_EMBER_PY_ENABLED', true);
 PHP
     install -m 0640 -o root -g 33 "$config_tmp" "$CONFIG_FILE"
   else
@@ -440,9 +441,16 @@ ensure_ollama_model() {
 [[ -f "$PROJECT_ROOT/database/migrations/004_profiles_knowledge.sql" ]] || die 'SQL-Profil- und Knowledge-Schema fehlt.'
 [[ -f "$PROJECT_ROOT/database/migrations/005_thinking_attachments.sql" ]] || die 'SQL-Thinking- und Anhangschema fehlt.'
 [[ -f "$PROJECT_ROOT/database/migrations/006_account_security.sql" ]] || die 'SQL-Kontosicherheitsschema fehlt.'
+[[ -f "$PROJECT_ROOT/database/migrations/007_remove_private_studio_lore.sql" ]] || die 'SQL-Datenschutzmigration fehlt.'
 [[ "$PROJECT_ROOT" =~ ^/[A-Za-z0-9._/-]+$ ]] || die 'Der Projektpfad enthaelt nicht unterstuetzte Zeichen.'
 [[ "$PROJECT_ROOT" != /root/* ]] || die 'Bitte das Paket dauerhaft nach /opt/ember-coreui verschieben.'
 [[ "$PROJECT_ROOT" != /home/* ]] || die 'Bitte das Paket dauerhaft nach /opt/ember-coreui verschieben.'
+
+# Entfernt nur die zwei bekannten Altdateien aus versehentlichen Alpha-Paketen.
+# Andere Betreiber-Dokumente im docs-Verzeichnis bleiben erhalten.
+rm -f -- \
+  "$PROJECT_ROOT/docs/S.U. MASTER BIBEL v10.4.docx" \
+  "$PROJECT_ROOT/docs/STU_KOMPENDIUM_V6.docx"
 
 if [[ -r /etc/os-release ]]; then
   # shellcheck disable=SC1091
@@ -515,7 +523,6 @@ INSTALL_BROWSE="${REQUEST_INSTALL_BROWSE:-${SAVED_INSTALL_BROWSE:-1}}"
 INSTALL_DOCKER="${COREUI_INSTALL_DOCKER:-1}"
 INSTALL_OLLAMA="${COREUI_INSTALL_OLLAMA:-1}"
 FORCE_CONFIG="${COREUI_FORCE_CONFIG:-0}"
-SKIP_LORE="${COREUI_SKIP_LORE:-0}"
 SKIP_BOOTSTRAP="${COREUI_SKIP_BOOTSTRAP:-0}"
 ADOPT_MODEL="${COREUI_ADOPT_MODEL:-0}"
 BASE_MODEL="${COREUI_BASE_MODEL:-}"
@@ -609,11 +616,13 @@ while IFS= read -r -d '' py_file; do
     || die "Python-Syntaxfehler in $py_file"
 done < <(find "$PROJECT_ROOT/tools" -type f -name '*.py' -print0)
 
-log 'Baue die isolierten PHP- und Browse-Images.'
-compose build php
+log 'Baue die isolierten PHP-, Python-Worker- und optionalen Browse-Images.'
+compose build php pyworker
 if is_enabled "$INSTALL_BROWSE"; then
   compose build browse
 fi
+log 'Baue das wegwerfbare Python-Sandbox-Image ohne Projekt- oder Geheimnis-Mounts.'
+docker build -t ember-py:1 -f "$PROJECT_ROOT/tools/ember_py.Dockerfile" "$PROJECT_ROOT/tools"
 
 compose run --rm --no-deps php sh -ec \
   'find api scripts tools -type f -name "*.php" -print0 | xargs -0 -r -n1 php -l >/dev/null'
@@ -642,20 +651,6 @@ else
   warn 'Account-Bootstrap wurde durch COREUI_SKIP_BOOTSTRAP=1 uebersprungen.'
 fi
 
-if ! is_enabled "$SKIP_LORE"; then
-  log 'Importiere die paketierten Lore-Dokumente in die eigene RAG-Lite-Datenbank.'
-  compose run --rm --no-deps php php tools/ingest_docx_knowledge.php \
-    --file='/var/www/coreui/docs/S.U. MASTER BIBEL v10.4.docx' \
-    --source=bibel_v10_4 \
-    --truncate
-  compose run --rm --no-deps php php tools/ingest_docx_knowledge.php \
-    --file='/var/www/coreui/docs/STU_KOMPENDIUM_V6.docx' \
-    --source=kompendium_v6 \
-    --truncate
-else
-  warn 'Lore-Import wurde durch COREUI_SKIP_LORE=1 uebersprungen.'
-fi
-
 if is_enabled "$INSTALL_SEARXNG"; then
   log "Starte die eigene SearXNG-Instanz auf 127.0.0.1:$SEARXNG_PORT."
   compose up -d searxng
@@ -681,6 +676,9 @@ if is_enabled "$INSTALL_BROWSE"; then
 else
   compose stop browse >/dev/null 2>&1 || true
 fi
+
+log 'Starte den isolierten Ember CoreUI-Python-Worker.'
+compose up -d pyworker
 
 chmod 0750 "$PROJECT_ROOT/scripts/install.sh" "$PROJECT_ROOT/scripts/preflight.sh" \
   "$PROJECT_ROOT/scripts/install-native.sh" "$PROJECT_ROOT/scripts/preflight-native.sh" \

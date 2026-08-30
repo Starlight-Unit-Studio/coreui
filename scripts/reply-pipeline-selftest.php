@@ -92,12 +92,19 @@ if (!str_contains($clientSource, 'MAX_MESSAGE_ATTACHMENTS = 10')
     || !str_contains($clientSource, 'attachment_uuids:')) {
   reply_test_fail('Die Nachrichtenanhaenge sind nicht auf zehn begrenzt und persistent verdrahtet.');
 }
+if (str_contains($clientSource, "EMBER_PREFIX + userText")
+    || !str_contains($clientSource, 'var msgToSend = userText;')) {
+  reply_test_fail('Der private Dateipfad sendet weiterhin ein kuenstliches @Ember-Praefix.');
+}
 
 $chatSource = (string)file_get_contents(dirname(__DIR__) . '/api/chat.php');
 foreach (['? 20000 : 12000', '? 1200 : 120', 'chat_clean_console_message', 'chat_console_transport_text'] as $needle) {
   if (!str_contains($chatSource, $needle)) {
     reply_test_fail('Private Ember CoreUI-Arbeitsgrenze fehlt: ' . $needle);
   }
+}
+if (!str_contains($chatSource, '($isConsoleChannel || ember_should_reply($message))')) {
+  reply_test_fail('Der private Kanal adressiert Ember nicht serverseitig.');
 }
 
 $migration = (string)file_get_contents(dirname(__DIR__) . '/database/migrations/002_coreui_management.sql');

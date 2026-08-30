@@ -56,6 +56,8 @@ UI_FILES=(
   js/settings.js
   js/admin.js
   css/admin.css
+  setup.sh
+  api/rag_lite.php
   api/ai_settings.php
   api/model_catalog.php
   api/models.php
@@ -76,7 +78,10 @@ UI_FILES=(
   database/migrations/004_profiles_knowledge.sql
   database/migrations/005_thinking_attachments.sql
   database/migrations/006_account_security.sql
+  database/migrations/007_remove_private_studio_lore.sql
   scripts/session-selftest.php
+  scripts/attachment-pipeline-selftest.php
+  scripts/python-worker-selftest.php
   scripts/profile-knowledge-selftest.php
   scripts/account-security-selftest.php
   scripts/branding-license-selftest.py
@@ -89,6 +94,13 @@ for ui_file in "${UI_FILES[@]}"; do
 done
 if (( FAILURES == 0 )); then
   ok 'Ember-CoreUI-Branding, Lizenzunterlagen und Einstellungsoberflaeche sind paketiert.'
+fi
+
+if find "$PROJECT_ROOT" -type f \
+    \( -iname '*master*bibel*' -o -iname '*kompendium*v6*' \) -print -quit | grep -q .; then
+  fail 'Privates Bibel- oder Kompendium-Material ist noch im Release enthalten.'
+else
+  ok 'Das Release enthaelt kein privates Bibel- oder Kompendium-Dokument.'
 fi
 
 if grep -Fq "action: 'delete_permanently'" "$PROJECT_ROOT/js/console-app.js" \
@@ -125,7 +137,7 @@ else
   fail 'Mindestens eine neue 0.4.1-Funktion ist nicht vollstaendig verdrahtet.'
 fi
 
-for command_name in curl mariadb nginx pdfinfo pdftoppm pdftotext php; do
+for command_name in curl docker mariadb nginx pdfinfo pdftoppm pdftotext php; do
   check_command "$command_name"
 done
 
@@ -189,6 +201,24 @@ if command -v php >/dev/null 2>&1; then
     fail "$profile_knowledge_selftest"
   fi
 
+  attachment_pipeline_selftest=''
+  if attachment_pipeline_selftest="$(runuser -u www-data -- php "$PROJECT_ROOT/scripts/attachment-pipeline-selftest.php" 2>&1)"; then
+    attachment_pipeline_selftest="${attachment_pipeline_selftest//$'\r'/}"
+    ok "$attachment_pipeline_selftest"
+  else
+    attachment_pipeline_selftest="${attachment_pipeline_selftest//$'\r'/}"
+    fail "$attachment_pipeline_selftest"
+  fi
+
+  python_worker_selftest=''
+  if python_worker_selftest="$(runuser -u www-data -- php "$PROJECT_ROOT/scripts/python-worker-selftest.php" 2>&1)"; then
+    python_worker_selftest="${python_worker_selftest//$'\r'/}"
+    ok "$python_worker_selftest"
+  else
+    python_worker_selftest="${python_worker_selftest//$'\r'/}"
+    fail "$python_worker_selftest"
+  fi
+
   account_security_selftest=''
   if account_security_selftest="$(runuser -u www-data -- php "$PROJECT_ROOT/scripts/account-security-selftest.php" 2>&1)"; then
     account_security_selftest="${account_security_selftest//$'\r'/}"
@@ -242,6 +272,18 @@ if command -v php >/dev/null 2>&1; then
       ok 'Migration 006: widerrufbare Anmeldungen und Passwortzeitpunkte sind bereit.'
     else
       fail 'Migration 006 fehlt.'
+    fi
+
+    if php -r "require '$PROJECT_ROOT/api/db.php'; \$p=stu_pdo(); \$s=\$p->prepare('SELECT COUNT(*) FROM ember_knowledge_chunks WHERE source IN (?,?)'); \$s->execute(['bibel_v10_4','kompendium_v6']); exit((int)\$s->fetchColumn() === 0 ? 0 : 1);" >/dev/null 2>&1; then
+      ok 'Migration 007: versehentlich importiertes privates Studio-Lore ist entfernt.'
+    else
+      fail 'Migration 007 fehlt oder privates Studio-Lore liegt noch in der Datenbank.'
+    fi
+
+    if systemctl is-active --quiet ember-coreui-python.service; then
+      ok 'Ember CoreUI-Python-Worker ist aktiv.'
+    else
+      fail 'Ember CoreUI-Python-Worker ist nicht aktiv.'
     fi
 
     MODEL_NAME="$(read_constant STU_EMBER_MODEL || true)"
