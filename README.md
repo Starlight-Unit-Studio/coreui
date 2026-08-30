@@ -1,183 +1,183 @@
 # Project STΛRLIɢHT: Ember CoreUI
 
-Ember CoreUI ist ein eigenstaendiges WebUI fuer einen lokalen E.M.B.E.R.-Kern. Bis zur finalen Aufnahme in den STU-Repack besitzt es eine eigene Versionierung und einen eigenen Release-Zyklus.
+Ember CoreUI is an independent WebUI for a local E.M.B.E.R. core. Until its final inclusion in the STU Repack, it has its own versioning and its own release cycle.
 
-Aktuelle Version: `0.4.2-alpha`
+Current version: `0.4.2-alpha`
 
-## Eigenstaendigkeit und verbindlicher Produktname
+## Independence and mandatory product name
 
-Der Produktname lautet immer **Ember CoreUI**. Die vollstaendige Bezeichnung lautet **STΛRLIɢHT: Ember CoreUI by Starlight Unit Studios**. Die alleinstehende Bezeichnung `CoreUI` wird fuer dieses Projekt nicht als Produktname verwendet.
+The product name is always **Ember CoreUI**. The full designation is **STΛRLIɢHT: Ember CoreUI by Starlight Unit Studios**. The standalone designation `CoreUI` is not used as a product name for this project.
 
-Ember CoreUI ist eigenstaendig entwickelt. Das Projekt ist kein Fork des getrennten Admin-Template- und UI-Komponentenprojekts unter `coreui.io`, enthaelt keine Abhaengigkeit davon und ist damit weder verbunden noch von diesem gesponsert oder empfohlen. Technische Kompatibilitaetsnamen wie `coreui`, `COREUI_*`, `ember-coreui`, `/opt/ember-coreui`, Repository- und Domainbestandteile bleiben reine Maschinenbezeichner.
+Ember CoreUI is independently developed. The project is not a fork of the separate admin template and UI component project at `coreui.io`, contains no dependency on it, and is neither affiliated with, sponsored by, nor endorsed by it. Technical compatibility names such as `coreui`, `COREUI_*`, `ember-coreui`, `/opt/ember-coreui`, repository components, and domain components remain purely machine identifiers.
 
-## Lizenz und kostenloses Community-Modell
+## License and free community model
 
-Ab `0.4.2-alpha` steht der projekt-eigene Code unter der **Starlight Unit Studios Ember CoreUI Community Source Lizenz 1.0**. Die rechtlich massgebliche deutsche Fassung befindet sich in `LICENSE.de.md`; `LICENSE.md` ist die englische Uebersetzung.
+Starting with `0.4.2-alpha`, the project's own code is licensed under the **Starlight Unit Studios Ember CoreUI Community Source License 1.0**. The legally authoritative German version is located in `LICENSE.de.md`; `LICENSE.md` is the English translation.
 
-- private, gemeinschaftliche und interne Nutzung bleibt kostenlos
-- interne Nutzung durch Unternehmen bleibt mit sichtbarem Ember-CoreUI-Branding kostenlos
-- keine Nutzergrenze und keine Lizenztelemetrie
-- kein kostenpflichtiges Lizenz-, White-Label-, Spenden-, Werbe- oder Supportprogramm des offiziellen Ember-CoreUI-Projekts
-- Ember CoreUI darf von Dritten nicht als kostenpflichtiger SaaS- oder Managed-Service verkauft werden
-- Branding-Aenderungen brauchen immer eine vorherige schriftliche Einzelfallgenehmigung
-- veraenderte Weitergaben muessen Quellcode, Lizenz, Herkunftshinweise und Branding erhalten
+- private, community, and internal use remains free
+- internal use by companies remains free with visible Ember CoreUI branding
+- no user limit and no license telemetry
+- no paid licensing, white-label, donation, advertising, or support program for the official Ember CoreUI project
+- Ember CoreUI may not be sold by third parties as a paid SaaS or managed service
+- branding changes always require prior written case-by-case approval
+- modified redistributions must retain source code, license, attribution notices, and branding
 
-Weitere Details stehen in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNITY_POLICY.md`, `NOTICE.md` und `COPYRIGHT.md`. Die Lizenz ist Source Available und nicht OSI-zertifiziert. Drittkomponenten behalten ihre eigenen Bedingungen.
+Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNITY_POLICY.md`, `NOTICE.md`, and `COPYRIGHT.md`. The license is Source Available and is not OSI-certified. Third-party components retain their own terms.
 
-## Ergebnis dieses Releases
+## Result of this release
 
-`0.4.2-alpha` ist ein reiner Lizenz-, Herkunfts- und Branding-Release. Es fuehrt keine neue Datenbankmigration und keine Monetarisierungsfunktion ein. Produkttexte verwenden konsequent `Ember CoreUI`; die Oberflaeche, Dokumentation und Metadaten nennen Starlight Unit Studios als unabhaengigen Herausgeber.
+`0.4.2-alpha` is a licensing, provenance, and branding-only release. It introduces no new database migration and no monetization functionality. Product text consistently uses `Ember CoreUI`; the interface, documentation, and metadata identify Starlight Unit Studios as the independent publisher.
 
-Der funktionale Stand aus `0.4.1-alpha` bleibt vollstaendig enthalten: sicherer Passwortwechsel, widerrufbare Login-Sitzungen, privater JSON-Kontoexport und eine gegen die lokale Ollama-Instanz validierte Modellauswahl.
+The full functional state from `0.4.1-alpha` remains included: secure password changes, revocable login sessions, private JSON account export, and model selection validated against the local Ollama instance.
 
-Direkt in den Einstellungen koennen TXT-, Markdown-, Text-PDF- und DOCX-Dateien als privates RAG-Lite-Wissen hochgeladen, extrahiert und gechunkt werden. Quellen, Originaldateien und Chunks sind immer an den authentifizierten Benutzer gebunden und bleiben vom global kuratierten Studio-Kanon getrennt. Das Admin Core kann neue Benutzer mit Startpasswort, Rolle, eigenem Operator und eigenem Profil anlegen.
+Directly in the settings, TXT, Markdown, text-based PDF, and DOCX files can be uploaded, extracted, and chunked as private RAG-Lite knowledge. Sources, original files, and chunks are always bound to the authenticated user and remain separate from the globally curated studio canon. The Admin Core can create new users with an initial password, role, dedicated operator, and dedicated profile.
 
-Der Nachrichten-Composer akzeptiert bis zu zehn Dateien pro Turn. Die geordnete Liste bleibt beim Neuladen erhalten, wird benutzergebunden an genau die Nachricht gekoppelt und beim endgueltigen Loeschen einer Sitzung referenzsicher bereinigt. Textanhaenge teilen sich ein begrenztes Kontextbudget; Bild-, Video- und Scan-PDF-Eingaben besitzen zusaetzlich ein gemeinsames Vision-Limit.
+The message composer accepts up to ten files per turn. The ordered list persists after reloading, is bound to the authenticated user and exactly the associated message, and is cleaned up in a reference-safe manner when a session is permanently deleted. Text attachments share a limited context budget; image, video, and scanned-PDF inputs additionally share a common vision limit.
 
-Die echten Sitzungs-Scopes, Turn-Zuordnungen, verlustfreien Altverlaeufe und die kontrollierte endgueltige Sitzungsloeschung aus `0.3.1-alpha` und `0.3.2-alpha` bleiben unveraendert enthalten. Game, Homepage, Apache, KeyHelp, Host-PHP, Repack-Pfade und die bestehende STU-Datenbank bleiben unberuehrt.
+The real session scopes, turn assignments, lossless legacy histories, and controlled permanent session deletion from `0.3.1-alpha` and `0.3.2-alpha` remain included without changes. Game, homepage, Apache, KeyHelp, host PHP, Repack paths, and the existing STU database remain untouched.
 
-## Echte Sitzungen statt Demo-Zeiger
+## Real sessions instead of demo pointers
 
-Vor `0.3.1-alpha` bestand eine Sitzung nur aus Titel und `since_id`. Alle privaten Nachrichten lagen trotzdem in einem gemeinsamen Benutzerstrom. Das fuehrte zu falschen Ausschnitten, springender Reihenfolge und fehlenden letzten Nachrichten. Der neue Pfad behebt das strukturell:
+Before `0.3.1-alpha`, a session consisted only of a title and `since_id`. All private messages were still stored in a shared user stream. This caused incorrect excerpts, jumping order, and missing latest messages. The new path fixes this structurally:
 
-- `stu_chat_messages.session_id` trennt Unterhaltungen dauerhaft in der Datenbank.
-- `reply_to_id` ordnet jede Ember-Antwort dem exakten User-Turn zu.
-- `console_messages.php` liefert ausschliesslich Nachrichten einer geprueften, eigenen Sitzung.
-- Der Client merkt sich die aktive Sitzungs-ID statt eines instabilen Listenindex.
-- Asynchrone History-, Poll-, SSE- und Browser-Callbacks pruefen ihre Sitzungs-ID, bevor sie die sichtbare Oberflaeche veraendern.
-- Lesemarkierungen veraendern nicht mehr `updated_at`; nur echte neue Nachrichten sortieren eine Sitzung nach oben.
-- Neueste Nachrichten werden direkt geladen. Aeltere Seiten koennen ohne Rechenfenster oder `since_id`-Schaetzung nachgeladen werden.
-- Sitzungen werden nicht mehr automatisch geloescht. Archivieren ist eine reversible Metadatenoperation; der Nachrichtenverlauf bleibt erhalten.
-- Eine eigene Archivansicht erlaubt das Wiederherstellen archivierter Sitzungen. Kurzzeitige Ladefehler verdraengen bereits bestaetigte Nachrichten nicht mehr aus der Ansicht.
-- Endgueltiges Loeschen ist ausschliesslich in der Archivansicht verfuegbar und verlangt zwei bewusste Bestaetigungen.
-- Der API-Endpunkt akzeptiert die Loeschung nur fuer eine eigene, archivierte Sitzung und prueft eine sitzungsspezifische Bestaetigung nochmals serverseitig.
-- Eine SQL-Transaktion entfernt Reaktionen, Browserframes, Browserschritte, abgeschlossene Browserjobs, Nachrichten, verwaiste Upload-Datensaetze und zuletzt die Sitzungszeile. Ein Fehler rollt die gesamte Datenbankoperation zurueck.
-- Sitzungen mit einem Browserjob im Zustand `queued` oder `running` werden nicht geloescht. Dadurch kann dem Worker keine aktive Recherche unter den Fuessen entfernt werden.
-- Physische Upload-Dateien und der abschliessende Screenshot entfernter Browserjobs werden erst nach erfolgreichem Datenbank-Commit und nur aus `var/console_media`, `assets/chat_media` oder `uploads/ember_browse` entfernt. Dateien mit weiteren Nachrichtenreferenzen bleiben erhalten.
-- Migration `003_console_sessions` sammelt nicht eindeutig trennbare Alt-Nachrichten verlustfrei in einem wiederhergestellten Verlauf.
-- Der eigene Sitzungs-Selftest prueft Schema, History-Scope, Turn-Zuordnung, Client-Rennen, Browser-Worker-Weitergabe und die vollstaendige transaktionale Loeschkaskade mit Rollback.
+- `stu_chat_messages.session_id` permanently separates conversations in the database.
+- `reply_to_id` assigns each Ember response to the exact user turn.
+- `console_messages.php` returns only messages from a verified session owned by the user.
+- The client remembers the active session ID instead of an unstable list index.
+- Asynchronous history, poll, SSE, and browser callbacks verify their session ID before changing the visible interface.
+- Read markers no longer change `updated_at`; only genuinely new messages move a session to the top.
+- The newest messages are loaded directly. Older pages can be loaded without calculation windows or `since_id` estimation.
+- Sessions are no longer deleted automatically. Archiving is a reversible metadata operation; the message history remains preserved.
+- A dedicated archive view allows archived sessions to be restored. Temporary loading errors no longer displace already confirmed messages from the view.
+- Permanent deletion is available only in the archive view and requires two deliberate confirmations.
+- The API endpoint accepts deletion only for a session owned by the user that is already archived and verifies a session-specific confirmation again on the server side.
+- An SQL transaction removes reactions, browser frames, browser steps, completed browser jobs, messages, orphaned upload records, and finally the session row. An error rolls back the entire database operation.
+- Sessions with a browser job in the `queued` or `running` state are not deleted. This prevents an active research task from being removed underneath the worker.
+- Physical upload files and the final screenshot of removed browser jobs are deleted only after a successful database commit and only from `var/console_media`, `assets/chat_media`, or `uploads/ember_browse`. Files with additional message references remain preserved.
+- Migration `003_console_sessions` collects legacy messages that cannot be separated unambiguously into a recovered history without data loss.
+- The dedicated session self-test checks schema, history scope, turn assignment, client races, browser worker propagation, and the complete transactional deletion cascade including rollback.
 
-## Sicherer Denkstatus und Bereinigung alter Sitzungen
+## Secure thinking status and cleanup of old sessions
 
-Ember CoreUI trennt die fluechtige interne Modellanalyse strikt von der sichtbaren Oberflaeche:
+Ember CoreUI strictly separates transient internal model analysis from the visible interface:
 
-- SSE liefert waehrend der Generierung nur feste Statusstufen wie `KONTEXT WIRD ABGEGLICHEN` und `ANTWORT WIRD FORMULIERT`.
-- `message.content` und `message.thinking` werden vollstaendig gesammelt und erst nach der gemeinsamen Sicherheitspruefung verarbeitet.
-- Englische und deutsche Prompt-, Analyse-, Entwurfs- und Selbstkorrektur-Muster werden vor SSE, Datenbank und History abgefangen.
-- Neue `thinking_content`-Werte enthalten bei aktivem Thinking nur den sicheren Abschlussstatus; bei deaktiviertem Thinking bleiben sie leer.
-- Der Fetch-Endpunkt ersetzt alte Raw-Werte vor der JSON-Ausgabe fail-closed.
-- Der Browser besitzt eine zusaetzliche Whitelist und schreibt keinen beliebigen Thinking-Text in den DOM.
-- Das Antwortbudget wird pro Benutzer an Ollama uebergeben. Ein erkanntes Tokenlimit setzt an der vorhandenen Antwort fort, statt die gesamte Generierung neu zu beginnen.
-- Private Console-Nachrichten duerfen bis zu 12000 Zeichen enthalten, mit Anhang bis zu 20000 Zeichen. Zeilenumbrueche und Code-Einrueckungen bleiben erhalten.
-- Der SSE-Aufruf uebergibt nur die authentifizierte Turn-ID. Der Nachrichtentext wird aus der Ember CoreUI-Datenbank geladen und erscheint nicht in der EventSource-URL oder in Proxy-Zugriffslogs.
-- Die Nachrichtenspalte wird durch Migration `002_coreui_management` auf `MEDIUMTEXT` erweitert.
+- During generation, SSE returns only fixed status stages such as `KONTEXT WIRD ABGEGLICHEN` and `ANTWORT WIRD FORMULIERT`.
+- `message.content` and `message.thinking` are collected in full and processed only after the shared safety check.
+- English and German prompt, analysis, draft, and self-correction patterns are intercepted before SSE, database, and history.
+- New `thinking_content` values contain only the safe final status when Thinking is enabled; when Thinking is disabled, they remain empty.
+- The fetch endpoint replaces old raw values before JSON output using fail-closed behavior.
+- The browser has an additional whitelist and does not write arbitrary Thinking text into the DOM.
+- The response budget is passed to Ollama per user. A detected token limit continues from the existing response instead of restarting the entire generation.
+- Private Console messages may contain up to 12000 characters, or up to 20000 characters with attachments. Line breaks and code indentation are preserved.
+- The SSE call passes only the authenticated turn ID. The message text is loaded from the Ember CoreUI database and does not appear in the EventSource URL or in proxy access logs.
+- The message column is expanded to `MEDIUMTEXT` by migration `002_coreui_management`.
 
-Nach dem Update koennen bereits vorhandene Raw-Blöcke einmalig in der isolierten Ember CoreUI-Datenbank ersetzt werden:
+After the update, existing raw blocks can be replaced once in the isolated Ember CoreUI database:
 
 ```bash
 cd /opt/ember-coreui
 sudo ./scripts/stack.sh scrub-thinking
 ```
 
-Der Befehl veraendert weder die Game-Datenbank noch den Global-Chat.
+The command changes neither the Game database nor the Global Chat.
 
-Nur Ollama wird als bereits vorhandene lokale Modell-Schnittstelle gemeinsam benutzt. Ember CoreUI erzeugt dafuer das getrennte Modell `ember-coreui:latest`. Ein vorhandenes STU-Modell wie `gemma4:26b` wird weder ersetzt noch umkonfiguriert.
+Only Ollama is shared as an already existing local model interface. Ember CoreUI creates the separate model `ember-coreui:latest` for this purpose. An existing STU model such as `gemma4:26b` is neither replaced nor reconfigured.
 
-## Profile, KI-Einstellungen und privates Wissen
+## Profiles, AI settings, and private knowledge
 
-`settings.html` verbindet lokale Anzeigeoptionen mit einem echten serverseitigen Benutzer- und KI-Profil:
+`settings.html` connects local display options with a real server-side user and AI profile:
 
-- eigener sichtbarer Benutzername, ohne Aenderung der Login-E-Mail oder internen Benutzer-ID
-- privates Benutzerprofilbild als serverseitig neu gerenderte PNG-Datei
-- eigener sichtbarer CoreAI-Name und separates CoreAI-Profilbild pro Konto
-- eigener System-Prompt fuer Stil und Arbeitsweise innerhalb der unveraenderten Ember CoreUI-Sicherheits- und Identitaetsregeln
-- Memory ein oder aus und einstellbares Memory-Limit
-- Modell-Thinking je Konto ein oder aus; rohe Gedankengaenge bleiben in beiden Stellungen privat
-- Antwortbudget von 256 bis 16384 Ollama-Tokens
-- Temperatur von 0,1 bis 1,5
-- optionaler lokaler Ollama-Modelltag, der im Chatpfad wirklich verwendet wird
-- eigene sichtbare Memory-Fakten anlegen und loeschen
-- private RAG-Lite-Quellen direkt hochladen, chunkweise verwenden und vollstaendig loeschen
-- Konto, Berechtigungsstufe, Health-Matrix, Modell und Version
-- lokaler Referenzbetrieb mit Gemma 4 und Ollama
+- custom visible username without changing the login email or internal user ID
+- private user profile image as a server-side re-rendered PNG file
+- custom visible CoreAI name and separate CoreAI profile image per account
+- custom system prompt for style and working method within the unchanged Ember CoreUI safety and identity rules
+- Memory on or off and configurable Memory limit
+- model Thinking on or off per account; raw thought processes remain private in both settings
+- response budget from 256 to 16384 Ollama tokens
+- temperature from 0.1 to 1.5
+- optional local Ollama model tag that is actually used in the chat path
+- create and delete custom visible Memory facts
+- upload private RAG-Lite sources directly, use them chunk by chunk, and delete them completely
+- account, permission level, health matrix, model, and version
+- local reference operation with Gemma 4 and Ollama
 
-Profilbilder werden nicht als frei erreichbare statische Dateien ausgeliefert. Der private Medienendpunkt prueft die Sitzung und liefert immer nur den aktuellen Avatar des angemeldeten Kontos. JPEG- und PNG-Uploads werden dekodiert, zentral quadratisch zugeschnitten, auf maximal 512 Pixel begrenzt und als neue PNG-Datei ohne fremde Metadaten gespeichert.
+Profile images are not served as freely accessible static files. The private media endpoint verifies the session and always serves only the current avatar of the signed-in account. JPEG and PNG uploads are decoded, center-cropped to a square, limited to a maximum of 512 pixels, and saved as a new PNG file without third-party metadata.
 
-RAG-Lite akzeptiert `.txt`, `.md`, `.pdf` und `.docx`. PDFs benoetigen fuer diesen Einstellungsimport eine echte Textebene; Scan-PDFs ohne auslesbaren Text werden klar abgewiesen. Standardmaessig gelten 20 MiB je Datei, 40 Quellen und insgesamt 5.000.000 extrahierte Zeichen pro Konto. Kontospezifische MariaDB-Locks verhindern, dass parallele Uploads diese Quoten gemeinsam umgehen. Dokumentinhalte werden im Prompt ausdruecklich als nicht vertrauenswuerdige Daten und niemals als Systemanweisung markiert.
+RAG-Lite accepts `.txt`, `.md`, `.pdf`, and `.docx`. For this settings import, PDFs require a real text layer; scanned PDFs without readable text are explicitly rejected. By default, limits are 20 MiB per file, 40 sources, and a total of 5,000,000 extracted characters per account. Account-specific MariaDB locks prevent parallel uploads from bypassing these quotas together. Document contents are explicitly marked in the prompt as untrusted data and never as system instructions.
 
-Der vorbereitete externe Provider-Adapter bleibt standardmaessig deaktiviert. API-Schluessel werden nie im Browser gespeichert. Erst eine spaetere serverseitig getestete Implementierung kann ihn freischalten; es gibt kein Kompatibilitaetsversprechen fuer beliebige Cloud-Anbieter.
+The prepared external provider adapter remains disabled by default. API keys are never stored in the browser. Only a later server-side tested implementation can enable it; there is no compatibility guarantee for arbitrary cloud providers.
 
 ## Admin Core
 
-`admin/index.html` ist nur fuer Berechtigungsstufe 0 und 1 erreichbar und arbeitet ausschliesslich gegen die Ember CoreUI-Datenbank. Enthalten sind:
+`admin/index.html` is accessible only to permission levels 0 and 1 and operates exclusively against the Ember CoreUI database. It includes:
 
-- Uebersicht fuer Konten, Sitzungen, Nachrichten, Memories, Lore, Browse-Jobs und Logs
-- neue Benutzerkonten mit Anzeigename, Login-E-Mail, Startpasswort und zulaessiger Rolle anlegen
-- Benutzerrechte, zeitlich begrenzte Sperren und Sperrgruende
-- Memory CRUD fuer globale, Benutzer- und Charakter-Sichtbarkeit
-- Lore-Quellen und Chunk-Suche
-- Registrierung, Wartungsmodus und Wartungsmeldung
-- zentrale Schalter fuer schnelle Websuche, Browser-Recherche und isoliertes Python
-- vorbereitete externe Provider-Metadaten ohne Browser-Schluessel
-- Fehlerprotokoll und unveraenderliches Admin-Audit
+- overview for accounts, sessions, messages, Memories, Lore, browse jobs, and logs
+- create new user accounts with display name, login email, initial password, and permitted role
+- user permissions, time-limited suspensions, and suspension reasons
+- Memory CRUD for global, user, and character visibility
+- Lore sources and chunk search
+- registration, maintenance mode, and maintenance message
+- central switches for fast web search, browser research, and isolated Python
+- prepared external provider metadata without browser keys
+- error log and immutable admin audit
 
-Rechteaenderungen und aktive Sperren werden bei jedem authentifizierten Request erneut aus der Datenbank gelesen. Sie wirken damit auch auf bereits angemeldete Sitzungen.
+Permission changes and active suspensions are read from the database again on every authenticated request. They therefore also apply to sessions that are already signed in.
 
-Die Anzeigeoptionen werden unter `emberCoreUI.preferences.v1` im lokalen Browser gespeichert. Sie aendern weder Datenbankschema noch Konten, Sessions, Erinnerungen oder Modellkonfiguration.
+The display options are stored under `emberCoreUI.preferences.v1` in the local browser. They change neither the database schema nor accounts, sessions, memories, or model configuration.
 
-## Sichere Runtime-Aktualisierung
+## Safe runtime update
 
-Der Update-Workflow behaelt `var/compose.env`, Datenbanken, Uploads und Caches bei. Gleichzeitig werden die nicht geheimen Nginx- und PHP-FPM-Runtime-Dateien vor jedem relevanten Stack-Start aus den aktuellen Paket-Templates neu erzeugt:
+The update workflow preserves `var/compose.env`, databases, uploads, and caches. At the same time, the non-secret Nginx and PHP-FPM runtime files are regenerated from the current package templates before every relevant stack start:
 
 ```bash
 sudo ./scripts/stack.sh refresh-runtime
 sudo ./scripts/stack.sh restart web
 ```
 
-Bei `sudo ./scripts/stack.sh up -d --force-recreate php web` erfolgen Runtime-Refresh und ausstehende additive Datenbankmigrationen automatisch. Die Runtime-Werte fuer Bind-Adresse und Ports stammen weiterhin aus der lokal geschuetzten `var/compose.env`; Zugangsdaten werden weder in Templates geschrieben noch ausgegeben.
+With `sudo ./scripts/stack.sh up -d --force-recreate php web`, the runtime refresh and pending additive database migrations are performed automatically. The runtime values for bind address and ports continue to come from the locally protected `var/compose.env`; credentials are neither written into templates nor output.
 
-## Isolationsgrenzen
+## Isolation boundaries
 
-| Bereich | Ember CoreUI-Parallelbetrieb |
+| Area | Ember CoreUI parallel operation |
 |---|---|
-| Projektdateien | Ausschliesslich unter `/opt/ember-coreui` |
-| Webserver | Eigener Nginx-Container auf `127.0.0.1:9080` |
-| PHP | Eigener PHP-FPM-Container auf `127.0.0.1:19073` |
-| Datenbank | Eigener MariaDB-Container auf `127.0.0.1:13306` |
-| Websuche | Eigener SearXNG-Container auf `127.0.0.1:18889` |
-| Browser-Recherche | Eigener Playwright-Container |
-| Live-Browserbilder | Private Ember CoreUI-Datenbank, authentifizierte Job-SSE, automatische Bereinigung |
-| Modell | Eigenes Ollama-Modell `ember-coreui:latest` |
-| Login-Sessions | Eigener Cookie-Name `EMBERCOREUISESSID` |
-| Chat-Sitzungen | Eigene `session_id`, exakte History und Turn-Zuordnung in der Ember CoreUI-Datenbank |
-| Profile | Kontobezogene Namen und private Medienmetadaten in der Ember CoreUI-Datenbank |
-| Profilbilder | Authentifizierte Auslieferung aus `var/profile_media`, kein direkter Webpfad |
-| Privates RAG-Lite | Benutzergebundene Quellen und Chunks in Migration 004, Originale unter `var/knowledge_uploads` |
-| Locks | Eigener Namespace `ember_coreui:*` |
-| Laufzeitdaten | Lokale Ordner `var/`, `logs/`, `uploads/` und `assets/chat_media/` |
-| PDF-Seitenbilder | Eigener kurzlebiger Runtime-Pfad `var/pdf_pages` |
+| Project files | Exclusively under `/opt/ember-coreui` |
+| Web server | Dedicated Nginx container on `127.0.0.1:9080` |
+| PHP | Dedicated PHP-FPM container on `127.0.0.1:19073` |
+| Database | Dedicated MariaDB container on `127.0.0.1:13306` |
+| Web search | Dedicated SearXNG container on `127.0.0.1:18889` |
+| Browser research | Dedicated Playwright container |
+| Live browser images | Private Ember CoreUI database, authenticated job SSE, automatic cleanup |
+| Model | Dedicated Ollama model `ember-coreui:latest` |
+| Login sessions | Dedicated cookie name `EMBERCOREUISESSID` |
+| Chat sessions | Dedicated `session_id`, exact history, and turn assignment in the Ember CoreUI database |
+| Profiles | Account-specific names and private media metadata in the Ember CoreUI database |
+| Profile images | Authenticated delivery from `var/profile_media`, no direct web path |
+| Private RAG-Lite | User-bound sources and chunks in migration 004, originals under `var/knowledge_uploads` |
+| Locks | Dedicated namespace `ember_coreui:*` |
+| Runtime data | Local directories `var/`, `logs/`, `uploads/`, and `assets/chat_media/` |
+| PDF page images | Dedicated short-lived runtime path `var/pdf_pages` |
 
-Die Container verwenden auf Linux das Host-Netzwerk, damit sie Ollama auf `127.0.0.1:11434` erreichen koennen, ohne den bestehenden Ollama-Dienst auf `0.0.0.0` umzubinden. Alle Ember CoreUI-Dienste erhalten eigene, vor der Installation gepruefte Loopback-Ports.
+On Linux, the containers use the host network so that they can reach Ollama at `127.0.0.1:11434` without rebinding the existing Ollama service to `0.0.0.0`. All Ember CoreUI services receive dedicated loopback ports that are checked before installation.
 
-Gemeinsame Ollama-Nutzung bedeutet weiterhin gemeinsame CPU-, RAM- und GPU-Ressourcen. Das ist keine Daten- oder Konfigurationskopplung, kann bei gleichzeitigen Generierungen aber die Antwortzeit beider Oberflaechen beeinflussen.
+Shared Ollama usage still means shared CPU, RAM, and GPU resources. This is not data or configuration coupling, but simultaneous generations can affect the response time of both interfaces.
 
-## Game und Ember CoreUI gleichzeitig antworten lassen
+## Let Game and Ember CoreUI respond simultaneously
 
-Game und Ember CoreUI blockieren sich auf Anwendungsebene bereits nicht:
+Game and Ember CoreUI already do not block each other at the application level:
 
-- Das Game verwendet seine vorhandene STU-Datenbank und den Lock `ember_global_ollama`.
-- Ember CoreUI verwendet seine eigene MariaDB-Instanz und standardmaessig den Lock `ember_coreui:global_ollama`.
-- Chatverlaeufe, Sitzungen, Uploads, Memories und RAG-Daten bleiben getrennt.
-- Gemeinsam ist nur der lokale Ollama-Dienst auf `127.0.0.1:11434`.
+- The Game uses its existing STU database and the lock `ember_global_ollama`.
+- Ember CoreUI uses its own MariaDB instance and, by default, the lock `ember_coreui:global_ollama`.
+- Chat histories, sessions, uploads, Memories, and RAG data remain separate.
+- Only the local Ollama service at `127.0.0.1:11434` is shared.
 
-Damit zwei verschiedene Modellnamen gleichzeitig geladen werden koennen, braucht Ollama genug RAM oder VRAM. Zuerst den rein lesenden Bericht ausfuehren:
+For two different model names to be loaded simultaneously, Ollama needs enough RAM or VRAM. First run the read-only report:
 
 ```bash
 cd /opt/ember-coreui
 sudo ./scripts/ollama-parallel-report.sh
 ```
 
-Wenn beide Modelle gemeinsam in den vorhandenen RAM oder VRAM passen, kann Ollama ueber einen systemd-Drop-in auf zwei geladene Modelle begrenzt werden:
+If both models fit together in the available RAM or VRAM, Ollama can be limited to two loaded models using a systemd drop-in:
 
 ```bash
 sudo install -d -m 0755 /etc/systemd/system/ollama.service.d
@@ -191,33 +191,33 @@ sudo systemctl restart ollama
 ollama ps
 ```
 
-Ohne eigene Begrenzung erlaubt Ollama laut offizieller Dokumentation standardmaessig bereits mindestens drei geladene Modelle. Der Drop-in ist deshalb nur noetig, wenn der Bericht eine abweichende bestehende Begrenzung zeigt oder die Obergrenze bewusst auf genau zwei festgeschrieben werden soll. `OLLAMA_NUM_PARALLEL=1` gilt je geladenem Modell und vermeidet zusaetzliche Kontextkopien. Falls Game und Ember CoreUI spaeter denselben Modellnamen verwenden sollen, kann `OLLAMA_NUM_PARALLEL=2` noetig sein. Das vervielfacht jedoch den Speicherbedarf des Kontextes und sollte erst nach einem RAM-/VRAM-Test gesetzt werden. Reicht der Speicher nicht, reiht Ollama Anforderungen in seine Warteschlange ein, statt echte Gleichzeitigkeit zu erzwingen.
+Without a custom limit, Ollama already allows at least three loaded models by default according to the official documentation. The drop-in is therefore needed only if the report shows a different existing limit or if the upper limit is intentionally fixed at exactly two. `OLLAMA_NUM_PARALLEL=1` applies per loaded model and avoids additional context copies. If Game and Ember CoreUI are later intended to use the same model name, `OLLAMA_NUM_PARALLEL=2` may be necessary. However, this multiplies the memory requirement of the context and should be set only after a RAM/VRAM test. If there is not enough memory, Ollama queues requests instead of forcing true concurrency.
 
-Der Ember CoreUI-Installer schreibt diese systemweite Ollama-Konfiguration bewusst nicht selbst. Der Ollama-Dienst ist die einzige gemeinsam genutzte Ressource und bleibt unter Kontrolle des Serverbetreibers.
+The Ember CoreUI installer deliberately does not write this system-wide Ollama configuration itself. The Ollama service is the only shared resource and remains under the control of the server operator.
 
-Offizielle Referenz: <https://docs.ollama.com/faq#how-does-ollama-handle-concurrent-requests>
+Official reference: <https://docs.ollama.com/faq#how-does-ollama-handle-concurrent-requests>
 
-Ember CoreUI ersetzt spaeter die alte STU-Console, nicht den Global-Chat im Game. Die Entfernung der alten Console gehoert deshalb in ein separates Repack-Update, nachdem Ember CoreUI im Alltag stabil getestet wurde. Dieses Standalone-Paket loescht keine Repack-Dateien und aendert keine Game-Routen.
+Ember CoreUI will later replace the old STU Console, not the Global Chat in the Game. Removal of the old Console therefore belongs in a separate Repack update after Ember CoreUI has been tested stably in everyday use. This standalone package deletes no Repack files and changes no Game routes.
 
-## Unterstuetzte Zielsysteme
+## Supported target systems
 
-- Debian 12 oder neuer
-- Ubuntu Server 24.04 oder neuer
-- Root- oder sudo-Zugriff per SSH
-- Docker oder Erlaubnis, Docker automatisch zu installieren
-- Lokales Ollama oder Erlaubnis, Ollama automatisch zu installieren
-- Genuegend RAM und Speicher fuer den ausgewaehlten Gemma-4-Tag
-- Ausgehender Internetzugriff waehrend des ersten Image-Builds
+- Debian 12 or newer
+- Ubuntu Server 24.04 or newer
+- Root or sudo access via SSH
+- Docker or permission to install Docker automatically
+- Local Ollama or permission to install Ollama automatically
+- Enough RAM and storage for the selected Gemma 4 tag
+- Outbound Internet access during the first image build
 
-Ollamas Linux-Anleitung: <https://docs.ollama.com/linux>
+Ollama's Linux guide: <https://docs.ollama.com/linux>
 
-Gemma-4-Modellseite: <https://ollama.com/library/gemma4>
+Gemma 4 model page: <https://ollama.com/library/gemma4>
 
-SearXNG-Docker-Dokumentation: <https://docs.searxng.org/admin/installation-docker.html>
+SearXNG Docker documentation: <https://docs.searxng.org/admin/installation-docker.html>
 
-## Sichere Parallelinstallation per SSH
+## Safe parallel installation via SSH
 
-Das Archiv dauerhaft nach `/opt/ember-coreui` verschieben:
+Move the archive permanently to `/opt/ember-coreui`:
 
 ```bash
 cd /tmp
@@ -234,17 +234,17 @@ sudo chmod 0750 scripts/*.sh
 sudo ./scripts/install.sh
 ```
 
-Der Installer fragt nach:
+The installer asks for:
 
-- Admin-E-Mail
-- Admin-Passwort mit mindestens 12 Zeichen
-- optionalem Anzeigenamen ueber `COREUI_ADMIN_NAME`
+- Admin email
+- Admin password with at least 12 characters
+- optional display name via `COREUI_ADMIN_NAME`
 
-Anschliessend werden ausschliesslich der eigene Compose-Stack, die eigene Datenbank, das eigene Ember CoreUI-Modell und die lokalen Projektdateien eingerichtet.
+Afterwards, only the dedicated Compose stack, dedicated database, dedicated Ember CoreUI model, and local project files are set up.
 
-## Update auf 0.4.2-alpha
+## Update to 0.4.2-alpha
 
-Die vorhandene Datenbank, Uploads, Sitzungen und Zugangsdaten bleiben erhalten. Das neue Paket wird nur ueber die statischen Projektdateien gelegt; Runtime-Ordner werden bewusst ausgeschlossen.
+The existing database, uploads, sessions, and credentials are preserved. The new package is placed only over the static project files; runtime directories are deliberately excluded.
 
 ```bash
 cd /home/users/game/tmp
@@ -267,74 +267,74 @@ sudo ./scripts/stack.sh up -d --force-recreate php web
 sudo ./scripts/preflight.sh
 ```
 
-`stack.sh up` erneuert die statische Runtime-Konfiguration, legt fehlende private Speicherordner mit den passenden Containerrechten an und wendet alle ausstehenden Migrationen automatisch an. Migration `006_account_security` ergaenzt Passwort- und Login-Zeitpunkte sowie widerrufbare, gehashte SQL-Anmeldetokens. Bestehende PHP-Logins werden beim ersten authentifizierten Aufruf transparent in die neue Sitzungsschicht uebernommen. Alle Aenderungen bleiben in der isolierten Ember CoreUI-Datenbank; Benutzer, Chat-Sitzungen, Nachrichten, Memories, Lore und Uploads bleiben erhalten.
+`stack.sh up` refreshes the static runtime configuration, creates missing private storage directories with the appropriate container permissions, and automatically applies all pending migrations. Migration `006_account_security` adds password and login timestamps as well as revocable, hashed SQL authentication tokens. Existing PHP logins are transparently transferred to the new session layer on the first authenticated request. All changes remain in the isolated Ember CoreUI database; users, chat sessions, messages, Memories, Lore, and uploads are preserved.
 
-Ein erneutes Erzeugen des Modells, ein neuer Lore-Import oder ein Account-Bootstrap sind nicht erforderlich. Die vorhandene `api/config.local.php` und die produktive Adresse `https://coreui.starlight-unit.de` bleiben erhalten. Bei sehr alten Staenden vor `0.2.3-alpha` muss das PHP-Image einmal mit `sudo ./scripts/stack.sh build --no-cache php` neu gebaut werden, damit Poppler, GD, ZIP und die benoetigten PHP-Erweiterungen vorhanden sind.
+Regenerating the model, importing Lore again, or running an account bootstrap is not required. The existing `api/config.local.php` and the production address `https://coreui.starlight-unit.de` are preserved. For very old versions before `0.2.3-alpha`, the PHP image must be rebuilt once with `sudo ./scripts/stack.sh build --no-cache php` so that Poppler, GD, ZIP, and the required PHP extensions are available.
 
-Nach dem Update sollten Anmeldung, Passwortwechsel, Anzeige der aktuellen Geraete-Anmeldung, ein zweiter Browserlogin, dessen Widerruf, JSON-Kontoexport und die Ollama-Modellliste geprueft werden. Danach weiterhin den Thinking-Schalter in beiden Stellungen, eine Nachricht mit zehn kleinen Testdateien, Sitzungsreload, RAG-Lite und endgueltige Sitzungsloeschung testen.
+After the update, login, password change, display of the current device login, a second browser login, revocation of that login, JSON account export, and the Ollama model list should be tested. Afterwards, continue by testing the Thinking switch in both positions, a message with ten small test files, session reload, RAG-Lite, and permanent session deletion.
 
-## Testen ohne Eingriff in bestehende Domains
+## Testing without affecting existing domains
 
-Ember CoreUI lauscht standardmaessig nur auf `127.0.0.1:9080`. Vom eigenen Rechner wird ein SSH-Tunnel geoeffnet:
+By default, Ember CoreUI listens only on `127.0.0.1:9080`. An SSH tunnel is opened from the local computer:
 
 ```bash
 ssh -L 9080:127.0.0.1:9080 DEIN_SSH_USER@DEIN_SERVER
 ```
 
-Danach im lokalen Browser oeffnen:
+Then open in the local browser:
 
 ```text
 http://127.0.0.1:9080/
 ```
 
-Damit ist kein neuer Host-Nginx-VHost, keine Portfreigabe und keine Aenderung an einer vorhandenen Homepage notwendig.
+This requires no new host Nginx virtual host, no port forwarding, and no change to an existing homepage.
 
-## Oeffentliche Adresse
+## Public address
 
-Die aktuelle produktive Adresse ist:
+The current production address is:
 
 ```text
 https://coreui.starlight-unit.de
 ```
 
-Der Reverse Proxy leitet diese Domain weiterhin intern an `http://127.0.0.1:9080` weiter. In der erhaltenen Datei `/opt/ember-coreui/api/config.local.php` muss dazu genau eine Definition aktiv sein:
+The reverse proxy continues to forward this domain internally to `http://127.0.0.1:9080`. In the preserved file `/opt/ember-coreui/api/config.local.php`, exactly one definition must be active for this:
 
 ```php
 define('STU_PUBLIC_BASE_URL', 'https://coreui.starlight-unit.de');
 ```
 
-Die fruehere Adresse `webui.starlight-unit.de` ist keine aktuelle Ember CoreUI-Basisadresse mehr. Da `config.local.php` bei Updates absichtlich ausgeschlossen wird, veraendert das Release diese lokale Betreiberkonfiguration nicht automatisch.
+The previous address `webui.starlight-unit.de` is no longer a current Ember CoreUI base address. Because `config.local.php` is deliberately excluded from updates, the release does not automatically change this local operator configuration.
 
-## Was der Standardinstaller nicht tut
+## What the standard installer does not do
 
-- Er entfernt keine Datei aus `/etc/nginx/sites-enabled/`.
-- Er schreibt keine Host-Nginx- oder Apache-Konfiguration.
-- Er schreibt keine globale PHP-Konfiguration und startet kein vorhandenes PHP-FPM neu.
-- Er legt keine Tabellen in der bestehenden STU-Datenbank an.
-- Er aendert keinen bestehenden MariaDB-Benutzer.
-- Er installiert keinen systemd-Dienst fuer den Browse-Worker.
-- Er schreibt nicht nach `/home/users/game`, `/var/www` oder in einen Repack-Pfad.
-- Er ersetzt kein vorhandenes STU-Ollama-Modell.
+- It does not remove any file from `/etc/nginx/sites-enabled/`.
+- It does not write any host Nginx or Apache configuration.
+- It does not write any global PHP configuration and does not restart an existing PHP-FPM.
+- It does not create tables in the existing STU database.
+- It does not change any existing MariaDB user.
+- It does not install a systemd service for the browse worker.
+- It does not write to `/home/users/game`, `/var/www`, or a Repack path.
+- It does not replace any existing STU Ollama model.
 
-Falls Docker fehlt und `COREUI_INSTALL_DOCKER=1` aktiv ist, installiert und startet der Installer Docker. Falls Ollama fehlt und `COREUI_INSTALL_OLLAMA=1` aktiv ist, installiert er Ollama. Bereits vorhandene erreichbare Dienste werden nicht umkonfiguriert.
+If Docker is missing and `COREUI_INSTALL_DOCKER=1` is active, the installer installs and starts Docker. If Ollama is missing and `COREUI_INSTALL_OLLAMA=1` is active, it installs Ollama. Existing reachable services are not reconfigured.
 
-## Installationsablauf
+## Installation process
 
-1. Validierung des Betriebssystems, Projektpfads und der Eingaben.
-2. Kollisionspruefung der eigenen Ports und des Compose-Projektnamens.
-3. Anlage eigener Laufzeitordner und Zugangsdaten.
-4. Validierung und Build der PHP- und Browse-Images.
-5. Erkennung oder Download eines Gemma-4-Basismodells.
-6. Erzeugung des getrennten Modells `ember-coreui:latest`.
-7. Start der eigenen MariaDB und idempotenter Import aller SQL-Migrationen.
-8. Anlage von Ember, Admin, Charakter und `stu_kv`.
-9. Import der beiden mitgelieferten Lore-Dokumente in RAG-Lite.
-10. Start von SearXNG, PHP-FPM, Nginx und Browse-Worker.
-11. Abschliessender Healthcheck.
+1. Validation of the operating system, project path, and inputs.
+2. Collision check for the dedicated ports and Compose project name.
+3. Creation of dedicated runtime directories and credentials.
+4. Validation and build of the PHP and browse images.
+5. Detection or download of a Gemma 4 base model.
+6. Creation of the separate model `ember-coreui:latest`.
+7. Start of the dedicated MariaDB and idempotent import of all SQL migrations.
+8. Creation of Ember, Admin, character, and `stu_kv`.
+9. Import of the two included Lore documents into RAG-Lite.
+10. Start of SearXNG, PHP-FPM, Nginx, and browse worker.
+11. Final health check.
 
-## Nicht-interaktive Installation
+## Non-interactive installation
 
-Das Passwort sollte nicht als Klartext in der Shell-Historie stehen:
+The password should not appear as plain text in the shell history:
 
 ```bash
 cd /opt/ember-coreui
@@ -347,57 +347,57 @@ sudo --preserve-env=COREUI_ADMIN_EMAIL,COREUI_ADMIN_PASSWORD,COREUI_ADMIN_NAME .
 unset COREUI_ADMIN_PASSWORD
 ```
 
-## Wichtige Optionen
+## Important options
 
-| Variable | Standard | Bedeutung |
+| Variable | Default | Meaning |
 |---|---:|---|
-| `COREUI_HTTP_PORT` | `9080` | Eigener Web-Port |
-| `COREUI_PHP_PORT` | `19073` | Eigener PHP-FPM-Port |
-| `COREUI_DB_PORT` | `13306` | Eigener MariaDB-Port |
-| `COREUI_SEARXNG_PORT` | `18889` | Eigener SearXNG-Port |
-| `COREUI_BIND_ADDRESS` | `127.0.0.1` | Sichere Web-Bind-Adresse |
-| `COREUI_BASE_MODEL` | vorhandenes `gemma4:*`, sonst `gemma4:e4b` | Ollama-Basismodell |
-| `COREUI_MODEL_NAME` | `ember-coreui:latest` | Getrennter Ember CoreUI-Modellname |
-| `COREUI_LOCK_NAMESPACE` | `ember_coreui` | Eigener MariaDB-Lock-Namespace |
-| `COREUI_VIDEO_FRAMES` | `6` | Gleichmaessig verteilte Frames je Video, maximal 32 |
-| `COREUI_VIDEO_FRAME_PX` | `512` | Maximale Breite und Hoehe eines Vision-Frames |
-| `COREUI_PDF_MAX_PAGES` | `4` | Repraesentative Seiten je Scan-PDF, maximal 12 |
-| `COREUI_PDF_PAGE_PX` | `1024` | Maximale Breite und Hoehe einer gerasterten PDF-Seite |
-| `COREUI_INSTALL_DOCKER` | `1` | Installiert Docker, falls erforderlich |
-| `COREUI_INSTALL_OLLAMA` | `1` | Installiert Ollama, falls erforderlich |
-| `COREUI_INSTALL_SEARXNG` | `1` | Startet die eigene SearXNG-Instanz |
-| `COREUI_INSTALL_BROWSE` | `1` | Startet den eigenen Browse-Worker |
-| `COREUI_SKIP_LORE` | `0` | Ueberspringt den Lore-Import |
-| `COREUI_SKIP_BOOTSTRAP` | `0` | Ueberspringt Admin- und Ember-Bootstrap |
-| `COREUI_FORCE_CONFIG` | `0` | Erzeugt `api/config.local.php` neu |
+| `COREUI_HTTP_PORT` | `9080` | Dedicated web port |
+| `COREUI_PHP_PORT` | `19073` | Dedicated PHP-FPM port |
+| `COREUI_DB_PORT` | `13306` | Dedicated MariaDB port |
+| `COREUI_SEARXNG_PORT` | `18889` | Dedicated SearXNG port |
+| `COREUI_BIND_ADDRESS` | `127.0.0.1` | Secure web bind address |
+| `COREUI_BASE_MODEL` | existing `gemma4:*`, otherwise `gemma4:e4b` | Ollama base model |
+| `COREUI_MODEL_NAME` | `ember-coreui:latest` | Separate Ember CoreUI model name |
+| `COREUI_LOCK_NAMESPACE` | `ember_coreui` | Dedicated MariaDB lock namespace |
+| `COREUI_VIDEO_FRAMES` | `6` | Evenly distributed frames per video, maximum 32 |
+| `COREUI_VIDEO_FRAME_PX` | `512` | Maximum width and height of a vision frame |
+| `COREUI_PDF_MAX_PAGES` | `4` | Representative pages per scanned PDF, maximum 12 |
+| `COREUI_PDF_PAGE_PX` | `1024` | Maximum width and height of a rasterized PDF page |
+| `COREUI_INSTALL_DOCKER` | `1` | Installs Docker if required |
+| `COREUI_INSTALL_OLLAMA` | `1` | Installs Ollama if required |
+| `COREUI_INSTALL_SEARXNG` | `1` | Starts the dedicated SearXNG instance |
+| `COREUI_INSTALL_BROWSE` | `1` | Starts the dedicated browse worker |
+| `COREUI_SKIP_LORE` | `0` | Skips the Lore import |
+| `COREUI_SKIP_BOOTSTRAP` | `0` | Skips Admin and Ember bootstrap |
+| `COREUI_FORCE_CONFIG` | `0` | Regenerates `api/config.local.php` |
 
-Jede Portkollision fuehrt vor dem Start der Ember CoreUI-Container zu einem Abbruch. Bereits vorhandene fremde Container mit dem Compose-Projektnamen `ember-coreui` werden ebenfalls nicht uebernommen.
+Any port collision causes the process to abort before the Ember CoreUI containers are started. Existing third-party containers with the Compose project name `ember-coreui` are likewise not adopted.
 
-## PDF-Erkennung
+## PDF detection
 
-Der Dokumentpfad arbeitet in zwei Stufen:
+The document path operates in two stages:
 
-1. `pdftotext` liest PDFs mit echter Textebene direkt und begrenzt den Prompt-Auszug wie andere Textanhaenge.
-2. Bleibt die Textebene leer, rendert `pdftoppm` bis zu vier gleichmaessig verteilte Seiten als JPEG. Diese Seiten gehen in korrekter Reihenfolge an Gemmas Vision-Pfad.
+1. `pdftotext` reads PDFs with a real text layer directly and limits the prompt excerpt like other text attachments.
+2. If the text layer remains empty, `pdftoppm` renders up to four evenly distributed pages as JPEG. These pages are sent to Gemma's vision path in the correct order.
 
-Bei einem langen Scan-PDF sieht Ember damit eine Stichprobe, nicht automatisch jede Seite. Die Antwort muss diesen Umfang offen benennen. Fuer eine andere Begrenzung koennen in `api/config.local.php` die Konstanten `STU_EMBER_PDF_MAX_PAGES` und `STU_EMBER_PDF_PAGE_PX` gesetzt werden. Mehr Seiten und hoehere Aufloesung vergroessern Vision-Laufzeit, Kontext und Speicherbedarf deutlich.
+With a long scanned PDF, Ember therefore sees a sample, not automatically every page. The response must openly state this scope. For a different limit, the constants `STU_EMBER_PDF_MAX_PAGES` and `STU_EMBER_PDF_PAGE_PX` can be set in `api/config.local.php`. More pages and higher resolution significantly increase vision runtime, context, and memory requirements.
 
-Wenn Poppler fehlt, der Runtime-Pfad nicht beschreibbar ist oder keine Seite gerendert werden kann, wird die Modellgenerierung fuer den Dokumentinhalt gestoppt. Dadurch entsteht keine frei erfundene PDF-Zusammenfassung.
+If Poppler is missing, the runtime path is not writable, or no page can be rendered, model generation for the document content is stopped. This prevents an invented PDF summary.
 
-## Browser-Recherche und Ollama-Laufzeiten
+## Browser research and Ollama runtimes
 
-Der Browse-Worker trennt Browsernavigation und Modellentscheidung klar voneinander. SearXNG-Suche, `goto`, Klicks und Seitentext-Erfassung laufen ueber Playwright. Erst danach entscheidet Ollama ueber den naechsten Schritt. Ein Ollama-Read-Timeout ist deshalb kein Playwright-Fehler.
+The browse worker clearly separates browser navigation from model decisions. SearXNG search, `goto`, clicks, and page text capture run through Playwright. Only afterwards does Ollama decide on the next step. An Ollama read timeout is therefore not a Playwright error.
 
-Im Chat ersetzt der aktuelle Browser-Viewport das fruehere Textprotokoll. Die erste Ansicht zeigt die lokal empfangenen SearXNG-Treffer als sichere, escaped Ergebnisseite. Nach Navigation, Klick, Eingabe und Scrollen folgen standardmaessig drei echte JPEG-Frames im Abstand von 240 Millisekunden. So werden nachgeladene Inhalte und sichtbare Seitenveraenderungen erfasst, ohne einen kuenstlichen Videostream zu erfinden. Der Ghost-Cursor behaelt seine letzte Position in jedem Frame. Ein separates Klicksignal wird nur zusammen mit der realen Bounding-Box eines angeklickten Playwright-Ziels gesetzt. Die Bilder werden nicht als oeffentliche Dateien ausgeliefert, sondern jobgebunden in der eigenen Datenbank gespeichert, nur ueber den authentifizierten SSE-Endpunkt gelesen und standardmaessig nach 24 Stunden entfernt.
+In the chat, the current browser viewport replaces the previous text log. The first view shows the locally received SearXNG results as a safe, escaped results page. After navigation, click, input, and scrolling, three real JPEG frames follow by default at intervals of 240 milliseconds. This captures dynamically loaded content and visible page changes without inventing an artificial video stream. The Ghost Cursor retains its last position in every frame. A separate click signal is set only together with the real bounding box of a clicked Playwright target. The images are not served as public files, but are stored job-bound in the dedicated database, read only through the authenticated SSE endpoint, and removed by default after 24 hours.
 
-Im Standard gelten folgende Fristen:
+The following time limits apply by default:
 
-- Aktionsentscheidung durch Ollama: 420 Sekunden
-- abschliessender Ember-Report: 420 Sekunden
-- Live-Fenster ohne neues Schritt-Ereignis: 480 Sekunden
-- gesamter Browse-SSE-Kanal: 900 Sekunden
+- action decision by Ollama: 420 seconds
+- final Ember report: 420 seconds
+- live window without a new step event: 480 seconds
+- entire browse SSE channel: 900 seconds
 
-Auf besonders langsamen CPU-Systemen koennen die beiden Ollama-Fristen in `api/config.local.php` angepasst werden:
+On particularly slow CPU systems, the two Ollama time limits can be adjusted in `api/config.local.php`:
 
 ```php
 define('STU_EMBER_BROWSE_AGENT_TIMEOUT', 600);
@@ -409,14 +409,14 @@ define('STU_EMBER_BROWSE_FRAME_INTERVAL_MS', 240);
 define('STU_EMBER_BROWSE_FRAME_RETENTION_HOURS', 24);
 ```
 
-`STU_EMBER_BROWSE_AGENT_RETRIES` bleibt standardmaessig `0`, weil ein leseseitig abgelaufener Request auf dem Ollama-Server noch rechnen kann. Optionale Wiederholungen greifen nur bei einem unmittelbaren Verbindungsfehler, nicht bei einem Read-Timeout. Pro Aktion sind 1 bis 5 Folgeframes erlaubt, der Abstand ist auf 120 bis 800 Millisekunden begrenzt. Die JPEG-Qualitaet ist auf Werte von 25 bis 75 begrenzt, die Aufbewahrung auf 1 bis 168 Stunden. Nach einer Aenderung muss nur der Worker neu gestartet werden:
+`STU_EMBER_BROWSE_AGENT_RETRIES` remains `0` by default because a read-side timed-out request may still be processing on the Ollama server. Optional retries apply only to an immediate connection failure, not to a read timeout. Per action, 1 to 5 follow-up frames are allowed, with the interval limited to 120 to 800 milliseconds. JPEG quality is limited to values from 25 to 75, and retention to 1 to 168 hours. After a change, only the worker needs to be restarted:
 
 ```bash
 cd /opt/ember-coreui
 sudo ./scripts/stack.sh restart browse
 ```
 
-## Bereits vorhandene SearXNG verwenden
+## Use an existing SearXNG instance
 
 ```bash
 sudo env \
@@ -425,9 +425,9 @@ sudo env \
   ./scripts/install.sh
 ```
 
-Das erzeugt bewusst eine Abhaengigkeit zu dieser vorhandenen Suchinstanz. Fuer maximale Isolation bleibt die eigene SearXNG-Instanz empfohlen.
+This deliberately creates a dependency on that existing search instance. For maximum isolation, the dedicated SearXNG instance remains recommended.
 
-Ohne Websuche und Browse-Worker:
+Without web search and browse worker:
 
 ```bash
 sudo env \
@@ -437,7 +437,7 @@ sudo env \
   ./scripts/install.sh
 ```
 
-## Diagnose und Betrieb
+## Diagnostics and operation
 
 ```bash
 cd /opt/ember-coreui
@@ -456,19 +456,19 @@ sudo ./scripts/ollama-parallel-report.sh
 sudo grep -E 'ember_(video|pdf)_|ember_vision_payload' logs/stu_error.log | tail -n 30
 ```
 
-Nur den Browse-Worker beobachten:
+Watch only the browse worker:
 
 ```bash
 sudo ./scripts/stack.sh logs -f browse
 ```
 
-Stack neu starten:
+Restart the stack:
 
 ```bash
 sudo ./scripts/stack.sh restart
 ```
 
-Stack anhalten, ohne Daten zu loeschen:
+Stop the stack without deleting data:
 
 ```bash
 sudo ./scripts/stack.sh stop
@@ -493,51 +493,51 @@ sudo tar -C /opt -czf /var/backups/ember-coreui/files.tgz \
   ember-coreui/var/knowledge_uploads
 ```
 
-## Nativer Installer fuer einen leeren Einzelserver
+## Native installer for an empty standalone server
 
-Der fruehere Host-Installer bleibt als `scripts/install-native.sh` enthalten. Er installiert Nginx, PHP-FPM und MariaDB direkt auf dem Host und ist deshalb nicht fuer den parallelen STU-Produktivserver gedacht.
+The previous host installer remains included as `scripts/install-native.sh`. It installs Nginx, PHP-FPM, and MariaDB directly on the host and is therefore not intended for the parallel STU production server.
 
-Er kann nur mit einer ausdruecklichen Bestaetigung gestartet werden:
+It can only be started with explicit confirmation:
 
 ```bash
 sudo env COREUI_NATIVE_CONFIRM=DEDICATED_SERVER ./scripts/install-native.sh
 ```
 
-Der native Installer entfernt auch dann keine bestehende Nginx-Default-Site, solange `COREUI_DISABLE_NGINX_DEFAULT=1` nicht bewusst gesetzt wurde.
+Even then, the native installer does not remove an existing Nginx default site unless `COREUI_DISABLE_NGINX_DEFAULT=1` has been deliberately set.
 
-## Projektstruktur
+## Project structure
 
 ```text
 ember-coreui/
-  admin/               isoliertes Admin Core fuer Level 0 und 1
-  api/                 lokale REST-, SSE-, Upload- und CRUD-Endpunkte
-  assets/              lokale Fonts und Chat-Medien
-  config/              Runtime-, Modelfile- und Native-Templates
-  css/                 eigenstaendiges Holo-HUD-Design
-  database/migrations/ vollstaendiges Ember CoreUI-Schema
-  docker/              eigene PHP- und Playwright-Images
-  docs/                lokale Lore-Quellen fuer RAG-Lite
-  images/              lokale UI-Bilder
-  js/                  Streaming-, Session-, Dedup- und Werkzeuglogik
-  scripts/             Parallelinstaller, Native-Installer und Preflight
-  tools/               Lore-, Browse- und optionale Python-Worker
-  uploads/             lokale Browser-Screenshots
-  var/                 Datenbank, Runtime-Konfiguration und Caches
-  compose.yaml         isolierter Standard-Stack
+  admin/               isolated Admin Core for levels 0 and 1
+  api/                 local REST, SSE, upload, and CRUD endpoints
+  assets/              local fonts and chat media
+  config/              runtime, Modelfile, and native templates
+  css/                 independent Holo HUD design
+  database/migrations/ complete Ember CoreUI schema
+  docker/              dedicated PHP and Playwright images
+  docs/                local Lore sources for RAG-Lite
+  images/              local UI images
+  js/                  streaming, session, deduplication, and tool logic
+  scripts/             parallel installer, native installer, and preflight
+  tools/               Lore, browse, and optional Python workers
+  uploads/             local browser screenshots
+  var/                 database, runtime configuration, and caches
+  compose.yaml         isolated standard stack
 ```
 
-## Getrennte Versionierung
+## Separate versioning
 
-Ember CoreUI-Versionen sind nicht mit Repack-Versionen gleichzusetzen. Der Mobile-Fix aus dem Repack-Patch `v1.1.1.96` ist enthalten, bestimmt aber nicht die Ember CoreUI-Releasefolge.
+Ember CoreUI versions are not equivalent to Repack versions. The mobile fix from Repack patch `v1.1.1.96` is included, but does not determine the Ember CoreUI release sequence.
 
-## Copyright und rechtliche Finalisierung
+## Copyright and legal finalization
 
 Copyright: `© 2026 Patrick Schildgen, Starlight Unit Studios.`
 
-Das Studio-Logo wird aus der bereitgestellten Originaldatei verwendet. Fuer die helle Ember CoreUI-Oberflaeche wurde ausschliesslich der schwarze Hintergrund transparent freigestellt; Motiv, Wortlaut, Proportionen und vorhandene dunkle Konturen bleiben erhalten. Die Lizenzen der lokal mitgelieferten Schriften sind getrennt unter `assets/fonts/LICENSES.md` dokumentiert. Die neue Lizenz ersetzt nicht das noch ausstehende anwaltliche Review eines spaeteren Final-Releases.
+The studio logo is used from the provided original file. For the light Ember CoreUI interface, only the black background was made transparent; the motif, wording, proportions, and existing dark outlines remain unchanged. The licenses of the locally bundled fonts are documented separately under `assets/fonts/LICENSES.md`. The new license does not replace the still-pending legal review of a later final release.
 
-Ein vollstaendiges deutsches Impressum und eine abschliessende Datenschutzerklaerung sind bewusst noch nicht als fertige Rechtsseiten enthalten. Dafuer muessen vor dem oeffentlichen Final-Release die echten Betreiberangaben, ladungsfaehige Anschrift, Vertretungsdaten, Kontaktwege, Hosting-Auftragslage und die gewuenschten Datenschutztexte feststehen. Das Paket erfindet keine solchen Angaben.
+A complete German legal notice and a final privacy policy are deliberately not yet included as finished legal pages. Before the public final release, the actual operator information, serviceable address, representation details, contact channels, hosting data-processing arrangement, and desired privacy texts must be established. The package does not invent such information.
 
-## Alpha-Status
+## Alpha status
 
-`0.4.2-alpha` fuehrt die kostenlose Ember CoreUI Community Source Lizenz, eine explizite Lizenzhistorie, verbindliche Markenregeln, eine Unabhaengigkeitserklaerung und eine Null-Monetarisierungsrichtlinie ein. Alle Funktionen aus `0.4.1-alpha` bleiben enthalten. Es gibt keine Nutzerzaehlung, kein Phone-home, keine Lizenzschluessel, keine Bezahlschranke und kein kostenpflichtiges Ember-CoreUI-Angebot.
+`0.4.2-alpha` introduces the free Ember CoreUI Community Source License, an explicit license history, binding trademark rules, an independence statement, and a zero-monetization policy. All features from `0.4.1-alpha` remain included. There is no user counting, no phone-home, no license keys, no paywall, and no paid Ember CoreUI offering.
