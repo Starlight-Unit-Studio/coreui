@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-VERSION="0.3.2-alpha"
-ARCHIVE="EMBER_COREUI_0_3_2_ALPHA.zip"
+VERSION="0.4.2-alpha"
+ARCHIVE="EMBER_COREUI_0_4_2_ALPHA.zip"
 CHECKSUM="${ARCHIVE}.sha256"
 
 REPO="pschildgen87-code/coreui"
