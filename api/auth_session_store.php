@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Widerrufbare SQL-Schicht fuer authentifizierte CoreUI-PHP-Sitzungen.
+ * Widerrufbare SQL-Schicht fuer authentifizierte Ember CoreUI-PHP-Sitzungen.
  * In der Datenbank liegt nur SHA-256 des zufaelligen Sitzungstokens.
  */
 

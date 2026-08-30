@@ -14,19 +14,19 @@ AENDERUNGEN
 * Eigene SearXNG-Instanz auf Loopback-Port 18889 eingefuehrt, damit eine vorhandene STU-Suche auf 8888 parallel weiterlaufen kann.
 * Den Granian-Server im offiziellen SearXNG-Container explizit an 127.0.0.1:18889 gebunden, statt dessen internen Standardport 8080 vorauszusetzen.
 * Browse-Worker in einen eigenen Playwright-Container verschoben. Es wird kein Host-systemd-Dienst mehr benoetigt.
-* CoreUI-Modellname von ember-core:latest auf ember-coreui:latest getrennt und durch eine lokale Eigentumsmarkierung gegen versehentliche Uebernahme fremder Modelle abgesichert.
-* MariaDB-Advisory-Locks auf einen konfigurierbaren CoreUI-Namespace umgestellt. Die bisherigen globalen Namen ember_global_ollama und ember_self_xp werden im Standardbetrieb nicht mehr verwendet.
+* Ember CoreUI-Modellname von ember-core:latest auf ember-coreui:latest getrennt und durch eine lokale Eigentumsmarkierung gegen versehentliche Uebernahme fremder Modelle abgesichert.
+* MariaDB-Advisory-Locks auf einen konfigurierbaren Ember CoreUI-Namespace umgestellt. Die bisherigen globalen Namen ember_global_ollama und ember_self_xp werden im Standardbetrieb nicht mehr verwendet.
 * Vor jeder Erstinstallation Kollisionstests fuer Ports und Compose-Projektidentitaet eingefuehrt.
 * Webzugriff standardmaessig auf 127.0.0.1 begrenzt und einen SSH-Tunnel als sicheren Testweg dokumentiert.
 * Eigenen Compose-Preflight sowie scripts/stack.sh fuer Status, Logs, Neustart und Stop hinzugefuegt.
-* Fast-Poll-Fallback an die ausloesende CoreUI-Sitzung gebunden, damit ein SSE-Rueckfall den Sitzungszeiger korrekt aktualisiert und nicht in einer Poll-Schleife haengen bleibt.
+* Fast-Poll-Fallback an die ausloesende Ember CoreUI-Sitzung gebunden, damit ein SSE-Rueckfall den Sitzungszeiger korrekt aktualisiert und nicht in einer Poll-Schleife haengen bleibt.
 * Den frueheren Host-Installer als expliziten install-native.sh fuer dedizierte Einzelserver erhalten und mit einer Pflichtbestaetigung gesichert.
 * Entfernen der Nginx-Default-Site im Native-Installer standardmaessig deaktiviert.
-* Getrennte CoreUI-Versionierung fortgefuehrt. Repack-Changelogs werden von diesem eigenstaendigen Alpha-Release nicht veraendert.
+* Getrennte Ember CoreUI-Versionierung fortgefuehrt. Repack-Changelogs werden von diesem eigenstaendigen Alpha-Release nicht veraendert.
 
 Bewusste gemeinsame Ressource:
 
-* Der lokale Ollama-Dienst wird weiterhin gemeinsam genutzt, damit vorhandene Gemma-4-Modelldaten nicht dupliziert werden. CoreUI verwendet einen eigenen Modellnamen und eigene Daten, gleichzeitige Generierungen koennen aber dieselbe CPU, GPU und denselben RAM beanspruchen.
+* Der lokale Ollama-Dienst wird weiterhin gemeinsam genutzt, damit vorhandene Gemma-4-Modelldaten nicht dupliziert werden. Ember CoreUI verwendet einen eigenen Modellnamen und eigene Daten, gleichzeitige Generierungen koennen aber dieselbe CPU, GPU und denselben RAM beanspruchen.
 
 HINWEIS
 

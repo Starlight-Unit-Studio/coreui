@@ -67,7 +67,7 @@ $sessionId    = coreui_console_session_normalize_id($_GET['session_id'] ?? '');
 $channel      = 'console';
 
 // Die eigentliche Nachricht liegt bereits durch den authentifizierten POST in
-// der CoreUI-Datenbank. Sie wird nicht noch einmal in die EventSource-URL
+// der Ember CoreUI-Datenbank. Sie wird nicht noch einmal in die EventSource-URL
 // geschrieben. Dadurch bleiben lange Eingaben unter den Proxy-Headergrenzen
 // und vertraulicher Text landet nicht in Apache- oder Nginx-Zugriffslogs.
 if ($afterId <= 0 || trim($character_id) === '' || $sessionId === '') {
@@ -191,7 +191,7 @@ try {
       if ($existing && isset($existing['id'])) {
         $existingText = ember_sanitize_public_reply((string)($existing['message'] ?? ''), '');
         if ($existingText === '') {
-          $existingText = 'Diese ältere Antwort wurde vom CoreUI-Sicherheitsfilter ausgeblendet.';
+          $existingText = 'Diese ältere Antwort wurde vom Ember CoreUI-Sicherheitsfilter ausgeblendet.';
         }
         sse_send('done', [
           'text'     => $existingText,

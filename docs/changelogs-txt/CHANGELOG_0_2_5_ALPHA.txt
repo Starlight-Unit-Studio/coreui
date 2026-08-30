@@ -13,11 +13,11 @@ AENDERUNGEN
 * Private Tabelle stu_ember_browse_frames mit Jobbindung, URL, Statuslabel, Viewport und Cursorposition hinzugefuegt. Der Worker migriert bestehende Installationen selbststaendig und entfernt alte Frames standardmaessig nach 24 Stunden.
 * Ghost-Cursor mit echten Bounding-Box-Koordinaten des angeklickten Playwright-Elements sowie sichtbarem Klickimpuls umgesetzt. Ohne echten Klick wird keine Bewegung erfunden.
 * Schrittstream auf eine kurze Statuszeile reduziert. Technische Protokolle verdecken das Browserbild nicht mehr.
-* Thinking-Bleed im direkten CoreUI-SSE-Pfad geschlossen. Der Streaming-Abschluss und der synchrone Werkzeugpfad verwenden jetzt dieselbe Schranke vor Datenbank und Client.
+* Thinking-Bleed im direkten Ember CoreUI-SSE-Pfad geschlossen. Der Streaming-Abschluss und der synchrone Werkzeugpfad verwenden jetzt dieselbe Schranke vor Datenbank und Client.
 * Interne Gemma-Labels wie Response Draft, Alternative, Final decision, Selected response und Checking constraints werden erkannt. Eine explizite Nutzerantwort kann aus dem getrennten Denkblock gerettet werden; reines Meta bleibt leer und loest den sauberen Fallback aus.
 * Client puffert fuehrende Werkzeug- und Meta-Fragmente, damit interne Labels auch waehrend des Tokenstreams nicht kurz in der Antwortblase aufblitzen.
 * Eigenen Thinking-Sanitizer-Selftest mit dem gemeldeten Leak-Muster aufgenommen. Compose- und Native-Preflight pruefen zusaetzlich die private Frame-Tabelle.
-* Eigene CoreUI-Versionierung auf 0.2.5-alpha angehoben. Repack, Game, Homepage und die auslaufende STU Console bleiben unberuehrt.
+* Eigene Ember CoreUI-Versionierung auf 0.2.5-alpha angehoben. Repack, Game, Homepage und die auslaufende STU Console bleiben unberuehrt.
 
 HINWEIS
 

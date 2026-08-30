@@ -88,7 +88,7 @@ if (is_file($config)) {
     session_test_expect((int)$st->fetchColumn() === 1, 'Migration 005 ist in der Datenbank nicht registriert.');
 
     // Funktionaler DB-Test mit vollstaendigem Rollback. Keine Testzeile bleibt
-    // in der produktiven CoreUI-Datenbank bestehen.
+    // in der produktiven Ember CoreUI-Datenbank bestehen.
     $pdo->beginTransaction();
     try {
       $suffix = bin2hex(random_bytes(6));

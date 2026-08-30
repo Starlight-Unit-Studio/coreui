@@ -104,7 +104,7 @@ http_response_code($ok ? 200 : 503);
 echo json_encode([
   'ok' => $ok,
   'project' => 'Project STΛRLIɢHT: Ember CoreUI',
-  'version' => '0.4.1-alpha',
+  'version' => '0.4.2-alpha',
   'model' => STU_EMBER_MODEL,
   'checks' => $checks,
   'missing_tables' => $missing ?? [],

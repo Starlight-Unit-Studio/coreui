@@ -39,6 +39,13 @@ read_constant() {
 printf 'Ember CoreUI Native-Preflight, Version %s\n' "$VERSION"
 
 UI_FILES=(
+  LICENSE.de.md
+  LICENSE.md
+  LICENSE_HISTORY.md
+  TRADEMARKS.md
+  COMMUNITY_POLICY.md
+  NOTICE.md
+  COPYRIGHT.md
   app.html
   settings.html
   admin/index.html
@@ -72,15 +79,16 @@ UI_FILES=(
   scripts/session-selftest.php
   scripts/profile-knowledge-selftest.php
   scripts/account-security-selftest.php
+  scripts/branding-license-selftest.py
   images/starlight_unit_studios_logo_transparent_v030.png
 )
 for ui_file in "${UI_FILES[@]}"; do
   if [[ ! -s "$PROJECT_ROOT/$ui_file" ]]; then
-    fail "CoreUI-Oberflaechendatei fehlt oder ist leer: $ui_file"
+    fail "Ember CoreUI-Oberflaechendatei fehlt oder ist leer: $ui_file"
   fi
 done
 if (( FAILURES == 0 )); then
-  ok 'Studio-Branding und Einstellungsoberflaeche sind paketiert.'
+  ok 'Ember-CoreUI-Branding, Lizenzunterlagen und Einstellungsoberflaeche sind paketiert.'
 fi
 
 if grep -Fq "action: 'delete_permanently'" "$PROJECT_ROOT/js/console-app.js" \

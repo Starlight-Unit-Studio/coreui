@@ -1,0 +1,170 @@
+PROJECT STARLIGHT: EMBER COREUI
+AUSFUEHRLICHES CHANGELOG
+VERSION: 0.4.2-alpha
+DATUM: 29.08.2026
+
+
+1. ZIEL DES RELEASES
+
+0.4.2-alpha ist ein reiner Lizenz-, Herkunfts- und Branding-Release. Der
+funktionale Stand von 0.4.1-alpha wird unveraendert uebernommen. Es gibt keine
+neue Datenbankmigration, keine Bezahlschranke, keine Lizenzschluessel und keine
+Monetarisierungsfunktion.
+
+
+2. NEUE COMMUNITY-SOURCE-LIZENZ
+
+* Die Starlight Unit Studios Ember CoreUI Community Source Lizenz 1.0 wurde
+  als neue Projektlizenz eingefuehrt.
+* LICENSE.de.md ist die rechtlich massgebliche deutsche Fassung.
+* LICENSE.md ist die englische Uebersetzung zur internationalen Information.
+* Das Modell ist Source Available und nicht OSI-zertifiziertes Open Source.
+* Die in der Lizenz ausdruecklich gewaehrten Rechte sind gebuehrenfrei.
+
+
+3. KOSTENLOSE ZULAESSIGE NUTZUNG
+
+* Private Nutzung und Selbsthosting bleiben kostenlos.
+* Kostenlose gemeinschaftliche Selbstbereitstellung bleibt erlaubt.
+* Interne Nutzung in Unternehmen und anderen Organisationen bleibt kostenlos,
+  auch wenn die Organisation selbst wirtschaftlich taetig ist.
+* Interne Aenderungen muessen nicht veroeffentlicht werden, solange sie weder
+  verbreitet noch Dritten als Dienst bereitgestellt werden.
+* Es gibt keine Nutzergrenze und keine Ausnahme fuer kleine oder grosse
+  Installationen.
+
+
+4. KEIN MONETARISIERTES ANGEBOT
+
+* Das offizielle Ember-CoreUI-Projekt bietet keine kostenpflichtige Lizenzstufe,
+  keine Abonnements und kein bezahltes White-Label-Programm an.
+* Es gibt keine Ember-CoreUI-Spendenfunktion, keine Werbung, kein Sponsoring
+  innerhalb der Anwendung und kein bezahltes offizielles Supportpaket.
+* Dritte duerfen Ember CoreUI nicht verkaufen, vermieten oder als
+  kostenpflichtigen SaaS- beziehungsweise Managed-Service anbieten.
+* Allgemeine Installations- oder Beratungsleistungen bleiben moeglich, wenn
+  der Kunde seine eigene Instanz betreibt, keine Softwarelizenz weiterverkauft
+  wird und alle Branding- und Lizenzpflichten eingehalten werden.
+* Schriftliche Einzelfallausnahmen schaffen keinen Anspruch und kein
+  allgemeines kommerzielles Lizenzangebot.
+
+
+5. VERBINDLICHER PRODUKTNAME
+
+* Der Produktname lautet immer Ember CoreUI.
+* Die vollstaendige Bezeichnung lautet:
+  STΛRLIɢHT: Ember CoreUI by Starlight Unit Studios
+* Die alleinstehende Produktbezeichnung CoreUI ist fuer dieses Projekt
+  unzulaessig.
+* Sichtbare UI-Texte, Fehlermeldungen, Installer-Ausgaben, Dokumentationen und
+  Kommentare wurden entsprechend bereinigt.
+* Technische Bezeichner wie coreui, ember-coreui, COREUI_*,
+  /opt/ember-coreui, X-CoreUI-CSRF, Repository-Slugs und Domainbestandteile
+  bleiben aus Kompatibilitaetsgruenden erhalten. Sie sind keine Produktnamen.
+
+
+6. BRANDING-SCHUTZ
+
+* Ember-CoreUI-, STΛRLIɢHT- und Starlight-Unit-Studios-Branding darf nicht
+  entfernt, ersetzt, verborgen, ueberdeckt oder irrefuehrend abgeschwaecht
+  werden.
+* Die Pflicht gilt ohne Nutzergrenze fuer jede Bereitstellung und Verbreitung.
+* Untergeordnete Betreiberhinweise duerfen ergaenzt werden, wenn sie das
+  geschuetzte Branding nicht verdraengen und keine offizielle Verbindung
+  vortaeuschen.
+* Oeffentliche Modifikationen muessen sich klar als inoffiziell kennzeichnen.
+* Branding-Aenderungen benoetigen immer eine vorherige ausdrueckliche
+  schriftliche Einzelfallgenehmigung.
+
+
+7. WEITERGABE UND QUELLCODE
+
+* Bei jeder Verbreitung bleiben Lizenz, Lizenzhistorie, NOTICE, Copyright- und
+  Markenhinweise erhalten.
+* Eigene Aenderungen muessen als inoffiziell gekennzeichnet und datiert werden.
+* Bei veraenderter Weitergabe muss der vollstaendige entsprechende Quellcode
+  ohne zusaetzliche Lizenzgebuehr unter denselben Bedingungen zugaenglich sein.
+* Empfaengern duerfen keine widersprechenden Zusatzbedingungen auferlegt
+  werden.
+
+
+8. KEINE LIZENZUEBERWACHUNG
+
+* Keine Nutzerzaehlung.
+* Keine Lizenzregistrierung.
+* Keine Uebermittlung von Installations-, Geraete- oder Benutzerzahlen.
+* Kein Phone-home fuer Lizenzzwecke.
+* Keine versteckte Telemetrie zur Lizenzdurchsetzung.
+
+
+9. LIZENZHISTORIE
+
+* LICENSE_HISTORY.md ordnet die Versionen eindeutig zu.
+* Fruehere Kopien behalten exakt die mit ihnen verbreiteten Bedingungen.
+* Kopien mit ausdruecklichem CC-BY-NC-SA-4.0-Hinweis behalten diese
+  Gewaehrung. Die Lizenzhistorie schafft keine rueckwirkende Freigabe fuer
+  Kopien, die diesen Hinweis nicht enthielten.
+* Die neue Community Source Lizenz beginnt mit 0.4.2-alpha.
+* Rechte an Drittkomponenten bleiben von der Umstellung unberuehrt.
+
+
+10. UNABHAENGIGKEITSERKLAERUNG
+
+* Ember CoreUI ist eine unabhaengige Entwicklung von Starlight Unit Studios.
+* Der Quellbaum enthaelt keine Abhaengigkeit vom getrennten Admin-Template- und
+  UI-Komponentenprojekt unter coreui.io.
+* Es besteht keine Verbindung, kein Sponsoring und keine Billigung durch dieses
+  andere Projekt.
+* Die Startseite enthaelt eindeutige Autoren-, Beschreibungs-, Canonical-,
+  Open-Graph- und strukturierte SoftwareApplication-Metadaten. Ember CoreUI,
+  Starlight Unit Studios und der kostenlose Zugang sind darin maschinenlesbar
+  zugeordnet. Interne Seiten sind fuer Suchmaschinen auf noindex und nofollow
+  gesetzt.
+
+
+11. NEUE UND AKTUALISIERTE DOKUMENTE
+
+Neu:
+
+* LICENSE.de.md
+* LICENSE.md
+* LICENSE_HISTORY.md
+* TRADEMARKS.md
+* COMMUNITY_POLICY.md
+* NOTICE.md
+* docs/changelogs-txt/CHANGELOG_0_4_2_ALPHA.txt
+* docs/UEBERGABEPROTOKOLL_0_4_2_ALPHA.txt
+
+Aktualisiert:
+
+* README.md
+* CHANGELOG.md
+* COPYRIGHT.md
+* sichtbare HTML-Metadaten und Brandingtexte
+* Installer-, Preflight-, API-, Worker- und Dokumentationstexte
+
+
+12. UNVERAENDERTE TECHNIK
+
+* Keine SQL-Migration.
+* Keine Aenderung an Passwort- oder Login-Sitzungslogik.
+* Keine Aenderung an Chat-Sitzungen oder endgueltiger Loeschkaskade.
+* Keine Aenderung an Thinking-Schutz und Antwortpipeline.
+* Keine Aenderung an RAG-Lite, Profilen, Avataren oder Anhaengen.
+* Keine Aenderung an Game, Homepage, Repack, KeyHelp oder Apache.
+* Keine Aenderung an privater Betreiberkonfiguration oder persistenten Daten.
+
+
+13. RECHTLICHER STATUS
+
+Der Lizenztext ist ein sorgfaeltig erstellter Projektentwurf fuer den
+Alpha-Betrieb. Vor einer streitigen Durchsetzung oder einem finalen
+Produktrelease soll er durch eine in Deutschland zugelassene fachkundige
+Rechtsberatung geprueft werden. Diese Einschraenkung aendert nicht die im Text
+eindeutig dokumentierte kostenlose und nicht monetarisierte Projektpolitik.
+
+
+14. VERSIONSGRENZE
+
+Dieses Dokument beschreibt genau den Stand 0.4.2-alpha. Spaetere Aenderungen
+werden in einer neuen Versionsdatei dokumentiert.

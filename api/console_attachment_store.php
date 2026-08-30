@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Persistente Zuordnung von bis zu zehn privaten Uploads zu einer CoreUI-Nachricht.
+ * Persistente Zuordnung von bis zu zehn privaten Uploads zu einer Ember CoreUI-Nachricht.
  * file_uuid in stu_chat_messages bleibt als lesbare Abwaertskompatibilitaet erhalten.
  */
 

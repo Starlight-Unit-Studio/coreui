@@ -3,7 +3,7 @@ set -u
 IFS=$'\n\t'
 
 # Rein lesender Bericht fuer den gemeinsamen Ollama-Dienst. Das Skript aendert
-# weder systemd noch Modelle oder den laufenden CoreUI-Stack.
+# weder systemd noch Modelle oder den laufenden Ember CoreUI-Stack.
 
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 ENV_FILE="$PROJECT_ROOT/var/compose.env"

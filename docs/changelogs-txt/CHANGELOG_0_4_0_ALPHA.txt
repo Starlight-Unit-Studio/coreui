@@ -8,14 +8,14 @@ STATUS:  ALPHA
 AENDERUNGEN
 
 * Die bisher nur teilweise lokale Einstellungsseite wurde zu einem echten kontobezogenen Konfigurationsbereich ausgebaut. Profil, KI-Laufzeitwerte, Memory und privates Wissen werden serverseitig dem authentifizierten Benutzer zugeordnet.
-* Jeder Benutzer besitzt jetzt ein eigenes CoreUI-Profil mit sichtbarem Anzeigenamen. Login-E-Mail, numerische Benutzer-ID und stabile interne Operator-ID bleiben bei einer Namensaenderung unveraendert.
+* Jeder Benutzer besitzt jetzt ein eigenes Ember CoreUI-Profil mit sichtbarem Anzeigenamen. Login-E-Mail, numerische Benutzer-ID und stabile interne Operator-ID bleiben bei einer Namensaenderung unveraendert.
 * Ein frei waehlbarer CoreAI-Anzeigename wurde je Konto ergaenzt. Die sichtbare Bezeichnung wird in Chatblasen, Denkstatus, Tippanzeige und Eingabeplatzhalter verwendet, ohne Embers technische Identitaet oder Sicherheitsregeln umzuschreiben.
 * Zwei getrennte private Avatar-Slots wurden aufgenommen: Benutzer und CoreAI. Beide Bilder koennen in den Einstellungen hochgeladen, ersetzt und geloescht werden.
 * Avatarannahme ist auf PNG und JPEG bis 4 MiB begrenzt. Abmessungen, Pixelmenge, MIME-Typ und echte Dekodierbarkeit werden serverseitig geprueft.
 * Hochgeladene Bilder werden zentral quadratisch zugeschnitten, auf maximal 512 mal 512 Pixel skaliert, neu als PNG kodiert und ohne fremde Bildmetadaten gespeichert.
 * Avatar-Dateien liegen ausserhalb des statischen Webpfads. profile_media.php prueft die Sitzung und liefert nur den aktuellen Avatar des angemeldeten Kontos aus.
 * Die zufaellige Medien-ID dient als exakter Cache-Buster. Auch zwei unmittelbar aufeinanderfolgende Uploads zeigen sicher das neueste Bild.
-* Die neuen Endpunkte profile.php und profile_media.php sowie der gemeinsame Profil-Speicher wurden ergaenzt. Jede schreibende Profilaktion verlangt Authentifizierung und CoreUI-CSRF-Token.
+* Die neuen Endpunkte profile.php und profile_media.php sowie der gemeinsame Profil-Speicher wurden ergaenzt. Jede schreibende Profilaktion verlangt Authentifizierung und das technische X-CoreUI-CSRF-Token.
 * Bereits vorhandene Benutzer werden beim naechsten Login automatisch vervollstaendigt. Falls Profil oder privater Operator fehlen, werden sie transaktional angelegt.
 * Registrierung und Admin Core verwenden jetzt denselben Account-Provisioning-Pfad. Neue Benutzer starten dadurch nicht mehr ohne Charakter-, KV- und Profildaten.
 * Das Admin Core kann neue Benutzer mit Anzeigename, Login-E-Mail, Startpasswort und Rolle anlegen.
@@ -25,7 +25,7 @@ AENDERUNGEN
 * Der optionale lokale Ollama-Modelltag in den Benutzereinstellungen ist jetzt funktional. model_override wird im gemeinsamen Chatpfad tatsaechlich ausgewertet; ein leeres Feld nutzt weiterhin den Serverstandard.
 * Eigener System-Prompt, Memory-Schalter, Memory-Limit, Antwortbudget und Temperatur bleiben pro Benutzer gespeichert und werden mit Profil und Modellwahl geladen.
 * Ein echter kontobezogener Thinking-Schalter wurde ergaenzt. Hauptantworten senden den offiziellen Ollama-Parameter think als true oder false; die Einstellung versteckt also nicht nur eine Oberflaeche.
-* Bei deaktiviertem Thinking sendet CoreUI keine Denkstatus-Ereignisse und speichert fuer neue Antworten keinen Denkstatus. Bei aktiviertem Thinking bleiben rohe Gedankengaenge weiterhin strikt serverintern.
+* Bei deaktiviertem Thinking sendet Ember CoreUI keine Denkstatus-Ereignisse und speichert fuer neue Antworten keinen Denkstatus. Bei aktiviertem Thinking bleiben rohe Gedankengaenge weiterhin strikt serverintern.
 * Pro Nachricht koennen bis zu zehn Dateien gemeinsam ausgewaehlt und nacheinander hochgeladen werden. Der Composer zeigt Fortschritt, fertige Anhaenge und eine einzelne Entfernen-Schaltflaeche pro Datei.
 * Vor dem Senden entfernte Uploads werden CSRF-geschuetzt aufgeraeumt, solange keine Nachricht sie bereits referenziert. SQL-Zeilensperren verhindern ein Rennen mit einem gleichzeitig laufenden Nachrichten-INSERT.
 * Die Auswahl wird serverseitig nochmals auf zehn UUIDs begrenzt. Jede Datei muss dem angemeldeten Benutzer gehoeren; fremde oder nicht mehr vorhandene Uploads werden vor dem Nachrichten-INSERT abgelehnt.
@@ -42,7 +42,7 @@ AENDERUNGEN
 * Standardquoten sind 20 MiB je Datei, 40 Quellen und 5.000.000 extrahierte Zeichen pro Konto. Ein einzelnes Dokument darf maximal 1200 Chunks erzeugen.
 * Ein kontospezifischer MariaDB-Lock schuetzt Quotenpruefung und Persistenz. Gleichzeitige Uploads desselben Benutzers koennen die Limits nicht gemeinsam umgehen.
 * Originaldateien werden privat unter var/knowledge_uploads gespeichert und nicht direkt durch Nginx ausgeliefert.
-* Private Quellenmetadaten und Chunks liegen in eigenen CoreUI-Tabellen. Volltextsuche und LIKE-Fallback filtern immer nach dem authentifizierten user_id.
+* Private Quellenmetadaten und Chunks liegen in eigenen Ember CoreUI-Tabellen. Volltextsuche und LIKE-Fallback filtern immer nach dem authentifizierten user_id.
 * Ein Benutzer kann weder Chunks eines anderen Kontos abrufen noch dessen Quellen loeschen. Ein eigener Selftest prueft diese Trennung mit zwei echten Testkonten.
 * Privates Benutzerwissen bleibt vom global kuratierten Studio-Kanon in ember_knowledge_chunks getrennt. Uploads veraendern weder Bibel- noch Kompendium-Importe.
 * Relevante private Chunks werden in den Modellprompt aufgenommen und klar als nicht vertrauenswuerdige Daten gekennzeichnet. Dokumentanweisungen erhalten keine Systemprioritaet.

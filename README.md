@@ -2,13 +2,33 @@
 
 Ember CoreUI ist ein eigenstaendiges WebUI fuer einen lokalen E.M.B.E.R.-Kern. Bis zur finalen Aufnahme in den STU-Repack besitzt es eine eigene Versionierung und einen eigenen Release-Zyklus.
 
-Aktuelle Version: `0.4.1-alpha`
+Aktuelle Version: `0.4.2-alpha`
+
+## Eigenstaendigkeit und verbindlicher Produktname
+
+Der Produktname lautet immer **Ember CoreUI**. Die vollstaendige Bezeichnung lautet **STΛRLIɢHT: Ember CoreUI by Starlight Unit Studios**. Die alleinstehende Bezeichnung `CoreUI` wird fuer dieses Projekt nicht als Produktname verwendet.
+
+Ember CoreUI ist eigenstaendig entwickelt. Das Projekt ist kein Fork des getrennten Admin-Template- und UI-Komponentenprojekts unter `coreui.io`, enthaelt keine Abhaengigkeit davon und ist damit weder verbunden noch von diesem gesponsert oder empfohlen. Technische Kompatibilitaetsnamen wie `coreui`, `COREUI_*`, `ember-coreui`, `/opt/ember-coreui`, Repository- und Domainbestandteile bleiben reine Maschinenbezeichner.
+
+## Lizenz und kostenloses Community-Modell
+
+Ab `0.4.2-alpha` steht der projekt-eigene Code unter der **Starlight Unit Studios Ember CoreUI Community Source Lizenz 1.0**. Die rechtlich massgebliche deutsche Fassung befindet sich in `LICENSE.de.md`; `LICENSE.md` ist die englische Uebersetzung.
+
+- private, gemeinschaftliche und interne Nutzung bleibt kostenlos
+- interne Nutzung durch Unternehmen bleibt mit sichtbarem Ember-CoreUI-Branding kostenlos
+- keine Nutzergrenze und keine Lizenztelemetrie
+- kein kostenpflichtiges Lizenz-, White-Label-, Spenden-, Werbe- oder Supportprogramm des offiziellen Ember-CoreUI-Projekts
+- Ember CoreUI darf von Dritten nicht als kostenpflichtiger SaaS- oder Managed-Service verkauft werden
+- Branding-Aenderungen brauchen immer eine vorherige schriftliche Einzelfallgenehmigung
+- veraenderte Weitergaben muessen Quellcode, Lizenz, Herkunftshinweise und Branding erhalten
+
+Weitere Details stehen in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNITY_POLICY.md`, `NOTICE.md` und `COPYRIGHT.md`. Die Lizenz ist Source Available und nicht OSI-zertifiziert. Drittkomponenten behalten ihre eigenen Bedingungen.
 
 ## Ergebnis dieses Releases
 
-`0.4.1-alpha` erweitert die kontobezogenen Einstellungen um echte Kontosicherheit und Datenportabilitaet. Benutzer koennen ihr Passwort nach erneuter Pruefung des aktuellen Passworts aendern, aktive Geraete-Anmeldungen sehen und widerrufen sowie ihre privaten CoreUI-Daten als JSON exportieren. Login-Sitzungen sind dabei technisch und sichtbar von Chat-Sitzungen getrennt.
+`0.4.2-alpha` ist ein reiner Lizenz-, Herkunfts- und Branding-Release. Es fuehrt keine neue Datenbankmigration und keine Monetarisierungsfunktion ein. Produkttexte verwenden konsequent `Ember CoreUI`; die Oberflaeche, Dokumentation und Metadaten nennen Starlight Unit Studios als unabhaengigen Herausgeber.
 
-Die freie Texteingabe fuer Ollama-Modellnamen wurde durch eine sichere Auswahlliste ersetzt. CoreUI liest ausschliesslich die lokal installierten Modelle aus der betreiberkonfigurierten Ollama-Instanz und prueft die Auswahl vor dem Speichern erneut. Ein leerer Wert verwendet weiterhin den Serverstandard.
+Der funktionale Stand aus `0.4.1-alpha` bleibt vollstaendig enthalten: sicherer Passwortwechsel, widerrufbare Login-Sitzungen, privater JSON-Kontoexport und eine gegen die lokale Ollama-Instanz validierte Modellauswahl.
 
 Direkt in den Einstellungen koennen TXT-, Markdown-, Text-PDF- und DOCX-Dateien als privates RAG-Lite-Wissen hochgeladen, extrahiert und gechunkt werden. Quellen, Originaldateien und Chunks sind immer an den authentifizierten Benutzer gebunden und bleiben vom global kuratierten Studio-Kanon getrennt. Das Admin Core kann neue Benutzer mit Startpasswort, Rolle, eigenem Operator und eigenem Profil anlegen.
 
@@ -39,7 +59,7 @@ Vor `0.3.1-alpha` bestand eine Sitzung nur aus Titel und `since_id`. Alle privat
 
 ## Sicherer Denkstatus und Bereinigung alter Sitzungen
 
-CoreUI trennt die fluechtige interne Modellanalyse strikt von der sichtbaren Oberflaeche:
+Ember CoreUI trennt die fluechtige interne Modellanalyse strikt von der sichtbaren Oberflaeche:
 
 - SSE liefert waehrend der Generierung nur feste Statusstufen wie `KONTEXT WIRD ABGEGLICHEN` und `ANTWORT WIRD FORMULIERT`.
 - `message.content` und `message.thinking` werden vollstaendig gesammelt und erst nach der gemeinsamen Sicherheitspruefung verarbeitet.
@@ -49,10 +69,10 @@ CoreUI trennt die fluechtige interne Modellanalyse strikt von der sichtbaren Obe
 - Der Browser besitzt eine zusaetzliche Whitelist und schreibt keinen beliebigen Thinking-Text in den DOM.
 - Das Antwortbudget wird pro Benutzer an Ollama uebergeben. Ein erkanntes Tokenlimit setzt an der vorhandenen Antwort fort, statt die gesamte Generierung neu zu beginnen.
 - Private Console-Nachrichten duerfen bis zu 12000 Zeichen enthalten, mit Anhang bis zu 20000 Zeichen. Zeilenumbrueche und Code-Einrueckungen bleiben erhalten.
-- Der SSE-Aufruf uebergibt nur die authentifizierte Turn-ID. Der Nachrichtentext wird aus der CoreUI-Datenbank geladen und erscheint nicht in der EventSource-URL oder in Proxy-Zugriffslogs.
+- Der SSE-Aufruf uebergibt nur die authentifizierte Turn-ID. Der Nachrichtentext wird aus der Ember CoreUI-Datenbank geladen und erscheint nicht in der EventSource-URL oder in Proxy-Zugriffslogs.
 - Die Nachrichtenspalte wird durch Migration `002_coreui_management` auf `MEDIUMTEXT` erweitert.
 
-Nach dem Update koennen bereits vorhandene Raw-Blöcke einmalig in der isolierten CoreUI-Datenbank ersetzt werden:
+Nach dem Update koennen bereits vorhandene Raw-Blöcke einmalig in der isolierten Ember CoreUI-Datenbank ersetzt werden:
 
 ```bash
 cd /opt/ember-coreui
@@ -61,7 +81,7 @@ sudo ./scripts/stack.sh scrub-thinking
 
 Der Befehl veraendert weder die Game-Datenbank noch den Global-Chat.
 
-Nur Ollama wird als bereits vorhandene lokale Modell-Schnittstelle gemeinsam benutzt. CoreUI erzeugt dafuer das getrennte Modell `ember-coreui:latest`. Ein vorhandenes STU-Modell wie `gemma4:26b` wird weder ersetzt noch umkonfiguriert.
+Nur Ollama wird als bereits vorhandene lokale Modell-Schnittstelle gemeinsam benutzt. Ember CoreUI erzeugt dafuer das getrennte Modell `ember-coreui:latest`. Ein vorhandenes STU-Modell wie `gemma4:26b` wird weder ersetzt noch umkonfiguriert.
 
 ## Profile, KI-Einstellungen und privates Wissen
 
@@ -70,7 +90,7 @@ Nur Ollama wird als bereits vorhandene lokale Modell-Schnittstelle gemeinsam ben
 - eigener sichtbarer Benutzername, ohne Aenderung der Login-E-Mail oder internen Benutzer-ID
 - privates Benutzerprofilbild als serverseitig neu gerenderte PNG-Datei
 - eigener sichtbarer CoreAI-Name und separates CoreAI-Profilbild pro Konto
-- eigener System-Prompt fuer Stil und Arbeitsweise innerhalb der unveraenderten CoreUI-Sicherheits- und Identitaetsregeln
+- eigener System-Prompt fuer Stil und Arbeitsweise innerhalb der unveraenderten Ember CoreUI-Sicherheits- und Identitaetsregeln
 - Memory ein oder aus und einstellbares Memory-Limit
 - Modell-Thinking je Konto ein oder aus; rohe Gedankengaenge bleiben in beiden Stellungen privat
 - Antwortbudget von 256 bis 16384 Ollama-Tokens
@@ -89,7 +109,7 @@ Der vorbereitete externe Provider-Adapter bleibt standardmaessig deaktiviert. AP
 
 ## Admin Core
 
-`admin/index.html` ist nur fuer Berechtigungsstufe 0 und 1 erreichbar und arbeitet ausschliesslich gegen die CoreUI-Datenbank. Enthalten sind:
+`admin/index.html` ist nur fuer Berechtigungsstufe 0 und 1 erreichbar und arbeitet ausschliesslich gegen die Ember CoreUI-Datenbank. Enthalten sind:
 
 - Uebersicht fuer Konten, Sitzungen, Nachrichten, Memories, Lore, Browse-Jobs und Logs
 - neue Benutzerkonten mit Anzeigename, Login-E-Mail, Startpasswort und zulaessiger Rolle anlegen
@@ -118,7 +138,7 @@ Bei `sudo ./scripts/stack.sh up -d --force-recreate php web` erfolgen Runtime-Re
 
 ## Isolationsgrenzen
 
-| Bereich | CoreUI-Parallelbetrieb |
+| Bereich | Ember CoreUI-Parallelbetrieb |
 |---|---|
 | Projektdateien | Ausschliesslich unter `/opt/ember-coreui` |
 | Webserver | Eigener Nginx-Container auf `127.0.0.1:9080` |
@@ -126,27 +146,27 @@ Bei `sudo ./scripts/stack.sh up -d --force-recreate php web` erfolgen Runtime-Re
 | Datenbank | Eigener MariaDB-Container auf `127.0.0.1:13306` |
 | Websuche | Eigener SearXNG-Container auf `127.0.0.1:18889` |
 | Browser-Recherche | Eigener Playwright-Container |
-| Live-Browserbilder | Private CoreUI-Datenbank, authentifizierte Job-SSE, automatische Bereinigung |
+| Live-Browserbilder | Private Ember CoreUI-Datenbank, authentifizierte Job-SSE, automatische Bereinigung |
 | Modell | Eigenes Ollama-Modell `ember-coreui:latest` |
 | Login-Sessions | Eigener Cookie-Name `EMBERCOREUISESSID` |
-| Chat-Sitzungen | Eigene `session_id`, exakte History und Turn-Zuordnung in der CoreUI-Datenbank |
-| Profile | Kontobezogene Namen und private Medienmetadaten in der CoreUI-Datenbank |
+| Chat-Sitzungen | Eigene `session_id`, exakte History und Turn-Zuordnung in der Ember CoreUI-Datenbank |
+| Profile | Kontobezogene Namen und private Medienmetadaten in der Ember CoreUI-Datenbank |
 | Profilbilder | Authentifizierte Auslieferung aus `var/profile_media`, kein direkter Webpfad |
 | Privates RAG-Lite | Benutzergebundene Quellen und Chunks in Migration 004, Originale unter `var/knowledge_uploads` |
 | Locks | Eigener Namespace `ember_coreui:*` |
 | Laufzeitdaten | Lokale Ordner `var/`, `logs/`, `uploads/` und `assets/chat_media/` |
 | PDF-Seitenbilder | Eigener kurzlebiger Runtime-Pfad `var/pdf_pages` |
 
-Die Container verwenden auf Linux das Host-Netzwerk, damit sie Ollama auf `127.0.0.1:11434` erreichen koennen, ohne den bestehenden Ollama-Dienst auf `0.0.0.0` umzubinden. Alle CoreUI-Dienste erhalten eigene, vor der Installation gepruefte Loopback-Ports.
+Die Container verwenden auf Linux das Host-Netzwerk, damit sie Ollama auf `127.0.0.1:11434` erreichen koennen, ohne den bestehenden Ollama-Dienst auf `0.0.0.0` umzubinden. Alle Ember CoreUI-Dienste erhalten eigene, vor der Installation gepruefte Loopback-Ports.
 
 Gemeinsame Ollama-Nutzung bedeutet weiterhin gemeinsame CPU-, RAM- und GPU-Ressourcen. Das ist keine Daten- oder Konfigurationskopplung, kann bei gleichzeitigen Generierungen aber die Antwortzeit beider Oberflaechen beeinflussen.
 
-## Game und CoreUI gleichzeitig antworten lassen
+## Game und Ember CoreUI gleichzeitig antworten lassen
 
-Game und CoreUI blockieren sich auf Anwendungsebene bereits nicht:
+Game und Ember CoreUI blockieren sich auf Anwendungsebene bereits nicht:
 
 - Das Game verwendet seine vorhandene STU-Datenbank und den Lock `ember_global_ollama`.
-- CoreUI verwendet seine eigene MariaDB-Instanz und standardmaessig den Lock `ember_coreui:global_ollama`.
+- Ember CoreUI verwendet seine eigene MariaDB-Instanz und standardmaessig den Lock `ember_coreui:global_ollama`.
 - Chatverlaeufe, Sitzungen, Uploads, Memories und RAG-Daten bleiben getrennt.
 - Gemeinsam ist nur der lokale Ollama-Dienst auf `127.0.0.1:11434`.
 
@@ -171,13 +191,13 @@ sudo systemctl restart ollama
 ollama ps
 ```
 
-Ohne eigene Begrenzung erlaubt Ollama laut offizieller Dokumentation standardmaessig bereits mindestens drei geladene Modelle. Der Drop-in ist deshalb nur noetig, wenn der Bericht eine abweichende bestehende Begrenzung zeigt oder die Obergrenze bewusst auf genau zwei festgeschrieben werden soll. `OLLAMA_NUM_PARALLEL=1` gilt je geladenem Modell und vermeidet zusaetzliche Kontextkopien. Falls Game und CoreUI spaeter denselben Modellnamen verwenden sollen, kann `OLLAMA_NUM_PARALLEL=2` noetig sein. Das vervielfacht jedoch den Speicherbedarf des Kontextes und sollte erst nach einem RAM-/VRAM-Test gesetzt werden. Reicht der Speicher nicht, reiht Ollama Anforderungen in seine Warteschlange ein, statt echte Gleichzeitigkeit zu erzwingen.
+Ohne eigene Begrenzung erlaubt Ollama laut offizieller Dokumentation standardmaessig bereits mindestens drei geladene Modelle. Der Drop-in ist deshalb nur noetig, wenn der Bericht eine abweichende bestehende Begrenzung zeigt oder die Obergrenze bewusst auf genau zwei festgeschrieben werden soll. `OLLAMA_NUM_PARALLEL=1` gilt je geladenem Modell und vermeidet zusaetzliche Kontextkopien. Falls Game und Ember CoreUI spaeter denselben Modellnamen verwenden sollen, kann `OLLAMA_NUM_PARALLEL=2` noetig sein. Das vervielfacht jedoch den Speicherbedarf des Kontextes und sollte erst nach einem RAM-/VRAM-Test gesetzt werden. Reicht der Speicher nicht, reiht Ollama Anforderungen in seine Warteschlange ein, statt echte Gleichzeitigkeit zu erzwingen.
 
-Der CoreUI-Installer schreibt diese systemweite Ollama-Konfiguration bewusst nicht selbst. Der Ollama-Dienst ist die einzige gemeinsam genutzte Ressource und bleibt unter Kontrolle des Serverbetreibers.
+Der Ember CoreUI-Installer schreibt diese systemweite Ollama-Konfiguration bewusst nicht selbst. Der Ollama-Dienst ist die einzige gemeinsam genutzte Ressource und bleibt unter Kontrolle des Serverbetreibers.
 
 Offizielle Referenz: <https://docs.ollama.com/faq#how-does-ollama-handle-concurrent-requests>
 
-CoreUI ersetzt spaeter die alte STU-Console, nicht den Global-Chat im Game. Die Entfernung der alten Console gehoert deshalb in ein separates Repack-Update, nachdem CoreUI im Alltag stabil getestet wurde. Dieses Standalone-Paket loescht keine Repack-Dateien und aendert keine Game-Routen.
+Ember CoreUI ersetzt spaeter die alte STU-Console, nicht den Global-Chat im Game. Die Entfernung der alten Console gehoert deshalb in ein separates Repack-Update, nachdem Ember CoreUI im Alltag stabil getestet wurde. Dieses Standalone-Paket loescht keine Repack-Dateien und aendert keine Game-Routen.
 
 ## Unterstuetzte Zielsysteme
 
@@ -203,12 +223,12 @@ Das Archiv dauerhaft nach `/opt/ember-coreui` verschieben:
 cd /tmp
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl unzip
-export COREUI_ARCHIVE_URL='https://DEIN-SERVER/EMBER_COREUI_0_4_1_ALPHA.zip'
-curl -fL "$COREUI_ARCHIVE_URL" -o EMBER_COREUI_0_4_1_ALPHA.zip
-curl -fL "$COREUI_ARCHIVE_URL.sha256" -o EMBER_COREUI_0_4_1_ALPHA.zip.sha256
-sha256sum -c EMBER_COREUI_0_4_1_ALPHA.zip.sha256
-unzip -q EMBER_COREUI_0_4_1_ALPHA.zip
-sudo mv EMBER_COREUI_0_4_1_ALPHA /opt/ember-coreui
+export COREUI_ARCHIVE_URL='https://DEIN-SERVER/EMBER_COREUI_0_4_2_ALPHA.zip'
+curl -fL "$COREUI_ARCHIVE_URL" -o EMBER_COREUI_0_4_2_ALPHA.zip
+curl -fL "$COREUI_ARCHIVE_URL.sha256" -o EMBER_COREUI_0_4_2_ALPHA.zip.sha256
+sha256sum -c EMBER_COREUI_0_4_2_ALPHA.zip.sha256
+unzip -q EMBER_COREUI_0_4_2_ALPHA.zip
+sudo mv EMBER_COREUI_0_4_2_ALPHA /opt/ember-coreui
 cd /opt/ember-coreui
 sudo chmod 0750 scripts/*.sh
 sudo ./scripts/install.sh
@@ -220,16 +240,16 @@ Der Installer fragt nach:
 - Admin-Passwort mit mindestens 12 Zeichen
 - optionalem Anzeigenamen ueber `COREUI_ADMIN_NAME`
 
-Anschliessend werden ausschliesslich der eigene Compose-Stack, die eigene Datenbank, das eigene CoreUI-Modell und die lokalen Projektdateien eingerichtet.
+Anschliessend werden ausschliesslich der eigene Compose-Stack, die eigene Datenbank, das eigene Ember CoreUI-Modell und die lokalen Projektdateien eingerichtet.
 
-## Update auf 0.4.1-alpha
+## Update auf 0.4.2-alpha
 
 Die vorhandene Datenbank, Uploads, Sitzungen und Zugangsdaten bleiben erhalten. Das neue Paket wird nur ueber die statischen Projektdateien gelegt; Runtime-Ordner werden bewusst ausgeschlossen.
 
 ```bash
 cd /home/users/game/tmp
-sha256sum -c EMBER_COREUI_0_4_1_ALPHA.zip.sha256
-unzip -q -o EMBER_COREUI_0_4_1_ALPHA.zip
+sha256sum -c EMBER_COREUI_0_4_2_ALPHA.zip.sha256
+unzip -q -o EMBER_COREUI_0_4_2_ALPHA.zip
 sudo apt-get update
 sudo apt-get install -y rsync
 
@@ -240,14 +260,14 @@ sudo rsync -a \
   --exclude='uploads/' \
   --exclude='assets/chat_media/' \
   --exclude='assets/profile_photos/' \
-  EMBER_COREUI_0_4_1_ALPHA/ /opt/ember-coreui/
+  EMBER_COREUI_0_4_2_ALPHA/ /opt/ember-coreui/
 
 cd /opt/ember-coreui
 sudo ./scripts/stack.sh up -d --force-recreate php web
 sudo ./scripts/preflight.sh
 ```
 
-`stack.sh up` erneuert die statische Runtime-Konfiguration, legt fehlende private Speicherordner mit den passenden Containerrechten an und wendet alle ausstehenden Migrationen automatisch an. Migration `006_account_security` ergaenzt Passwort- und Login-Zeitpunkte sowie widerrufbare, gehashte SQL-Anmeldetokens. Bestehende PHP-Logins werden beim ersten authentifizierten Aufruf transparent in die neue Sitzungsschicht uebernommen. Alle Aenderungen bleiben in der isolierten CoreUI-Datenbank; Benutzer, Chat-Sitzungen, Nachrichten, Memories, Lore und Uploads bleiben erhalten.
+`stack.sh up` erneuert die statische Runtime-Konfiguration, legt fehlende private Speicherordner mit den passenden Containerrechten an und wendet alle ausstehenden Migrationen automatisch an. Migration `006_account_security` ergaenzt Passwort- und Login-Zeitpunkte sowie widerrufbare, gehashte SQL-Anmeldetokens. Bestehende PHP-Logins werden beim ersten authentifizierten Aufruf transparent in die neue Sitzungsschicht uebernommen. Alle Aenderungen bleiben in der isolierten Ember CoreUI-Datenbank; Benutzer, Chat-Sitzungen, Nachrichten, Memories, Lore und Uploads bleiben erhalten.
 
 Ein erneutes Erzeugen des Modells, ein neuer Lore-Import oder ein Account-Bootstrap sind nicht erforderlich. Die vorhandene `api/config.local.php` und die produktive Adresse `https://coreui.starlight-unit.de` bleiben erhalten. Bei sehr alten Staenden vor `0.2.3-alpha` muss das PHP-Image einmal mit `sudo ./scripts/stack.sh build --no-cache php` neu gebaut werden, damit Poppler, GD, ZIP und die benoetigten PHP-Erweiterungen vorhanden sind.
 
@@ -255,7 +275,7 @@ Nach dem Update sollten Anmeldung, Passwortwechsel, Anzeige der aktuellen Geraet
 
 ## Testen ohne Eingriff in bestehende Domains
 
-CoreUI lauscht standardmaessig nur auf `127.0.0.1:9080`. Vom eigenen Rechner wird ein SSH-Tunnel geoeffnet:
+Ember CoreUI lauscht standardmaessig nur auf `127.0.0.1:9080`. Vom eigenen Rechner wird ein SSH-Tunnel geoeffnet:
 
 ```bash
 ssh -L 9080:127.0.0.1:9080 DEIN_SSH_USER@DEIN_SERVER
@@ -283,7 +303,7 @@ Der Reverse Proxy leitet diese Domain weiterhin intern an `http://127.0.0.1:9080
 define('STU_PUBLIC_BASE_URL', 'https://coreui.starlight-unit.de');
 ```
 
-Die fruehere Adresse `webui.starlight-unit.de` ist keine aktuelle CoreUI-Basisadresse mehr. Da `config.local.php` bei Updates absichtlich ausgeschlossen wird, veraendert das Release diese lokale Betreiberkonfiguration nicht automatisch.
+Die fruehere Adresse `webui.starlight-unit.de` ist keine aktuelle Ember CoreUI-Basisadresse mehr. Da `config.local.php` bei Updates absichtlich ausgeschlossen wird, veraendert das Release diese lokale Betreiberkonfiguration nicht automatisch.
 
 ## Was der Standardinstaller nicht tut
 
@@ -319,7 +339,7 @@ Das Passwort sollte nicht als Klartext in der Shell-Historie stehen:
 ```bash
 cd /opt/ember-coreui
 export COREUI_ADMIN_EMAIL='admin@example.org'
-read -r -s -p 'CoreUI Admin-Passwort: ' COREUI_ADMIN_PASSWORD
+read -r -s -p 'Ember CoreUI Admin-Passwort: ' COREUI_ADMIN_PASSWORD
 printf '\n'
 export COREUI_ADMIN_PASSWORD
 export COREUI_ADMIN_NAME='Operator'
@@ -337,7 +357,7 @@ unset COREUI_ADMIN_PASSWORD
 | `COREUI_SEARXNG_PORT` | `18889` | Eigener SearXNG-Port |
 | `COREUI_BIND_ADDRESS` | `127.0.0.1` | Sichere Web-Bind-Adresse |
 | `COREUI_BASE_MODEL` | vorhandenes `gemma4:*`, sonst `gemma4:e4b` | Ollama-Basismodell |
-| `COREUI_MODEL_NAME` | `ember-coreui:latest` | Getrennter CoreUI-Modellname |
+| `COREUI_MODEL_NAME` | `ember-coreui:latest` | Getrennter Ember CoreUI-Modellname |
 | `COREUI_LOCK_NAMESPACE` | `ember_coreui` | Eigener MariaDB-Lock-Namespace |
 | `COREUI_VIDEO_FRAMES` | `6` | Gleichmaessig verteilte Frames je Video, maximal 32 |
 | `COREUI_VIDEO_FRAME_PX` | `512` | Maximale Breite und Hoehe eines Vision-Frames |
@@ -351,7 +371,7 @@ unset COREUI_ADMIN_PASSWORD
 | `COREUI_SKIP_BOOTSTRAP` | `0` | Ueberspringt Admin- und Ember-Bootstrap |
 | `COREUI_FORCE_CONFIG` | `0` | Erzeugt `api/config.local.php` neu |
 
-Jede Portkollision fuehrt vor dem Start der CoreUI-Container zu einem Abbruch. Bereits vorhandene fremde Container mit dem Compose-Projektnamen `ember-coreui` werden ebenfalls nicht uebernommen.
+Jede Portkollision fuehrt vor dem Start der Ember CoreUI-Container zu einem Abbruch. Bereits vorhandene fremde Container mit dem Compose-Projektnamen `ember-coreui` werden ebenfalls nicht uebernommen.
 
 ## PDF-Erkennung
 
@@ -494,7 +514,7 @@ ember-coreui/
   assets/              lokale Fonts und Chat-Medien
   config/              Runtime-, Modelfile- und Native-Templates
   css/                 eigenstaendiges Holo-HUD-Design
-  database/migrations/ vollstaendiges CoreUI-Schema
+  database/migrations/ vollstaendiges Ember CoreUI-Schema
   docker/              eigene PHP- und Playwright-Images
   docs/                lokale Lore-Quellen fuer RAG-Lite
   images/              lokale UI-Bilder
@@ -508,16 +528,16 @@ ember-coreui/
 
 ## Getrennte Versionierung
 
-Ember CoreUI-Versionen sind nicht mit Repack-Versionen gleichzusetzen. Der Mobile-Fix aus dem Repack-Patch `v1.1.1.96` ist enthalten, bestimmt aber nicht die CoreUI-Releasefolge.
+Ember CoreUI-Versionen sind nicht mit Repack-Versionen gleichzusetzen. Der Mobile-Fix aus dem Repack-Patch `v1.1.1.96` ist enthalten, bestimmt aber nicht die Ember CoreUI-Releasefolge.
 
 ## Copyright und rechtliche Finalisierung
 
-Copyright: `© 2026 Starlight Unit Studios. Alle Rechte vorbehalten.`
+Copyright: `© 2026 Patrick Schildgen, Starlight Unit Studios.`
 
-Das Studio-Logo wird aus der bereitgestellten Originaldatei verwendet. Fuer die helle CoreUI-Oberflaeche wurde ausschliesslich der schwarze Hintergrund transparent freigestellt; Motiv, Wortlaut, Proportionen und vorhandene dunkle Konturen bleiben erhalten. Die Lizenzen der lokal mitgelieferten Schriften sind getrennt unter `assets/fonts/LICENSES.md` dokumentiert.
+Das Studio-Logo wird aus der bereitgestellten Originaldatei verwendet. Fuer die helle Ember CoreUI-Oberflaeche wurde ausschliesslich der schwarze Hintergrund transparent freigestellt; Motiv, Wortlaut, Proportionen und vorhandene dunkle Konturen bleiben erhalten. Die Lizenzen der lokal mitgelieferten Schriften sind getrennt unter `assets/fonts/LICENSES.md` dokumentiert. Die neue Lizenz ersetzt nicht das noch ausstehende anwaltliche Review eines spaeteren Final-Releases.
 
 Ein vollstaendiges deutsches Impressum und eine abschliessende Datenschutzerklaerung sind bewusst noch nicht als fertige Rechtsseiten enthalten. Dafuer muessen vor dem oeffentlichen Final-Release die echten Betreiberangaben, ladungsfaehige Anschrift, Vertretungsdaten, Kontaktwege, Hosting-Auftragslage und die gewuenschten Datenschutztexte feststehen. Das Paket erfindet keine solchen Angaben.
 
 ## Alpha-Status
 
-`0.4.1-alpha` ergaenzt widerrufbare Login-Sitzungen, sicheren Passwortwechsel, privaten JSON-Kontoexport und eine gegen Ollama validierte Modellliste. Echte Chat-Sitzungen, Profile, private Avatare, CoreAI-Rufname, schaltbares Thinking, bis zu zehn persistente Nachrichtenanhaenge, Benutzeranlage, RAG-Lite, Antwortschutz und Admin Core bleiben enthalten. Passwort-Hashes, Login-Tokens, private Serverpfade und interne Thinking-Inhalte werden nicht exportiert. Der externe Provider-Adapter bleibt vorbereitet und ist nicht fuer produktive Nutzung freigeschaltet.
+`0.4.2-alpha` fuehrt die kostenlose Ember CoreUI Community Source Lizenz, eine explizite Lizenzhistorie, verbindliche Markenregeln, eine Unabhaengigkeitserklaerung und eine Null-Monetarisierungsrichtlinie ein. Alle Funktionen aus `0.4.1-alpha` bleiben enthalten. Es gibt keine Nutzerzaehlung, kein Phone-home, keine Lizenzschluessel, keine Bezahlschranke und kein kostenpflichtiges Ember-CoreUI-Angebot.

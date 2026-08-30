@@ -84,7 +84,7 @@ ensure_host_tools() {
 ensure_docker() {
   if ! command -v docker >/dev/null 2>&1; then
     is_enabled "$INSTALL_DOCKER" || die 'Docker fehlt. Installiere Docker oder setze COREUI_INSTALL_DOCKER=1.'
-    log 'Installiere Docker fuer den isolierten CoreUI-Stack.'
+    log 'Installiere Docker fuer den isolierten Ember CoreUI-Stack.'
     ensure_apt_updated
     apt-get install -y docker.io
   fi
@@ -212,7 +212,7 @@ assert_ports_available() {
   fi
 
   for index in "${!ports[@]}"; do
-    [[ "$seen" != *" ${ports[$index]} "* ]] || die "Port ${ports[$index]} wurde im CoreUI-Stack doppelt vergeben."
+    [[ "$seen" != *" ${ports[$index]} "* ]] || die "Port ${ports[$index]} wurde im Ember CoreUI-Stack doppelt vergeben."
     seen+="${ports[$index]} "
     if port_is_listening "${ports[$index]}"; then
       if (( EXISTING_STACK == 0 )) \
@@ -413,7 +413,7 @@ ensure_ollama_model() {
   if ollama show "$MODEL_NAME" >/dev/null 2>&1 \
       && [[ "$owned_model" != "$MODEL_NAME" ]] \
       && ! is_enabled "$ADOPT_MODEL"; then
-    die "Das Modell $MODEL_NAME existiert bereits, ist aber nicht als CoreUI-eigen markiert. Waehle einen anderen Namen oder setze COREUI_ADOPT_MODEL=1 bewusst."
+    die "Das Modell $MODEL_NAME existiert bereits, ist aber nicht als Ember CoreUI-eigen markiert. Waehle einen anderen Namen oder setze COREUI_ADOPT_MODEL=1 bewusst."
   fi
 
   sed "s|{{BASE_MODEL}}|$BASE_MODEL|g" \
@@ -594,7 +594,7 @@ if ! is_enabled "$SKIP_BOOTSTRAP"; then
     || die 'COREUI_ADMIN_GENDER muss leer, m oder f sein.'
 fi
 
-log "Bereite den isolierten Parallelbetrieb fuer CoreUI $COREUI_VERSION vor."
+log "Bereite den isolierten Parallelbetrieb fuer Ember CoreUI $COREUI_VERSION vor."
 ensure_docker
 prepare_permissions
 assert_stack_identity
@@ -620,18 +620,18 @@ compose run --rm --no-deps php sh -ec \
 
 ensure_ollama_model
 
-log 'Starte die eigene CoreUI-Datenbank auf dem geschuetzten Loopback-Port.'
+log 'Starte die eigene Ember CoreUI-Datenbank auf dem geschuetzten Loopback-Port.'
 compose up -d database
 if ! wait_healthy database 75; then
   compose logs --tail=100 database >&2 || true
-  die 'Die isolierte CoreUI-Datenbank wurde nicht gesund.'
+  die 'Die isolierte Ember CoreUI-Datenbank wurde nicht gesund.'
 fi
 
-log 'Importiere alle CoreUI-Migrationen in die eigene Container-Datenbank.'
+log 'Importiere alle Ember CoreUI-Migrationen in die eigene Container-Datenbank.'
 "$PROJECT_ROOT/scripts/migrate.sh"
 
 if ! is_enabled "$SKIP_BOOTSTRAP"; then
-  log 'Initialisiere Ember und das CoreUI-Administratorkonto.'
+  log 'Initialisiere Ember und das Ember CoreUI-Administratorkonto.'
   compose run --rm --no-deps \
     -e "COREUI_ADMIN_EMAIL=$ADMIN_EMAIL" \
     -e "COREUI_ADMIN_PASSWORD=$ADMIN_PASSWORD" \
@@ -665,15 +665,15 @@ else
   compose stop searxng >/dev/null 2>&1 || true
 fi
 
-log "Starte CoreUI-Web und PHP auf $BIND_ADDRESS:$HTTP_PORT."
+log "Starte Ember CoreUI-Web und PHP auf $BIND_ADDRESS:$HTTP_PORT."
 compose up -d php web
 if ! wait_healthy php 45; then
   compose logs --tail=100 php >&2 || true
-  die 'Der isolierte CoreUI-PHP-Dienst wurde nicht gesund.'
+  die 'Der isolierte Ember CoreUI-PHP-Dienst wurde nicht gesund.'
 fi
 if ! wait_http "http://127.0.0.1:$HTTP_PORT/api/health.php" 45; then
   compose logs --tail=100 web php >&2 || true
-  die 'Der CoreUI-Healthcheck ist fehlgeschlagen.'
+  die 'Der Ember CoreUI-Healthcheck ist fehlgeschlagen.'
 fi
 
 if is_enabled "$INSTALL_BROWSE"; then

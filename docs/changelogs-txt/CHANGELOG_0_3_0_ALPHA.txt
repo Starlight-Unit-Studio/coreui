@@ -14,15 +14,15 @@ AENDERUNGEN
 * Console-Modelltimeout auf bis zu 900 Sekunden angeglichen. SSE-Heartbeats halten Reverse Proxy und Browser waehrend lokaler langer Generierungen aktiv.
 * Erhaltene 0.2.x-Konfigurationen mit STU_EMBER_MAX_REPLY_CHARS=7200 koennen neue Antworten nicht mehr still kuerzen. Die sichere Ausgabegrenze skaliert mit dem Tokenbudget bis 60000 Zeichen.
 * Private Console-Eingaben auf 12000 Zeichen ohne und 20000 Zeichen mit Anhang erweitert. Zeilenumbrueche, Leerzeilen und Code-Einrueckungen bleiben erhalten.
-* EventSource uebergibt nur noch die authentifizierte Turn-ID. Lange oder vertrauliche Nachrichten werden aus der CoreUI-Datenbank geladen und landen weder in der URL noch in Proxy-Zugriffslogs.
+* EventSource uebergibt nur noch die authentifizierte Turn-ID. Lange oder vertrauliche Nachrichten werden aus der Ember CoreUI-Datenbank geladen und landen weder in der URL noch in Proxy-Zugriffslogs.
 * Privaten History-Kontext auf bis zu 1200 Zeichen je Nachricht erweitert. Die engen Global-Chat-Grenzen bleiben fuer den Game-Pfad unveraendert.
 * Migration 002_coreui_management erweitert stu_chat_messages.message auf MEDIUMTEXT und fuegt Benutzer-KI-Profile sowie Admin-Audit hinzu.
 * Servergespeichertes KI-Profil je Benutzer hinzugefuegt: System-Prompt, Memory-Schalter, Memory-Limit, Antwortbudget und Temperatur.
-* Memory-Verwaltung in den CoreUI-Einstellungen ergaenzt. Benutzer koennen eigene sichtbare Fakten anlegen und loeschen; globale Fakten bleiben geschuetzt.
+* Memory-Verwaltung in den Ember CoreUI-Einstellungen ergaenzt. Benutzer koennen eigene sichtbare Fakten anlegen und loeschen; globale Fakten bleiben geschuetzt.
 * Externen Provider als deaktivierte, serverseitig vorbereitete Schnittstelle aufgenommen. API-Schluessel werden nie im Browser gespeichert; lokales Gemma 4 ueber Ollama bleibt der Referenzbetrieb.
 * Eigenstaendiges Admin Core mit Uebersicht, Benutzerrechten, Sperren, Memory CRUD, Lore-Suche, Runtime-Schaltern, Registrierung, Wartungsmodus, Logs und Audit hinzugefuegt.
 * Werkzeugpfade fuer schnelle Websuche, tiefe Browser-Recherche und isoliertes Python koennen zentral im Admin Core aktiviert oder deaktiviert werden.
-* Berechtigungsstufen und aktive Sperren werden bei jedem authentifizierten Request aus der CoreUI-Datenbank aktualisiert und wirken auf bestehende Sitzungen.
+* Berechtigungsstufen und aktive Sperren werden bei jedem authentifizierten Request aus der Ember CoreUI-Datenbank aktualisiert und wirken auf bestehende Sitzungen.
 * Gehaertete Nginx-Allowlists fuer settings.html, admin/index.html, user_settings.php und admin.php in Compose und Native aktualisiert.
 * Transparentes Studio-Logo unter starlight_unit_studios_logo_transparent_v030.png neu referenziert. Der eindeutige Dateiname umgeht den bis zu sieben Tage alten Browsercache der frueheren schwarzen Datei.
 * Preflight um Migration-002-Pruefung, Admin-Route, Reply-Pipeline-Selftest, 15 Thinking-Regressionen und Logo-Cache-Buster-Test erweitert.

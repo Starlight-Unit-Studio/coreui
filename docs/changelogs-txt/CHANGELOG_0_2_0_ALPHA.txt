@@ -14,13 +14,13 @@ AENDERUNGEN
 * CLI-Bootstrap fuer Ember, Admin-Account, Charakter und stu_kv hinzugefuegt.
 * Standalone-Konfiguration ueber api/config.local.php oder COREUI_*-Umgebungsvariablen eingefuehrt.
 * Eigenen Health-Endpunkt und authentifiziertes CRUD-API fuer ember_memories hinzugefuegt.
-* Gemma-4-Modelfile mit CoreUI-Werkzeugprotokoll und empfohlenen Sampling-Werten hinzugefuegt.
+* Gemma-4-Modelfile mit Ember CoreUI-Werkzeugprotokoll und empfohlenen Sampling-Werten hinzugefuegt.
 * Lokales SearXNG-Template mit aktivierter JSON-Search-API hinzugefuegt.
 * Asynchronen Playwright-Browse-Worker als eigenen systemd-Dienst paketiert.
 * SSH-Installer fuer Debian und Ubuntu sowie einen wiederholbaren Preflight-Test hinzugefuegt.
 * Nginx-Allowlist fuer ausschliesslich oeffentliche API-Endpunkte und Schutz interner Projektordner hinzugefuegt.
 * Vision-Dateiaufloesung auf das lokale Projektverzeichnis assets/chat_media begrenzt.
-* Getrennte CoreUI-Versionierung gegenueber der Repack-Versionierung verbindlich dokumentiert.
+* Getrennte Ember CoreUI-Versionierung gegenueber der Repack-Versionierung verbindlich dokumentiert.
 
 Bekannte Alpha-Grenze:
 

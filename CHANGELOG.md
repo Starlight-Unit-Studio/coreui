@@ -2,6 +2,28 @@
 
 Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versioniert.
 
+## v0.4.2-alpha - 29.08.2026
+
+- Neue `Starlight Unit Studios Ember CoreUI Community Source Lizenz 1.0` eingefuehrt. Die deutsche Fassung in `LICENSE.de.md` ist rechtlich massgeblich; `LICENSE.md` enthaelt die englische Uebersetzung.
+- Lizenzmodell als Source Available und nicht als OSI-zertifiziertes Open Source gekennzeichnet.
+- Projekt-eigener Code bleibt fuer private, gemeinschaftliche und interne Nutzung kostenlos. Auch interne Unternehmensnutzung ist ohne Lizenzgebuehr erlaubt, solange alle Bedingungen und das Branding eingehalten werden.
+- Nutzergrenze vollstaendig verworfen. Es gibt weder eine 50-Nutzer-Ausnahme noch irgendeine andere Schwelle fuer Branding-Aenderungen.
+- Entfernung, Ersetzung, Verschleierung oder irrefuehrende Abschwaechung des Ember-CoreUI- und Starlight-Unit-Studios-Brandings fuer jede Bereitstellung untersagt.
+- Verbindliche Namensregel aufgenommen: Der Produktname lautet immer `Ember CoreUI`; die alleinstehende Produktbezeichnung `CoreUI` ist fuer dieses Projekt unzulaessig.
+- Technische Kennungen wie `coreui`, `ember-coreui`, `COREUI_*`, `/opt/ember-coreui`, `X-CoreUI-CSRF`, Repository-Slugs und Domainbestandteile als reine Kompatibilitaetsbezeichner dokumentiert.
+- Kostenpflichtiges White-Label-, Enterprise-, Abonnement-, Spenden-, Werbe- und Supportmodell fuer das offizielle Ember-CoreUI-Projekt ausgeschlossen.
+- Monetarisierten Weiterverkauf als SaaS oder Managed Service durch Dritte untersagt. Kostenlose Selbstbereitstellung und interne Unternehmensnutzung bleiben erlaubt.
+- Schriftliche Branding-Ausnahmen nur als individuelle Ermessensentscheidung vorgesehen. Die aktuelle Community-Richtlinie verlangt dafuer keine Ember-CoreUI-Lizenzgebuehr und begruendet keinen Anspruch auf Genehmigung.
+- Bei veraenderter Weitergabe muessen der vollstaendige entsprechende Quellcode, dieselbe Lizenz, Herkunftshinweise und das geschuetzte Branding erhalten bleiben. Rein interne Aenderungen muessen nicht veroeffentlicht werden.
+- Ausdruecklich festgehalten, dass die Lizenz keine Nutzerzaehlung, Registrierung, Lizenztelemetrie oder Phone-home-Funktion verlangt.
+- `LICENSE_HISTORY.md` ergaenzt. Fruehere Kopien behalten exakt die mit ihnen verbreiteten Bedingungen; Kopien mit ausdruecklichem CC-BY-NC-SA-4.0-Hinweis behalten diese Gewaehrung. Die neue Lizenz beginnt ohne rueckwirkende Neulizenzierung mit `0.4.2-alpha`.
+- `TRADEMARKS.md`, `COMMUNITY_POLICY.md` und `NOTICE.md` fuer Markenfuehrung, kostenlose Projektpolitik, Herkunft und Drittkomponenten ergaenzt.
+- Unabhaengigkeitserklaerung aufgenommen: Ember CoreUI ist kein Fork des getrennten Admin-Template- und UI-Komponentenprojekts unter `coreui.io`, enthaelt keine Abhaengigkeit davon und ist damit nicht verbunden.
+- Sichtbare Produkttexte, Fehlermeldungen, Installer-Ausgaben, Quellkommentare und historische Dokumentation auf die vollstaendige Bezeichnung `Ember CoreUI` bereinigt. Protokollrelevante technische Header bleiben aus Kompatibilitaetsgruenden unveraendert.
+- Oeffentliche Startseite um eindeutige Autoren-, Beschreibungs-, Open-Graph-, Canonical- und strukturierte `SoftwareApplication`-Metadaten ergaenzt. Darin werden Ember CoreUI, Starlight Unit Studios und der kostenlose Zugang maschinenlesbar zugeordnet. Authentifizierte Seiten tragen `noindex,nofollow`.
+- Keine neue Datenbankmigration, keine Bezahlschranke, keine Lizenzschluessel und keine Aenderung an Benutzer-, Chat-, RAG-, Profil- oder Sitzungsdaten.
+- Alle Funktionen und Sicherheitskorrekturen aus `0.4.1-alpha` unveraendert uebernommen.
+
 ## v0.4.1-alpha - 29.08.2026
 
 - Kontosicherheitsbereich in den Benutzereinstellungen ergaenzt. Er trennt Geraete-Anmeldungen klar von den bereits vorhandenen Chat-Sitzungen.
@@ -27,19 +49,19 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - PHP-Grenze `max_file_uploads` fuer Compose und Native auf zehn angeglichen. Die bestehende produktive Anhanglogik bleibt weiterhin bei maximal zehn Dateien je Nachricht.
 - Versionsparameter, Healthcheck, README, TXT-Changelog-Archiv und Uebergabeprotokoll auf `0.4.1-alpha` aktualisiert.
 - Produktive Adresse bleibt `https://coreui.starlight-unit.de`. Die fruehere Adresse `webui.starlight-unit.de` ist nur noch historischer Kontext.
-- Game, Homepage, KeyHelp-VHosts, Apache, STU-Repack, Game-Datenbank, bestehende CoreUI-Konfiguration und persistente Nutzerdaten bleiben unveraendert.
+- Game, Homepage, KeyHelp-VHosts, Apache, STU-Repack, Game-Datenbank, bestehende Ember CoreUI-Konfiguration und persistente Nutzerdaten bleiben unveraendert.
 
 ## v0.4.0-alpha - 29.08.2026
 
 - Bisher teilweise lokale Einstellungsseite zu einem echten kontobezogenen Konfigurationsbereich ausgebaut. Profil, KI-Laufzeitwerte, Memory und privates Wissen werden serverseitig dem authentifizierten Benutzer zugeordnet.
-- Eigenes CoreUI-Profil je Benutzer mit sichtbarem Anzeigenamen eingefuehrt. Die Login-E-Mail, numerische Benutzer-ID und stabile interne Operator-ID bleiben bei einer Namensaenderung unveraendert.
+- Eigenes Ember CoreUI-Profil je Benutzer mit sichtbarem Anzeigenamen eingefuehrt. Die Login-E-Mail, numerische Benutzer-ID und stabile interne Operator-ID bleiben bei einer Namensaenderung unveraendert.
 - Frei waehlbaren CoreAI-Anzeigenamen je Konto ergaenzt. Die sichtbare Bezeichnung wird in Chatblasen, Denkstatus, Tippanzeige und Eingabeplatzhalter verwendet, ohne Embers technische Identitaet oder Sicherheitsregeln umzuschreiben.
 - Zwei getrennte private Avatar-Slots aufgenommen: Benutzer und CoreAI. Beide koennen in den Einstellungen hochgeladen, ersetzt und geloescht werden.
 - Avatarannahme auf PNG und JPEG bis 4 MiB begrenzt. Abmessungen, Pixelmenge, MIME-Typ und echte Dekodierbarkeit werden serverseitig geprueft.
 - Hochgeladene Bilder werden zentral quadratisch zugeschnitten, auf maximal 512 mal 512 Pixel skaliert, neu als PNG kodiert und ohne fremde Bildmetadaten gespeichert.
 - Avatar-Dateien aus dem statischen Webroot herausgehalten. `profile_media.php` liefert nur den Avatar des angemeldeten Kontos mit privatem Cache-Verhalten aus.
 - Zufallsbasierte Medien-ID als exakten Cache-Buster verwendet. Auch zwei unmittelbar aufeinanderfolgende Avatar-Uploads zeigen sicher den neuesten Stand.
-- Neue Profilendpunkte `profile.php` und `profile_media.php` samt gemeinsamem `profile_store.php` hinzugefuegt. Schreiboperationen verlangen Authentifizierung und CoreUI-CSRF-Token.
+- Neue Profilendpunkte `profile.php` und `profile_media.php` samt gemeinsamem `profile_store.php` hinzugefuegt. Schreiboperationen verlangen Authentifizierung und das technische `X-CoreUI-CSRF`-Token.
 - Automatische Altaccount-Provisionierung eingebaut. Bereits vorhandene Benutzer erhalten beim naechsten Login ein Profil und, falls bisher keiner existiert, einen stabilen privaten Operator.
 - Gemeinsames transaktionales Account-Provisioning fuer Registrierung und Admin Core eingefuehrt. Neue Benutzer starten nicht mehr ohne Charakter- und Profildaten.
 - Admin Core um eine echte Benutzeranlage mit Anzeigename, Login-E-Mail, Startpasswort und Rolle erweitert. System-Admin kann Level 1 bis 4, Admin kann nur niedrigere Rollen Level 2 bis 4 vergeben.
@@ -47,7 +69,7 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - Benutzerliste um Profilname und internen Operator erweitert. Suche findet jetzt Login-E-Mail, sichtbaren Namen und Operatornamen.
 - Einstellungsseite um einen optionalen lokalen Ollama-Modelltag erweitert. Der gespeicherte `model_override` wird nun im gemeinsamen Chatpfad tatsaechlich ausgewertet; leer verwendet weiterhin den Serverstandard.
 - System-Prompt, Memory-Schalter, Memory-Limit, Antwortbudget und Temperatur bleiben pro Benutzer gespeichert und werden gemeinsam mit Profil und Modellwahl geladen.
-- Kontobezogenen Modell-Thinking-Schalter ergaenzt. CoreUI sendet den offiziellen Ollama-Parameter `think` bei Hauptantworten als `true` oder `false`, statt nur die Anzeige zu verstecken.
+- Kontobezogenen Modell-Thinking-Schalter ergaenzt. Ember CoreUI sendet den offiziellen Ollama-Parameter `think` bei Hauptantworten als `true` oder `false`, statt nur die Anzeige zu verstecken.
 - Bei deaktiviertem Thinking werden keine Denkstatus-Ereignisse und kein Denkstatus in neuen Verlaufszeilen gespeichert. Die bestehende Schutzschranke bleibt auch bei aktiviertem Thinking bestehen: Rohe Modellgedanken verlassen den Server nicht.
 - Composer auf bis zu zehn Dateien pro Nachricht erweitert. Mehrfachauswahl, sequentieller Upload mit Fortschritt, einzelne Entfernung vor dem Senden und Wiederherstellung der Auswahl bei einem Sendefehler sind enthalten.
 - Vor dem Senden entfernte Uploads werden ueber einen CSRF-geschuetzten Eigentuemercall geloescht, sofern keine Nachricht sie inzwischen referenziert. Zeilensperren schliessen das Rennen zwischen Entfernen und gleichzeitigem Nachrichten-INSERT.
@@ -63,7 +85,7 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - DOCX-Import liest ausschliesslich `word/document.xml`, deaktiviert externe XML-Netzwerkzugriffe und begrenzt XML-Groesse sowie Absatzanzahl.
 - Private Wissensquellen standardmaessig auf 20 MiB je Datei, 40 Quellen, 5.000.000 Zeichen und 1200 Chunks je Einzeldokument begrenzt. Betreiber koennen die Hauptquoten ueber isolierte App-Settings steuern.
 - Kontospezifischen MariaDB-Lock um Quotenpruefung und Persistenz gelegt. Gleichzeitige Uploads desselben Benutzers koennen die Quelle- oder Zeichenquote nicht gemeinsam umgehen.
-- Originaldateien unter `var/knowledge_uploads` gespeichert und nie direkt durch Nginx ausgeliefert. Quellenmetadaten und Chunks liegen in eigenen CoreUI-Tabellen.
+- Originaldateien unter `var/knowledge_uploads` gespeichert und nie direkt durch Nginx ausgeliefert. Quellenmetadaten und Chunks liegen in eigenen Ember CoreUI-Tabellen.
 - RAG-Suche filtert in Volltext- und LIKE-Fallback immer nach `user_id` und Quelle. Ein Benutzer kann keine Chunks eines anderen Kontos finden oder loeschen.
 - Privates Benutzerwissen klar vom globalen Studio-Kanon in `ember_knowledge_chunks` getrennt. Uploads veraendern weder Bibel- noch Kompendium-Importe.
 - Relevante private Chunks in den Modellprompt aufgenommen und ausdruecklich als nicht vertrauenswuerdige Daten markiert. Dokumentanweisungen erhalten keine Systemprioritaet.
@@ -134,15 +156,15 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - Console-Modelltimeout auf bis zu 900 Sekunden angeglichen. SSE-Heartbeats halten Reverse Proxy und Browser waehrend lokaler langer Generierungen aktiv.
 - Erhaltene 0.2.x-Konfigurationen mit `STU_EMBER_MAX_REPLY_CHARS=7200` koennen neue Antworten nicht mehr still kuerzen. Die sichere Ausgabegrenze skaliert mit dem Tokenbudget bis 60000 Zeichen.
 - Private Console-Eingaben auf 12000 Zeichen ohne und 20000 Zeichen mit Anhang erweitert. Zeilenumbrueche, Leerzeilen und Code-Einrueckungen bleiben erhalten.
-- EventSource uebergibt nur noch die authentifizierte Turn-ID. Lange oder vertrauliche Nachrichten werden aus der CoreUI-Datenbank geladen und landen weder in der URL noch in Proxy-Zugriffslogs.
+- EventSource uebergibt nur noch die authentifizierte Turn-ID. Lange oder vertrauliche Nachrichten werden aus der Ember CoreUI-Datenbank geladen und landen weder in der URL noch in Proxy-Zugriffslogs.
 - Privaten History-Kontext auf bis zu 1200 Zeichen je Nachricht erweitert. Die engen Global-Chat-Grenzen bleiben fuer den Game-Pfad unveraendert.
 - Migration `002_coreui_management` erweitert `stu_chat_messages.message` auf `MEDIUMTEXT` und fuegt Benutzer-KI-Profile sowie Admin-Audit hinzu.
 - Servergespeichertes KI-Profil je Benutzer hinzugefuegt: System-Prompt, Memory-Schalter, Memory-Limit, Antwortbudget und Temperatur.
-- Memory-Verwaltung in den CoreUI-Einstellungen ergaenzt. Benutzer koennen eigene sichtbare Fakten anlegen und loeschen; globale Fakten bleiben geschuetzt.
+- Memory-Verwaltung in den Ember CoreUI-Einstellungen ergaenzt. Benutzer koennen eigene sichtbare Fakten anlegen und loeschen; globale Fakten bleiben geschuetzt.
 - Externen Provider als deaktivierte, serverseitig vorbereitete Schnittstelle aufgenommen. API-Schluessel werden nie im Browser gespeichert; lokales Gemma 4 ueber Ollama bleibt der Referenzbetrieb.
 - Eigenstaendiges Admin Core mit Uebersicht, Benutzerrechten, Sperren, Memory CRUD, Lore-Suche, Runtime-Schaltern, Registrierung, Wartungsmodus, Logs und Audit hinzugefuegt.
 - Werkzeugpfade fuer schnelle Websuche, tiefe Browser-Recherche und isoliertes Python koennen zentral im Admin Core aktiviert oder deaktiviert werden.
-- Berechtigungsstufen und aktive Sperren werden bei jedem authentifizierten Request aus der CoreUI-Datenbank aktualisiert und wirken auf bestehende Sitzungen.
+- Berechtigungsstufen und aktive Sperren werden bei jedem authentifizierten Request aus der Ember CoreUI-Datenbank aktualisiert und wirken auf bestehende Sitzungen.
 - Gehaertete Nginx-Allowlists fuer `settings.html`, `admin/index.html`, `user_settings.php` und `admin.php` in Compose und Native aktualisiert.
 - Transparentes Studio-Logo unter `starlight_unit_studios_logo_transparent_v030.png` neu referenziert. Der eindeutige Dateiname umgeht den bis zu sieben Tage alten Browsercache der frueheren schwarzen Datei.
 - Preflight um Migration-002-Pruefung, Admin-Route, Reply-Pipeline-Selftest, 15 Thinking-Regressionen und Logo-Cache-Buster-Test erweitert.
@@ -154,12 +176,12 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - Denkpanel zum sicheren `DENKSTATUS` umgebaut. Promptteile, Identitaetsdaten, Systemanweisungen, Entwuerfe und Selbstkorrekturen werden weder live noch aus der Historie in den DOM geschrieben.
 - Persistenzschranke in `ember_insert()` ergaenzt: Neue Console-Antworten speichern ausschliesslich einen festen Prozessstatus, niemals den rohen Thinking-Block.
 - Console-Fetch fail-closed gehaertet. Historische `thinking_content`-Werte werden serverseitig durch einen sicheren Abschlussstatus ersetzt, bevor die JSON-Antwort erzeugt wird.
-- Einmalige Datenbankbereinigung mit `sudo ./scripts/stack.sh scrub-thinking` aufgenommen. Sie ersetzt alte Raw-Thinking-Inhalte nur in der isolierten CoreUI-Datenbank.
+- Einmalige Datenbankbereinigung mit `sudo ./scripts/stack.sh scrub-thinking` aufgenommen. Sie ersetzt alte Raw-Thinking-Inhalte nur in der isolierten Ember CoreUI-Datenbank.
 - Antwort-Sanitizer um die gemeldeten Muster `Actually, the prompt says`, `The user is asking` und `Let's try` erweitert. Ein fuehrendes, geschlossenes Antwortzitat endet jetzt vor nachfolgender interner Analyse.
 - Thinking-Selftest auf zwoelf Faelle erweitert und um Quellcode-Grenzen fuer SSE und Persistenz ergaenzt.
 - Studio-Original als echte RGBA-PNG freigestellt. Der schwarze Rechteckhintergrund wurde entfernt; die vorhandenen feinen dunklen Konturen an Wortmarke und Symbolen bleiben erhalten.
 - Splash, Login und Einstellungen auf das transparente PNG-Asset umgestellt. Schwarzer Panelhintergrund, Polygonbeschnitt und Rahmen des Logo-Wrappers wurden entfernt.
-- Eigene CoreUI-Versionierung auf `0.2.9-alpha` angehoben. Game, Homepage, Repack-Versionierung und auslaufende STU Console bleiben unberuehrt.
+- Eigene Ember CoreUI-Versionierung auf `0.2.9-alpha` angehoben. Game, Homepage, Repack-Versionierung und auslaufende STU Console bleiben unberuehrt.
 
 ## v0.2.8-alpha - 19.08.2026
 
@@ -174,14 +196,14 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 
 ## v0.2.7-alpha - 19.08.2026
 
-- Das bereitgestellte originale Starlight Unit Studios-Logo unveraendert als lokales CoreUI-Asset aufgenommen und das fruehere Game-Logo auf Splash und Login ersetzt.
-- Die animierte Ren-Sternenmatrix als eigenstaendiges CoreUI-Kernsymbol in der Sidebar erhalten und klar von der Studio-Herausgebermarke getrennt.
+- Das bereitgestellte originale Starlight Unit Studios-Logo unveraendert als lokales Ember CoreUI-Asset aufgenommen und das fruehere Game-Logo auf Splash und Login ersetzt.
+- Die animierte Ren-Sternenmatrix als eigenstaendiges Ember CoreUI-Kernsymbol in der Sidebar erhalten und klar von der Studio-Herausgebermarke getrennt.
 - Sichtbare Copyright-Zuordnung fuer Splash, Login, Sidebar, Protokolle und den neuen Info-Bereich ergaenzt.
 - Sidebar um den eigenstaendigen Bereich `Einstellungen` erweitert; Einsatz-Protokolle und Abmeldung bleiben direkt erreichbar.
 - Funktionale Einstellungsseite fuer reduzierte Bewegung, kompakten Datenstrom, Thinking-Panel-Standard, Desktop-Telemetrie und Live-Browser-Bildfolge eingefuehrt.
 - Anzeigeoptionen robust und ohne Schemaaenderung im lokalen Browser gespeichert. Konten, Sessions, Erinnerungen und Modellkonfiguration bleiben unberuehrt.
 - Reale Systemstatusmatrix auf Basis von `api/health.php` mit Datenbank-, Schema-, Ollama- und Runtime-Pruefung aufgenommen.
-- Angemeldetes Konto und Berechtigungslevel aus der bestehenden isolierten CoreUI-Authentifizierung in den Einstellungen sichtbar gemacht.
+- Angemeldetes Konto und Berechtigungslevel aus der bestehenden isolierten Ember CoreUI-Authentifizierung in den Einstellungen sichtbar gemacht.
 - Protokollansicht um Studio-Zuordnung, Copyright und direkten Wechsel zu den Einstellungen erweitert.
 - Compose- und Native-Preflight pruefen nun Studio-Logo, Einstellungsseite, gemeinsame Preferences-Logik und die Auslieferung der Einstellungsroute.
 - Mobile Viewport-Regel aus dem v1.1.1.96-Patch unveraendert beibehalten; Game, Homepage, Repack-Versionierung und auslaufende STU Console bleiben unberuehrt.
@@ -195,7 +217,7 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - Ghost-Cursor kleiner, kontrastreicher und auf hellen wie dunklen Webseiten lesbar gestaltet. Den grossen dekorativen Eckwinkel des Browserpanels reduziert, damit er nicht mehr wie ein uebergrosser Cursor wirkt.
 - Client-Puffer auf 16 Browserframes erweitert und die Wiedergabezeit fuer normale Frames sowie echte Klickframes getrennt abgestimmt.
 - Bestehende Installationen werden durch den Browse-Worker automatisch migriert. Eine vorhandene `api/config.local.php` muss fuer die neuen Standardwerte nicht ersetzt werden.
-- Eigene CoreUI-Versionierung auf `0.2.6-alpha` angehoben. Repack, Game, Homepage und die auslaufende STU Console bleiben unberuehrt.
+- Eigene Ember CoreUI-Versionierung auf `0.2.6-alpha` angehoben. Repack, Game, Homepage und die auslaufende STU Console bleiben unberuehrt.
 
 ## v0.2.5-alpha - 19.08.2026
 
@@ -205,11 +227,11 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - Private Tabelle `stu_ember_browse_frames` mit Jobbindung, URL, Statuslabel, Viewport und Cursorposition hinzugefuegt. Der Worker migriert bestehende Installationen selbststaendig und entfernt alte Frames standardmaessig nach 24 Stunden.
 - Ghost-Cursor mit echten Bounding-Box-Koordinaten des angeklickten Playwright-Elements sowie sichtbarem Klickimpuls umgesetzt. Ohne echten Klick wird keine Bewegung erfunden.
 - Schrittstream auf eine kurze Statuszeile reduziert. Technische Protokolle verdecken das Browserbild nicht mehr.
-- Thinking-Bleed im direkten CoreUI-SSE-Pfad geschlossen. Der Streaming-Abschluss und der synchrone Werkzeugpfad verwenden jetzt dieselbe Schranke vor Datenbank und Client.
+- Thinking-Bleed im direkten Ember CoreUI-SSE-Pfad geschlossen. Der Streaming-Abschluss und der synchrone Werkzeugpfad verwenden jetzt dieselbe Schranke vor Datenbank und Client.
 - Interne Gemma-Labels wie `Response Draft`, `Alternative`, `Final decision`, `Selected response` und `Checking constraints` werden erkannt. Eine explizite Nutzerantwort kann aus dem getrennten Denkblock gerettet werden; reines Meta bleibt leer und loest den sauberen Fallback aus.
 - Client puffert fuehrende Werkzeug- und Meta-Fragmente, damit interne Labels auch waehrend des Tokenstreams nicht kurz in der Antwortblase aufblitzen.
 - Eigenen Thinking-Sanitizer-Selftest mit dem gemeldeten Leak-Muster aufgenommen. Compose- und Native-Preflight pruefen zusaetzlich die private Frame-Tabelle.
-- Eigene CoreUI-Versionierung auf `0.2.5-alpha` angehoben. Repack, Game, Homepage und die auslaufende STU Console bleiben unberuehrt.
+- Eigene Ember CoreUI-Versionierung auf `0.2.5-alpha` angehoben. Repack, Game, Homepage und die auslaufende STU Console bleiben unberuehrt.
 
 ## v0.2.4-alpha - 19.08.2026
 
@@ -221,7 +243,7 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - SearXNG-Treffer bleiben bei einem Modellfehler als belastbarer Fallback erhalten; der Browse-Job und die Ember-Antwort gehen dadurch nicht verloren.
 - Idle-Frist des Live-Browse-Fensters auf 480 Sekunden und Sicherheits-Cap des Browse-SSE-Endpunkts auf 900 Sekunden angehoben.
 - Neue Laufzeitwerte in Standardkonfiguration, Beispielkonfiguration sowie Compose- und Native-Installer aufgenommen. Bestehende `config.local.php`-Dateien muessen fuer den neuen Standard nicht ersetzt werden.
-- Eigene CoreUI-Versionierung auf `0.2.4-alpha` angehoben. Die Repack-Version und die auslaufende STU Console bleiben unberuehrt.
+- Eigene Ember CoreUI-Versionierung auf `0.2.4-alpha` angehoben. Die Repack-Version und die auslaufende STU Console bleiben unberuehrt.
 
 ## v0.2.3-alpha - 19.08.2026
 
@@ -230,15 +252,15 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - Eigene beschreibbare Laufzeitablage `var/pdf_pages` als PHP-Volume hinzugefuegt. Der schreibgeschuetzte Projekt-Mount bleibt unveraendert.
 - PDF-Stichprobe auf standardmaessig vier gleichmaessig verteilte Seiten und maximal 1024 Pixel je Seite begrenzt. Seitenverhaeltnis und Seitenreihenfolge bleiben erhalten.
 - SSE-Routing um PDF-Anhaenge erweitert, damit ein moeglicher Scan-Fallback nicht im reinen Text-Streaming-Pfad ohne Bild-Payload landet.
-- Vision-Dateiaufloesung auf zwei kanonische CoreUI-Runtime-Wurzeln begrenzt: `var/ember_frames` und `var/pdf_pages`.
+- Vision-Dateiaufloesung auf zwei kanonische Ember CoreUI-Runtime-Wurzeln begrenzt: `var/ember_frames` und `var/pdf_pages`.
 - Prompt-Injection-Schutz fuer Scan-PDFs eingebaut. Sichtbare Dokumentanweisungen werden als Inhalt, nicht als Systemanweisung behandelt.
 - Halluzinationsschutz fuer PDFs eingebaut: Wenn weder Textebene noch Seitenbilder lesbar sind, wird keine modellgenerierte Inhaltsbeschreibung angefordert.
 - Healthcheck, Compose-Preflight und Native-Preflight um den PDF-Seitenordner erweitert.
 - Preflight um einen vollstaendigen PHP-Syntaxcheck fuer API-, Skript- und Tool-Dateien erweitert, damit auch ein reines Update ohne erneuten Installer fehlerhafte PHP-Dateien sofort stoppt.
 - Eigenen PDF-Selftest hinzugefuegt. Er validiert eine bekannte Textebene und ein bildbasiertes Scan-PDF samt Rasterung, Skalierung, Metadaten und Cleanup.
-- Anwendungssperren fuer den Parallelbetrieb dokumentiert: Game und CoreUI verwenden getrennte Datenbanken und getrennte Lock-Namen. Sie blockieren sich auf Anwendungsebene nicht.
-- Rein lesenden `ollama-parallel-report.sh` fuer RAM-, VRAM-, Modell- und Dienstdiagnose hinzugefuegt. Der CoreUI-Installer veraendert den gemeinsam genutzten Ollama-Dienst weiterhin nicht.
-- Eigene CoreUI-Versionierung auf `0.2.3-alpha` angehoben. Die Repack-Version bleibt davon unberuehrt.
+- Anwendungssperren fuer den Parallelbetrieb dokumentiert: Game und Ember CoreUI verwenden getrennte Datenbanken und getrennte Lock-Namen. Sie blockieren sich auf Anwendungsebene nicht.
+- Rein lesenden `ollama-parallel-report.sh` fuer RAM-, VRAM-, Modell- und Dienstdiagnose hinzugefuegt. Der Ember CoreUI-Installer veraendert den gemeinsam genutzten Ollama-Dienst weiterhin nicht.
+- Eigene Ember CoreUI-Versionierung auf `0.2.3-alpha` angehoben. Die Repack-Version bleibt davon unberuehrt.
 
 ## v0.2.2-alpha - 19.08.2026
 
@@ -252,7 +274,7 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - Verdeckten 480-Sekunden-cURL-Deckel auf die bereits fuer PHP-FPM und Nginx vorgesehenen 900 Sekunden angehoben. Die konfigurierte Modellfrist von standardmaessig 600 Sekunden greift damit auch bei mehreren Video-Frames wirklich.
 - Healthcheck und Preflight pruefen nun den Frame-Ordner. Ein eigener Video-Selftest erzeugt im PHP-Container einen synthetischen Clip und validiert `ffmpeg`, `ffprobe`, Frame-Extraktion, Skalierung und Cleanup gemeinsam.
 - Veraltetes Top-Level-Feld `version` aus `compose.yaml` entfernt, damit aktuelle Docker-Compose-Versionen keine kosmetische Warnung mehr ausgeben.
-- Eigene CoreUI-Versionierung auf `0.2.2-alpha` angehoben. Die Repack-Version bleibt davon unberuehrt.
+- Eigene Ember CoreUI-Versionierung auf `0.2.2-alpha` angehoben. Die Repack-Version bleibt davon unberuehrt.
 
 ## v0.2.1-alpha - 19.08.2026
 
@@ -263,19 +285,19 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - Eigene SearXNG-Instanz auf Loopback-Port `18889` eingefuehrt, damit eine vorhandene STU-Suche auf `8888` parallel weiterlaufen kann.
 - Den Granian-Server im offiziellen SearXNG-Container explizit an `127.0.0.1:18889` gebunden, statt dessen internen Standardport `8080` vorauszusetzen.
 - Browse-Worker in einen eigenen Playwright-Container verschoben. Es wird kein Host-systemd-Dienst mehr benoetigt.
-- CoreUI-Modellname von `ember-core:latest` auf `ember-coreui:latest` getrennt und durch eine lokale Eigentumsmarkierung gegen versehentliche Uebernahme fremder Modelle abgesichert.
-- MariaDB-Advisory-Locks auf einen konfigurierbaren CoreUI-Namespace umgestellt. Die bisherigen globalen Namen `ember_global_ollama` und `ember_self_xp` werden im Standardbetrieb nicht mehr verwendet.
+- Ember CoreUI-Modellname von `ember-core:latest` auf `ember-coreui:latest` getrennt und durch eine lokale Eigentumsmarkierung gegen versehentliche Uebernahme fremder Modelle abgesichert.
+- MariaDB-Advisory-Locks auf einen konfigurierbaren Ember CoreUI-Namespace umgestellt. Die bisherigen globalen Namen `ember_global_ollama` und `ember_self_xp` werden im Standardbetrieb nicht mehr verwendet.
 - Vor jeder Erstinstallation Kollisionstests fuer Ports und Compose-Projektidentitaet eingefuehrt.
 - Webzugriff standardmaessig auf `127.0.0.1` begrenzt und einen SSH-Tunnel als sicheren Testweg dokumentiert.
 - Eigenen Compose-Preflight sowie `scripts/stack.sh` fuer Status, Logs, Neustart und Stop hinzugefuegt.
-- Fast-Poll-Fallback an die ausloesende CoreUI-Sitzung gebunden, damit ein SSE-Rueckfall den Sitzungszeiger korrekt aktualisiert und nicht in einer Poll-Schleife haengen bleibt.
+- Fast-Poll-Fallback an die ausloesende Ember CoreUI-Sitzung gebunden, damit ein SSE-Rueckfall den Sitzungszeiger korrekt aktualisiert und nicht in einer Poll-Schleife haengen bleibt.
 - Den frueheren Host-Installer als expliziten `install-native.sh` fuer dedizierte Einzelserver erhalten und mit einer Pflichtbestaetigung gesichert.
 - Entfernen der Nginx-Default-Site im Native-Installer standardmaessig deaktiviert.
-- Getrennte CoreUI-Versionierung fortgefuehrt. Repack-Changelogs werden von diesem eigenstaendigen Alpha-Release nicht veraendert.
+- Getrennte Ember CoreUI-Versionierung fortgefuehrt. Repack-Changelogs werden von diesem eigenstaendigen Alpha-Release nicht veraendert.
 
 Bewusste gemeinsame Ressource:
 
-- Der lokale Ollama-Dienst wird weiterhin gemeinsam genutzt, damit vorhandene Gemma-4-Modelldaten nicht dupliziert werden. CoreUI verwendet einen eigenen Modellnamen und eigene Daten, gleichzeitige Generierungen koennen aber dieselbe CPU, GPU und denselben RAM beanspruchen.
+- Der lokale Ollama-Dienst wird weiterhin gemeinsam genutzt, damit vorhandene Gemma-4-Modelldaten nicht dupliziert werden. Ember CoreUI verwendet einen eigenen Modellnamen und eigene Daten, gleichzeitige Generierungen koennen aber dieselbe CPU, GPU und denselben RAM beanspruchen.
 
 ## v0.2.0-alpha - 19.08.2026
 
@@ -286,13 +308,13 @@ Bewusste gemeinsame Ressource:
 - CLI-Bootstrap fuer Ember, Admin-Account, Charakter und `stu_kv` hinzugefuegt.
 - Standalone-Konfiguration ueber `api/config.local.php` oder `COREUI_*`-Umgebungsvariablen eingefuehrt.
 - Eigenen Health-Endpunkt und authentifiziertes CRUD-API fuer `ember_memories` hinzugefuegt.
-- Gemma-4-Modelfile mit CoreUI-Werkzeugprotokoll und empfohlenen Sampling-Werten hinzugefuegt.
+- Gemma-4-Modelfile mit Ember CoreUI-Werkzeugprotokoll und empfohlenen Sampling-Werten hinzugefuegt.
 - Lokales SearXNG-Template mit aktivierter JSON-Search-API hinzugefuegt.
 - Asynchronen Playwright-Browse-Worker als eigenen systemd-Dienst paketiert.
 - SSH-Installer fuer Debian und Ubuntu sowie einen wiederholbaren Preflight-Test hinzugefuegt.
 - Nginx-Allowlist fuer ausschliesslich oeffentliche API-Endpunkte und Schutz interner Projektordner hinzugefuegt.
 - Vision-Dateiaufloesung auf das lokale Projektverzeichnis `assets/chat_media` begrenzt.
-- Getrennte CoreUI-Versionierung gegenueber der Repack-Versionierung verbindlich dokumentiert.
+- Getrennte Ember CoreUI-Versionierung gegenueber der Repack-Versionierung verbindlich dokumentiert.
 
 Bekannte Alpha-Grenze:
 
@@ -314,7 +336,7 @@ Bekannte Alpha-Grenze:
 - Helles Ayal'ren-HUD, SVG-Runenmatrix, Sidebar, Ticker, Chat-Feed und Composer gestaltet.
 - Bestehende DOM-Kopplung fuer die aktuelle Console-JavaScript-Laufzeit erhalten.
 - Grundlayout in feste Navigations-, Kopf-, Verlaufs- und Eingabebereiche gegliedert, damit die spaetere funktionale Erweiterung ohne Austausch des visuellen Kerns moeglich bleibt.
-- Eigene Ayal'ren-Runenmatrix als CoreUI-Kernsymbol eingefuehrt und vom spaeter getrennt gefuehrten Studio-Branding abgegrenzt.
+- Eigene Ayal'ren-Runenmatrix als Ember CoreUI-Kernsymbol eingefuehrt und vom spaeter getrennt gefuehrten Studio-Branding abgegrenzt.
 - Chatblasen, Statusanzeige, Nachrichtenzeiten, Eingabefeld und primaere Aktionen als konsistentes HUD-System angelegt.
-- Erste Desktop-Proportionen, Typografie, Farbvariablen, Raster, Schatten und Bewegungsmuster in einer gemeinsamen CoreUI-Styleschicht gebuendelt.
+- Erste Desktop-Proportionen, Typografie, Farbvariablen, Raster, Schatten und Bewegungsmuster in einer gemeinsamen Ember CoreUI-Styleschicht gebuendelt.
 - Game, Homepage und bestehende Repack-Oberflaechen nicht ersetzt; der Stand war ein eigenstaendiger Alpha-Frontendkern.

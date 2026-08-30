@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/console_attachment_store.php';
 
 /**
- * Persistente CoreUI-Sitzungslogik.
+ * Persistente Ember CoreUI-Sitzungslogik.
  *
  * Eine Sitzung ist ein echter Nachrichten-Scope. since_id bleibt nur als
  * Kompatibilitaetsfeld fuer alte Clients bestehen und definiert niemals mehr
