@@ -2,7 +2,7 @@ PROJECT STARLIGHT: EMBER COREUI
 UEBERGABEPROTOKOLL FUER EINEN NEUEN CHAT
 
 Stand: 29.08.2026
-Zielversion: 0.4.1-alpha
+Zielversion: 0.4.2-alpha
 Produktive Adresse: https://coreui.starlight-unit.de
 
 
@@ -21,6 +21,41 @@ ausdrueckliche Freigabe nicht veraendert werden:
 * KeyHelp-generierte Apache-VHost-Dateien
 * Host-PHP und fremde Container
 * bestehende lokale Ember CoreUI-Zugangsdaten
+
+
+1A. LIZENZ, NAME UND KOSTENLOSE PROJEKTPOLITIK
+
+Ab 0.4.2-alpha gilt fuer den projekt-eigenen Code die Starlight Unit Studios
+Ember CoreUI Community Source Lizenz 1.0.
+
+Verbindliche Dateien:
+
+* LICENSE.de.md: rechtlich massgeblicher deutscher Text
+* LICENSE.md: englische Uebersetzung
+* LICENSE_HISTORY.md: Versionszuordnung der Lizenzen
+* TRADEMARKS.md: Namen, Branding und technische Ausnahmen
+* COMMUNITY_POLICY.md: kostenlose, nicht monetarisierte Projektpolitik
+* NOTICE.md und COPYRIGHT.md: Herkunft und Rechtehinweise
+
+Der Produktname lautet immer Ember CoreUI. Die alleinstehende
+Produktbezeichnung CoreUI darf fuer dieses Projekt nicht verwendet werden.
+Technische Kennungen wie coreui, ember-coreui, COREUI_*, /opt/ember-coreui,
+X-CoreUI-CSRF, Repository-Slugs und Domainbestandteile bleiben aus
+Kompatibilitaetsgruenden erhalten und sind keine Produktbezeichnung.
+
+Fuer das offizielle Ember-CoreUI-Projekt gibt es keine Nutzergrenze, keine
+kostenpflichtige Lizenzstufe, kein White-Label-Angebot, keine Spendenfunktion,
+keine Werbung, kein Sponsoring und kein bezahltes Supportpaket. Es gibt keine
+Lizenztelemetrie und kein Phone-home. Schriftliche Branding-Ausnahmen sind
+reine Einzelfallentscheidungen und begruenden keinen Anspruch.
+
+Ember CoreUI darf von Dritten nicht als kostenpflichtiger SaaS- oder
+Managed-Service weiterverkauft werden. Private, gemeinschaftliche und interne
+Unternehmensnutzung bleibt unter Einhaltung der Lizenz und des Brandings
+kostenlos.
+
+Ember CoreUI ist kein Fork des getrennten Admin-Template- und
+UI-Komponentenprojekts unter coreui.io und enthaelt keine Abhaengigkeit davon.
 
 
 2. PRODUKTIVE STRUKTUR
@@ -167,8 +202,8 @@ Healthcheck und beide Preflights verlangen Migration 006.
 6. SICHERES UPDATE AUF 0.4.1-ALPHA
 
 cd /home/users/game/tmp
-sha256sum -c EMBER_COREUI_0_4_1_ALPHA.zip.sha256
-unzip -q -o EMBER_COREUI_0_4_1_ALPHA.zip
+sha256sum -c EMBER_COREUI_0_4_2_ALPHA.zip.sha256
+unzip -q -o EMBER_COREUI_0_4_2_ALPHA.zip
 
 sudo rsync -a \
   --exclude='api/config.local.php' \
@@ -177,7 +212,7 @@ sudo rsync -a \
   --exclude='uploads/' \
   --exclude='assets/chat_media/' \
   --exclude='assets/profile_photos/' \
-  EMBER_COREUI_0_4_1_ALPHA/ /opt/ember-coreui/
+  EMBER_COREUI_0_4_2_ALPHA/ /opt/ember-coreui/
 
 cd /opt/ember-coreui
 sudo ./scripts/stack.sh up -d --force-recreate php web
@@ -259,20 +294,22 @@ private Routen und Schreibrechte erfolgreich melden.
 
 10. STARTTEXT FUER EINEN NEUEN CHAT
 
-"Wir setzen Project Starlight Ember CoreUI ab Version 0.4.1-alpha fort. Lies
+"Wir setzen Project Starlight Ember CoreUI ab Version 0.4.2-alpha fort. Lies
 zuerst das beigefuegte Uebergabeprotokoll und den Changelog vollstaendig.
 Ember CoreUI ist isoliert unter /opt/ember-coreui installiert und oeffentlich unter
 https://coreui.starlight-unit.de erreichbar. Veraendere Game, Homepage,
 STU-Repack, KeyHelp-VHosts und bestehende lokale Konfiguration nicht. Pruefe
 zuerst den Server-Preflight sowie den beschriebenen Mehrbrowser-, Passwort-,
 Login-Sitzungs-, Export-, Ollama-Modell-, Thinking-, Zehn-Anhaenge-, RAG- und
-Chat-Sitzungstest. Setze danach nur auf dem belegten 0.4.1-alpha-Stand fort."
+Chat-Sitzungstest. Setze danach nur auf dem belegten 0.4.2-alpha-Stand fort."
 
 
 11. ZUGEHOERIGE DOKUMENTE
 
-* EMBER_COREUI_0_4_1_ALPHA.zip
-* EMBER_COREUI_0_4_1_ALPHA.zip.sha256
-* docs/changelogs-txt/CHANGELOG_0_4_1_ALPHA.txt
-* docs/changelogs-txt/INDEX.txt mit allen Versionen 0.1.0 bis 0.4.1
+* EMBER_COREUI_0_4_2_ALPHA.zip
+* EMBER_COREUI_0_4_2_ALPHA.zip.sha256
+* docs/changelogs-txt/CHANGELOG_0_4_2_ALPHA.txt
+* docs/changelogs-txt/INDEX.txt mit allen Versionen 0.1.0 bis 0.4.2
+* LICENSE.de.md und LICENSE.md
+* LICENSE_HISTORY.md, TRADEMARKS.md, COMMUNITY_POLICY.md und NOTICE.md
 * Dieses Uebergabeprotokoll

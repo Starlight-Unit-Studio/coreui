@@ -387,7 +387,7 @@
           ev.stopPropagation();
           var title = String(s.title || 'Sitzung');
           if (!window.confirm(
-            'Sitzung "' + title + '" endgültig löschen? Nachrichten, Browser-Recherchen und zugehörige Uploads werden aus CoreUI entfernt.'
+            'Sitzung "' + title + '" endgültig löschen? Nachrichten, Browser-Recherchen und zugehörige Uploads werden aus Ember CoreUI entfernt.'
           )) return;
           var proof = window.prompt('Zur Bestätigung LÖSCHEN eingeben:');
           proof = String(proof || '').trim().toLocaleUpperCase('de-DE');

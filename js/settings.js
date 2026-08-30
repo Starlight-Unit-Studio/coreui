@@ -132,7 +132,7 @@
     if (!healthChecks) return;
     healthChecks.innerHTML = '';
     var names = {
-      database: 'COREUI-DATENBANK',
+      database: 'EMBER COREUI-DATENBANK',
       schema: 'DATENSCHEMA',
       ollama: 'OLLAMA-KERN',
       storage: 'RUNTIME-SPEICHER'
@@ -325,7 +325,7 @@
       if (externalNote) {
         var p = externalNote.querySelector('p');
         if (p && data.external && data.external.enabled && !externalConfigured) {
-          p.textContent = 'Der externe Adapter ist im Adminbereich aktiviert, aber noch nicht vollständig mit HTTPS-Endpunkt, Modell und serverseitigem Schlüssel konfiguriert. CoreUI bleibt deshalb sicher auf lokalem Ollama.';
+          p.textContent = 'Der externe Adapter ist im Adminbereich aktiviert, aber noch nicht vollständig mit HTTPS-Endpunkt, Modell und serverseitigem Schlüssel konfiguriert. Ember CoreUI bleibt deshalb sicher auf lokalem Ollama.';
         }
       }
       updatePromptCounter();
@@ -509,7 +509,7 @@
   }
 
   function revokeOtherLoginSessions() {
-    if (!window.confirm('Alle anderen Geräte sofort von CoreUI abmelden?')) return;
+    if (!window.confirm('Alle anderen Geräte sofort von Ember CoreUI abmelden?')) return;
     if (revokeOtherSessionsButton) revokeOtherSessionsButton.disabled = true;
     api('./api/account_security.php', {
       method: 'POST',

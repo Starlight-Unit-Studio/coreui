@@ -160,7 +160,7 @@
       permission_level: Number(document.getElementById('newUserLevel').value) || 4
     }).then(function (data) {
       document.getElementById('adminUserForm').reset();
-      show('Benutzer #' + data.user.id + ' wurde mit eigenem CoreUI-Profil angelegt.');
+      show('Benutzer #' + data.user.id + ' wurde mit eigenem Ember CoreUI-Profil angelegt.');
       return Promise.all([loadUsers(), loadOverview()]);
     }).catch(function (error) {
       var labels = {
@@ -325,7 +325,7 @@
   }
 
   function clearLogs() {
-    if (!window.confirm('Das CoreUI-Fehlerprotokoll wirklich leeren?')) return;
+    if (!window.confirm('Das Ember CoreUI-Fehlerprotokoll wirklich leeren?')) return;
     post('logs_clear', {}).then(function (data) {
       show('Protokoll geleert: ' + data.removed + ' sichtbare Zeilen.');
       loadLogs();

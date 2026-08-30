@@ -141,7 +141,7 @@ fi
 [[ ${#ADMIN_PASSWORD} -ge 12 ]] || die 'Das Admin-Passwort muss mindestens 12 Zeichen lang sein.'
 [[ "$ADMIN_GENDER" == '' || "$ADMIN_GENDER" == 'm' || "$ADMIN_GENDER" == 'f' ]] || die 'COREUI_ADMIN_GENDER muss leer, m oder f sein.'
 
-log "Installiere Systempakete fuer CoreUI $COREUI_VERSION."
+log "Installiere Systempakete fuer Ember CoreUI $COREUI_VERSION."
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 
@@ -387,7 +387,7 @@ fi
 if [[ "$MODEL_NAME" != "$BASE_MODEL" ]]; then
   MODELFILE_GENERATED="$PROJECT_ROOT/var/Modelfile.generated"
   sed "s|{{BASE_MODEL}}|$BASE_MODEL|g" "$PROJECT_ROOT/config/Modelfile.template" > "$MODELFILE_GENERATED"
-  log "Erzeuge lokales CoreUI-Modell $MODEL_NAME aus $BASE_MODEL."
+  log "Erzeuge lokales Ember CoreUI-Modell $MODEL_NAME aus $BASE_MODEL."
   ollama create "$MODEL_NAME" -f "$MODELFILE_GENERATED"
 else
   warn 'COREUI_MODEL_NAME entspricht dem Basismodell. Das eigene Modelfile wird deshalb nicht erzeugt.'

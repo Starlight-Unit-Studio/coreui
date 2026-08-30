@@ -14,7 +14,7 @@ AENDERUNGEN
 * Ghost-Cursor kleiner, kontrastreicher und auf hellen wie dunklen Webseiten lesbar gestaltet. Den grossen dekorativen Eckwinkel des Browserpanels reduziert, damit er nicht mehr wie ein uebergrosser Cursor wirkt.
 * Client-Puffer auf 16 Browserframes erweitert und die Wiedergabezeit fuer normale Frames sowie echte Klickframes getrennt abgestimmt.
 * Bestehende Installationen werden durch den Browse-Worker automatisch migriert. Eine vorhandene api/config.local.php muss fuer die neuen Standardwerte nicht ersetzt werden.
-* Eigene CoreUI-Versionierung auf 0.2.6-alpha angehoben. Repack, Game, Homepage und die auslaufende STU Console bleiben unberuehrt.
+* Eigene Ember CoreUI-Versionierung auf 0.2.6-alpha angehoben. Repack, Game, Homepage und die auslaufende STU Console bleiben unberuehrt.
 
 HINWEIS
 

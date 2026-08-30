@@ -15,7 +15,7 @@ AENDERUNGEN
 * SearXNG-Treffer bleiben bei einem Modellfehler als belastbarer Fallback erhalten; der Browse-Job und die Ember-Antwort gehen dadurch nicht verloren.
 * Idle-Frist des Live-Browse-Fensters auf 480 Sekunden und Sicherheits-Cap des Browse-SSE-Endpunkts auf 900 Sekunden angehoben.
 * Neue Laufzeitwerte in Standardkonfiguration, Beispielkonfiguration sowie Compose- und Native-Installer aufgenommen. Bestehende config.local.php-Dateien muessen fuer den neuen Standard nicht ersetzt werden.
-* Eigene CoreUI-Versionierung auf 0.2.4-alpha angehoben. Die Repack-Version und die auslaufende STU Console bleiben unberuehrt.
+* Eigene Ember CoreUI-Versionierung auf 0.2.4-alpha angehoben. Die Repack-Version und die auslaufende STU Console bleiben unberuehrt.
 
 HINWEIS
 

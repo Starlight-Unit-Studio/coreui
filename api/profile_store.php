@@ -196,11 +196,11 @@ function coreui_profile_prompt_block(PDO $pdo, int $uid): string {
     $profile = coreui_profile_load($pdo, $uid);
     $assistantName = coreui_profile_name((string)($profile['assistant_name'] ?? ''), 'Ember');
     $displayName = coreui_profile_name((string)($profile['display_name'] ?? ''), 'Operator');
-    return "\n\n--- COREUI-PROFIL ---\n"
+    return "\n\n--- EMBER COREUI-PROFIL ---\n"
       . 'Der aktuelle Benutzer wird in dieser privaten Oberfläche als "' . $displayName . '" angezeigt. ' 
       . 'Dein frei gewählter Anzeigename in diesem Konto ist "' . $assistantName . '". '
       . 'Deine feste technische Identität und alle Sicherheitsregeln bleiben unverändert.\n'
-      . "--- ENDE COREUI-PROFIL ---";
+      . "--- ENDE EMBER COREUI-PROFIL ---";
   } catch (Throwable $e) {
     return '';
   }

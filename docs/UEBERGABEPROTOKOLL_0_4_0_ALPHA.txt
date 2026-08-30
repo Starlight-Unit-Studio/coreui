@@ -20,11 +20,11 @@ Zugangsdaten.
 * Upload- und Updatepfad: /home/users/game/tmp
 * Oeffentliche Adresse: https://coreui.starlight-unit.de
 * Veraltete Adresse: https://webui.starlight-unit.de
-* Interner CoreUI-Endpunkt: http://127.0.0.1:9080
+* Interner Ember CoreUI-Endpunkt: http://127.0.0.1:9080
 * Oeffentliche Ports 80 und 443: Apache unter KeyHelp
 * Reverse Proxy: Apache/KeyHelp leitet nur coreui.starlight-unit.de an
   127.0.0.1:9080 weiter.
-* Der Nginx-Prozess fuer Port 9080 gehoert zum isolierten CoreUI-Container.
+* Der Nginx-Prozess fuer Port 9080 gehoert zum isolierten Ember CoreUI-Container.
 * Compose-Projektname: ember-coreui
 * Wichtige Dienste: database, php, web und browse; SearXNG ist optional.
 * Lokale Betreiberkonfiguration: /opt/ember-coreui/api/config.local.php
@@ -33,9 +33,9 @@ Zugangsdaten.
 * Neue private Profildateien: var/profile_media/
 * Neue private Knowledge-Originale: var/knowledge_uploads/
 
-CoreUI ist technisch vom Game, von der Homepage, vom STU-Repack und von deren
+Ember CoreUI ist technisch vom Game, von der Homepage, vom STU-Repack und von deren
 produktiver Datenbank getrennt. Game-Dateien, Repack-Pfade und durch KeyHelp
-generierte Apache-VHost-Dateien duerfen fuer CoreUI-Updates nicht direkt
+generierte Apache-VHost-Dateien duerfen fuer Ember CoreUI-Updates nicht direkt
 ueberschrieben werden.
 
 
@@ -78,7 +78,7 @@ oder Zertifikate nicht.
 
 PROFILE UND IDENTITAETEN
 
-* Jeder Benutzer besitzt ein serverseitiges CoreUI-Profil.
+* Jeder Benutzer besitzt ein serverseitiges Ember CoreUI-Profil.
 * Der sichtbare Benutzername kann geaendert werden. Login-E-Mail, Benutzer-ID
   und stabile interne Operator-ID bleiben unveraendert.
 * Der sichtbare CoreAI-Rufname kann pro Konto frei gewaehlt werden.
@@ -157,8 +157,8 @@ Neue private Speicherpfade:
 
 stack.sh legt fehlende Verzeichnisse bei up, start und restart mit passenden
 Containerrechten an und wendet alle ausstehenden additiven Migrationen an. Die
-neuen Daten liegen nur in der isolierten CoreUI-Datenbank und den beiden
-CoreUI-Verzeichnissen.
+neuen Daten liegen nur in der isolierten Ember CoreUI-Datenbank und den beiden
+Ember CoreUI-Verzeichnissen.
 
 Migration 005_thinking_attachments:
 
@@ -236,7 +236,7 @@ Logo-Alpha-Test, private Routen und Schreibrechte erfolgreich melden.
   ueberschrieben oder geloescht werden.
 * Port 9080 bleibt lokal gebunden.
 * Keine direkte Bearbeitung von KeyHelp-generierten VHost-Dateien.
-* Keine CoreUI-Migration in der produktiven Game-Datenbank.
+* Keine Ember CoreUI-Migration in der produktiven Game-Datenbank.
 * Keine Rohgedanken, Prompttexte oder Antwortentwuerfe an Browser oder History.
 * Keine Cloud-API-Schluessel in Browser, LocalStorage oder Benutzerprofilen.
 * Private Knowledge-Abfragen muessen immer nach authentifiziertem user_id
@@ -271,7 +271,7 @@ Den folgenden Text zusammen mit diesem Protokoll und dem aktuellen Release-ZIP
 an den neuen Chat geben:
 
 "Wir setzen Project Starlight Ember CoreUI ab Version 0.4.0-alpha fort. Lies
-zuerst das beigefuegte Uebergabeprotokoll vollstaendig. CoreUI ist isoliert
+zuerst das beigefuegte Uebergabeprotokoll vollstaendig. Ember CoreUI ist isoliert
 unter /opt/ember-coreui installiert und oeffentlich unter
 https://coreui.starlight-unit.de erreichbar. Veraendere Game, Homepage,
 STU-Repack, KeyHelp-VHosts und bestehende lokale Konfiguration nicht. Pruefe

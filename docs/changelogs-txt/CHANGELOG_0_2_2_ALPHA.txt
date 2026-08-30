@@ -17,7 +17,7 @@ AENDERUNGEN
 * Verdeckten 480-Sekunden-cURL-Deckel auf die bereits fuer PHP-FPM und Nginx vorgesehenen 900 Sekunden angehoben. Die konfigurierte Modellfrist von standardmaessig 600 Sekunden greift damit auch bei mehreren Video-Frames wirklich.
 * Healthcheck und Preflight pruefen nun den Frame-Ordner. Ein eigener Video-Selftest erzeugt im PHP-Container einen synthetischen Clip und validiert ffmpeg, ffprobe, Frame-Extraktion, Skalierung und Cleanup gemeinsam.
 * Veraltetes Top-Level-Feld version aus compose.yaml entfernt, damit aktuelle Docker-Compose-Versionen keine kosmetische Warnung mehr ausgeben.
-* Eigene CoreUI-Versionierung auf 0.2.2-alpha angehoben. Die Repack-Version bleibt davon unberuehrt.
+* Eigene Ember CoreUI-Versionierung auf 0.2.2-alpha angehoben. Die Repack-Version bleibt davon unberuehrt.
 
 HINWEIS
 

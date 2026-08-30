@@ -8,8 +8,8 @@ STATUS:  ALPHA
 AENDERUNGEN
 
 * Die Benutzereinstellungen besitzen jetzt einen echten Bereich fuer Kontosicherheit. Geraete-Anmeldungen werden ausdruecklich von den vorhandenen Chat-Sitzungen unterschieden.
-* Benutzer koennen ihr Passwort direkt in CoreUI aendern. Dafuer sind das aktuelle Passwort, ein neues Passwort mit mindestens 12 Zeichen und eine identische Bestaetigung erforderlich.
-* Der Passwortwechsel ist durch die bestehende authentifizierte Sitzung, CoreUI-CSRF und ein eigenes Rate-Limit geschuetzt.
+* Benutzer koennen ihr Passwort direkt in Ember CoreUI aendern. Dafuer sind das aktuelle Passwort, ein neues Passwort mit mindestens 12 Zeichen und eine identische Bestaetigung erforderlich.
+* Der Passwortwechsel ist durch die bestehende authentifizierte Sitzung, das technische X-CoreUI-CSRF-Token und ein eigenes Rate-Limit geschuetzt.
 * Das aktuelle Passwort wird mit password_verify geprueft. Das neue Passwort wird ausschliesslich als PASSWORD_DEFAULT-Hash gespeichert.
 * Ein identisches altes und neues Passwort wird abgelehnt.
 * Nach erfolgreichem Passwortwechsel werden saemtliche bisherigen Login-Sitzungen des Kontos widerrufen.
@@ -56,7 +56,7 @@ AENDERUNGEN
 * Versionsparameter verhindern alte CSS- und JavaScript-Caches nach dem Update.
 * README, Markdown-Changelog, TXT-Changelog-Archiv und Uebergabeprotokoll beschreiben jetzt den Stand 0.4.1-alpha.
 * Die produktive Adresse bleibt https://coreui.starlight-unit.de. webui.starlight-unit.de bleibt nur als veraltete historische Adresse dokumentiert.
-* Game, Homepage, STU-Repack, KeyHelp, Apache, Host-PHP, Game-Datenbank und die erhaltene CoreUI-Konfiguration werden nicht veraendert.
+* Game, Homepage, STU-Repack, KeyHelp, Apache, Host-PHP, Game-Datenbank und die erhaltene Ember CoreUI-Konfiguration werden nicht veraendert.
 
 MIGRATION UND SPEICHER
 

@@ -52,7 +52,7 @@ if (substr_count($joined, 'einem eindeutig wiederholten Uebergang') !== 1) {
 
 $multiline = chat_clean_console_message("Erste Zeile\n  code_block()\n\nZweite Zeile");
 if (!str_contains($multiline, "\n  code_block()\n\n")) {
-  reply_test_fail('Der private CoreUI-Kanal verliert Zeilenumbrueche oder Code-Einrueckungen.');
+  reply_test_fail('Der private Ember CoreUI-Kanal verliert Zeilenumbrueche oder Code-Einrueckungen.');
 }
 $transport = chat_console_transport_text($multiline);
 if (!str_contains($transport, "\n  code_block()\n\n")) {
@@ -82,7 +82,7 @@ if (str_contains($clientSource, "'&msg='")) {
 }
 $appHtml = (string)file_get_contents(dirname(__DIR__) . '/app.html');
 if (!str_contains($appHtml, 'maxlength="12000"')) {
-  reply_test_fail('Das CoreUI-Eingabefeld besitzt weiterhin ein altes Kurzlimit.');
+  reply_test_fail('Das Ember CoreUI-Eingabefeld besitzt weiterhin ein altes Kurzlimit.');
 }
 if (!str_contains($appHtml, 'id="fileInput"') || !str_contains($appHtml, 'multiple')) {
   reply_test_fail('Die Dateiauswahl erlaubt keine Mehrfachauswahl.');
@@ -96,7 +96,7 @@ if (!str_contains($clientSource, 'MAX_MESSAGE_ATTACHMENTS = 10')
 $chatSource = (string)file_get_contents(dirname(__DIR__) . '/api/chat.php');
 foreach (['? 20000 : 12000', '? 1200 : 120', 'chat_clean_console_message', 'chat_console_transport_text'] as $needle) {
   if (!str_contains($chatSource, $needle)) {
-    reply_test_fail('Private CoreUI-Arbeitsgrenze fehlt: ' . $needle);
+    reply_test_fail('Private Ember CoreUI-Arbeitsgrenze fehlt: ' . $needle);
   }
 }
 
