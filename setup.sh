@@ -32,6 +32,29 @@ cleanup() {
 }
 trap cleanup EXIT
 
+cleanup_legacy_release_dirs() {
+  local legacy_dir
+  local legacy_name
+  local removed=0
+
+  while IFS= read -r -d '' legacy_dir; do
+    legacy_name="${legacy_dir##*/}"
+    [[ "$legacy_name" =~ ^EMBER_COREUI_[0-9]+_[0-9]+_[0-9]+_ALPHA$ ]] || continue
+    [[ ! -L "$legacy_dir" ]] || die "Unsicherer symbolischer Altversionspfad erkannt: $legacy_dir"
+    [[ "$legacy_dir" == "$TARGET_DIR"/EMBER_COREUI_*_ALPHA ]] \
+      || die "Unsicherer Altversionspfad erkannt: $legacy_dir"
+
+    log "Entferne vollstaendig entpackte Altversion: $legacy_name"
+    rm -rf -- "$legacy_dir"
+    [[ ! -e "$legacy_dir" ]] || die "Altversionsordner konnte nicht entfernt werden: $legacy_dir"
+    removed=$((removed + 1))
+  done < <(find -P "$TARGET_DIR" -mindepth 1 -maxdepth 1 -type d -name 'EMBER_COREUI_*_ALPHA' -print0)
+
+  if (( removed > 0 )); then
+    log "$removed entpackte Altversionsordner wurden entfernt. Persistente Daten blieben unangetastet."
+  fi
+}
+
 [[ "${EUID:-$(id -u)}" -eq 0 ]] || die 'Bitte das heruntergeladene Setup mit sudo bash ausfuehren.'
 
 packages=()
@@ -78,6 +101,7 @@ if [[ -f "$TARGET_DIR/api/config.local.php" && -f "$TARGET_DIR/var/compose.env" 
 fi
 
 install -d -m 0750 "$TARGET_DIR"
+cleanup_legacy_release_dirs
 rsync -a \
   --exclude='api/config.local.php' \
   --exclude='var/' \
