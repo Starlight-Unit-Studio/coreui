@@ -1,4 +1,5 @@
 # Project STΛRLIɢHT: Ember CoreUI
+[![DOI](https://zenodo.org/badge/1349352973.svg)](https://doi.org/10.5281/zenodo.22201310)
 
 Ember CoreUI is an independent WebUI for a local E.M.B.E.R. core. Until its final inclusion in the STU Repack, it has its own versioning and its own release cycle.
 
