@@ -10,7 +10,7 @@ Current version: `0.4.3-alpha`
 The installer downloads the archive and its SHA-256 file into a unique temporary directory, verifies both before changing `/opt/ember-coreui`, and preserves local configuration, database data, accounts, sessions, uploads, logs, chat media, and profile images during updates.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pschildgen87-code/coreui/main/setup.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh | sudo bash
 ```
 
 A fresh interactive installation asks for the administrator email address and password at the terminal. For unattended first installation, provide `COREUI_ADMIN_EMAIL` and `COREUI_ADMIN_PASSWORD` as environment variables.
@@ -117,7 +117,6 @@ Only Ollama is shared as an already existing local model interface. Ember CoreUI
 - local reference operation with Gemma 4 and Ollama
 
 Profile images are not served as freely accessible static files. The private media endpoint verifies the session and always serves only the current avatar of the signed-in account. JPEG and PNG uploads are decoded, center-cropped to a square, limited to a maximum of 512 pixels, and saved as a new PNG file without third-party metadata.
-
 Private RAG-Lite accepts `.txt`, `.md`, `.pdf`, `.docx`, `.py`, `.csv`, `.json`, `.xml`, `.yml`, `.yaml`, `.ini`, `.php`, `.js`, `.html`, `.css`, and `.sql`. PDFs require a real text layer for this settings import; scanned PDFs without readable text are explicitly rejected. Extraction, UTF-8 normalization, overlapping chunking, query-term generation, and relevance ranking use the shared RAG-Lite engine. Sources and chunks remain strictly bound to the authenticated user, and both model prompt paths hard-limit private knowledge to the private console channel. By default, limits are 20 MiB per file, 40 sources, and a total of 5,000,000 extracted characters per account. Account-specific MariaDB locks prevent concurrent uploads from jointly bypassing these quotas. Document contents are marked as untrusted data and never as system instructions.
 
 The prepared external provider adapter remains disabled by default. API keys are never stored in the browser. Only a later server-side tested implementation can enable it; there is no compatibility guarantee for arbitrary cloud providers.
@@ -237,8 +236,7 @@ The same verified flow used by the quick installer can be run manually:
 
 ```bash
 cd /home/users/game/tmp
-BASE='https://raw.githubusercontent.com/pschildgen87-code/coreui/main/releases/v0.4.3-alpha'
-
+BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.4.3-alpha'
 curl -fL "$BASE/EMBER_COREUI_0_4_3_ALPHA.zip" -o EMBER_COREUI_0_4_3_ALPHA.zip
 curl -fL "$BASE/EMBER_COREUI_0_4_3_ALPHA.zip.sha256" -o EMBER_COREUI_0_4_3_ALPHA.zip.sha256
 sha256sum -c EMBER_COREUI_0_4_3_ALPHA.zip.sha256
@@ -357,7 +355,6 @@ unset COREUI_ADMIN_PASSWORD
 ```
 
 ## Important options
-
 | Variable | Default | Meaning |
 |---|---:|---|
 | `COREUI_HTTP_PORT` | `9080` | Dedicated web port |
