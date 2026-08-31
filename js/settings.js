@@ -690,7 +690,7 @@
 
   function selectKnowledgeFile(file) {
     selectedKnowledgeFile = file || null;
-    if (knowledgeFileName) knowledgeFileName.textContent = file ? file.name : 'TXT, MD, PDF ODER DOCX AUSWÄHLEN';
+    if (knowledgeFileName) knowledgeFileName.textContent = file ? file.name : 'DOKUMENT ODER CODEDATEI AUSWÄHLEN';
   }
 
   function uploadKnowledge() {

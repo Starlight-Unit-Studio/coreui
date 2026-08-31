@@ -2,7 +2,17 @@
 
 Ember CoreUI is an independent WebUI for a local E.M.B.E.R. core. Until its final inclusion in the STU Repack, it has its own versioning and its own release cycle.
 
-Current version: `0.4.2-alpha`
+Current version: `0.4.3-alpha`
+
+## Quick installation
+
+The installer downloads the archive and its SHA-256 file into a unique temporary directory, verifies both before changing `/opt/ember-coreui`, and preserves local configuration, database data, accounts, sessions, uploads, logs, chat media, and profile images during updates.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pschildgen87-code/coreui/main/setup.sh | sudo bash
+```
+
+A fresh interactive installation asks for the administrator email address and password at the terminal. For unattended first installation, provide `COREUI_ADMIN_EMAIL` and `COREUI_ADMIN_PASSWORD` as environment variables.
 
 ## Independence and mandatory product name
 
@@ -26,15 +36,19 @@ Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNIT
 
 ## Result of this release
 
-`0.4.2-alpha` is a licensing, provenance, and branding-only release. It introduces no new database migration and no monetization functionality. Product text consistently uses `Ember CoreUI`; the interface, documentation, and metadata identify Starlight Unit Studios as the independent publisher.
+`0.4.3-alpha` is a stability, privacy, upload, private RAG-Lite, and Python-runtime release.
 
-The full functional state from `0.4.1-alpha` remains included: secure password changes, revocable login sessions, private JSON account export, and model selection validated against the local Ollama instance.
+- The quick installer has been rebuilt. It no longer points to `0.3.2-alpha`, verifies the exact package root and version, and never unpacks an extra directory level into `/opt/ember-coreui`.
+- Private console turns address Ember on the server. Attachment-only messages therefore no longer leave an artificial `@Ember` prefix or a single `@` in the model prompt.
+- The authenticated turn ID now restores all ordered message attachments before prompt construction. A real end-to-end preflight verifies TXT, Python, DOCX, and text-PDF contents from storage mapping through to the final model attachment block.
+- Up to ten files per message remain supported and are stored in stable order with the exact user and session.
+- Private RAG-Lite now uses the same shared extraction, normalization, chunking, query, and ranking engine as the operator RAG path, while keeping every source and chunk in user-scoped tables.
+- Private knowledge uploads additionally accept common source and data formats such as Python, CSV, JSON, XML, YAML, PHP, JavaScript, HTML, CSS, and SQL.
+- A dedicated Compose Python queue worker and sandbox self-test close the previously incomplete execution path. Generated code runs only in a disposable restricted container.
+- No private Starlight Unit manuscript is bundled or imported. Migration `007_remove_private_studio_lore` removes only the two historic accidental global source IDs from already-updated Ember CoreUI databases.
+- The production address remains `https://coreui.starlight-unit.de`.
 
-Directly in the settings, TXT, Markdown, text-based PDF, and DOCX files can be uploaded, extracted, and chunked as private RAG-Lite knowledge. Sources, original files, and chunks are always bound to the authenticated user and remain separate from the globally curated studio canon. The Admin Core can create new users with an initial password, role, dedicated operator, and dedicated profile.
-
-The message composer accepts up to ten files per turn. The ordered list persists after reloading, is bound to the authenticated user and exactly the associated message, and is cleaned up in a reference-safe manner when a session is permanently deleted. Text attachments share a limited context budget; image, video, and scanned-PDF inputs additionally share a common vision limit.
-
-The real session scopes, turn assignments, lossless legacy histories, and controlled permanent session deletion from `0.3.1-alpha` and `0.3.2-alpha` remain included without changes. Game, homepage, Apache, KeyHelp, host PHP, Repack paths, and the existing STU database remain untouched.
+The session scopes, exact turn assignments, lossless legacy history, controlled session deletion, Thinking protection, profiles, user settings, and Admin Core from the preceding releases remain included. Game, homepage, Apache, KeyHelp, host PHP, Repack paths, and the existing STU database remain untouched.
 
 ## Real sessions instead of demo pointers
 
@@ -103,7 +117,7 @@ Only Ollama is shared as an already existing local model interface. Ember CoreUI
 
 Profile images are not served as freely accessible static files. The private media endpoint verifies the session and always serves only the current avatar of the signed-in account. JPEG and PNG uploads are decoded, center-cropped to a square, limited to a maximum of 512 pixels, and saved as a new PNG file without third-party metadata.
 
-RAG-Lite accepts `.txt`, `.md`, `.pdf`, and `.docx`. For this settings import, PDFs require a real text layer; scanned PDFs without readable text are explicitly rejected. By default, limits are 20 MiB per file, 40 sources, and a total of 5,000,000 extracted characters per account. Account-specific MariaDB locks prevent parallel uploads from bypassing these quotas together. Document contents are explicitly marked in the prompt as untrusted data and never as system instructions.
+Private RAG-Lite accepts `.txt`, `.md`, `.pdf`, `.docx`, `.py`, `.csv`, `.json`, `.xml`, `.yml`, `.yaml`, `.ini`, `.php`, `.js`, `.html`, `.css`, and `.sql`. PDFs require a real text layer for this settings import; scanned PDFs without readable text are explicitly rejected. Extraction, UTF-8 normalization, overlapping chunking, query-term generation, and relevance ranking use the shared RAG-Lite engine. Sources and chunks remain strictly bound to the authenticated user, and both model prompt paths hard-limit private knowledge to the private console channel. By default, limits are 20 MiB per file, 40 sources, and a total of 5,000,000 extracted characters per account. Account-specific MariaDB locks prevent concurrent uploads from jointly bypassing these quotas. Document contents are marked as untrusted data and never as system instructions.
 
 The prepared external provider adapter remains disabled by default. API keys are never stored in the browser. Only a later server-side tested implementation can enable it; there is no compatibility guarantee for arbitrary cloud providers.
 
@@ -134,7 +148,7 @@ sudo ./scripts/stack.sh refresh-runtime
 sudo ./scripts/stack.sh restart web
 ```
 
-With `sudo ./scripts/stack.sh up -d --force-recreate php web`, the runtime refresh and pending additive database migrations are performed automatically. The runtime values for bind address and ports continue to come from the locally protected `var/compose.env`; credentials are neither written into templates nor output.
+With `sudo ./scripts/stack.sh up -d --build --force-recreate php web browse pyworker`, the runtime refresh and pending additive database migrations are performed automatically. The runtime values for bind address and ports continue to come from the locally protected `var/compose.env`; credentials are neither written into templates nor output.
 
 ## Isolation boundaries
 
@@ -146,6 +160,7 @@ With `sudo ./scripts/stack.sh up -d --force-recreate php web`, the runtime refre
 | Database | Dedicated MariaDB container on `127.0.0.1:13306` |
 | Web search | Dedicated SearXNG container on `127.0.0.1:18889` |
 | Browser research | Dedicated Playwright container |
+| Python queue | Dedicated trusted worker; generated code runs in a disposable restricted sandbox container |
 | Live browser images | Private Ember CoreUI database, authenticated job SSE, automatic cleanup |
 | Model | Dedicated Ollama model `ember-coreui:latest` |
 | Login sessions | Dedicated cookie name `EMBERCOREUISESSID` |
@@ -197,7 +212,7 @@ The Ember CoreUI installer deliberately does not write this system-wide Ollama c
 
 Official reference: <https://docs.ollama.com/faq#how-does-ollama-handle-concurrent-requests>
 
-Ember CoreUI will later replace the old STU Console, not the Global Chat in the Game. Removal of the old Console therefore belongs in a separate Repack update after Ember CoreUI has been tested stably in everyday use. This standalone package deletes no Repack files and changes no Game routes.
+The internal STU Console was already removed from the Game with Alpha `v1.1.1.98` on 20 August 2026. Ember CoreUI is its independent successor and reference interface; it does not replace the Global Chat. This standalone package deletes no Repack files and changes no Game routes.
 
 ## Supported target systems
 
@@ -217,42 +232,36 @@ SearXNG Docker documentation: <https://docs.searxng.org/admin/installation-docke
 
 ## Safe parallel installation via SSH
 
-Move the archive permanently to `/opt/ember-coreui`:
-
-```bash
-cd /tmp
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl unzip
-export COREUI_ARCHIVE_URL='https://DEIN-SERVER/EMBER_COREUI_0_4_2_ALPHA.zip'
-curl -fL "$COREUI_ARCHIVE_URL" -o EMBER_COREUI_0_4_2_ALPHA.zip
-curl -fL "$COREUI_ARCHIVE_URL.sha256" -o EMBER_COREUI_0_4_2_ALPHA.zip.sha256
-sha256sum -c EMBER_COREUI_0_4_2_ALPHA.zip.sha256
-unzip -q EMBER_COREUI_0_4_2_ALPHA.zip
-sudo mv EMBER_COREUI_0_4_2_ALPHA /opt/ember-coreui
-cd /opt/ember-coreui
-sudo chmod 0750 scripts/*.sh
-sudo ./scripts/install.sh
-```
-
-The installer asks for:
-
-- Admin email
-- Admin password with at least 12 characters
-- optional display name via `COREUI_ADMIN_NAME`
-
-Afterwards, only the dedicated Compose stack, dedicated database, dedicated Ember CoreUI model, and local project files are set up.
-
-## Update to 0.4.2-alpha
-
-The existing database, uploads, sessions, and credentials are preserved. The new package is placed only over the static project files; runtime directories are deliberately excluded.
+The same verified flow used by the quick installer can be run manually:
 
 ```bash
 cd /home/users/game/tmp
-sha256sum -c EMBER_COREUI_0_4_2_ALPHA.zip.sha256
-unzip -q -o EMBER_COREUI_0_4_2_ALPHA.zip
+BASE='https://raw.githubusercontent.com/pschildgen87-code/coreui/main/releases/v0.4.3-alpha'
+
+curl -fL "$BASE/EMBER_COREUI_0_4_3_ALPHA.zip" -o EMBER_COREUI_0_4_3_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_4_3_ALPHA.zip.sha256" -o EMBER_COREUI_0_4_3_ALPHA.zip.sha256
+sha256sum -c EMBER_COREUI_0_4_3_ALPHA.zip.sha256
+unzip -q EMBER_COREUI_0_4_3_ALPHA.zip
+
+sudo mv EMBER_COREUI_0_4_3_ALPHA /opt/ember-coreui
+cd /opt/ember-coreui
+sudo chmod 0750 setup.sh scripts/*.sh
+sudo ./scripts/install.sh
+```
+
+The installer asks for the administrator email address, a password of at least 12 characters, and an optional display name through `COREUI_ADMIN_NAME`.
+
+## Update to 0.4.3-alpha
+
+The existing database, accounts, sessions, uploads, and protected credentials are preserved. The package is copied only over static project files and templates.
+
+```bash
+cd /home/users/game/tmp
+sha256sum -c EMBER_COREUI_0_4_3_ALPHA.zip.sha256
+unzip -q -o EMBER_COREUI_0_4_3_ALPHA.zip
+
 sudo apt-get update
 sudo apt-get install -y rsync
-
 sudo rsync -a \
   --exclude='api/config.local.php' \
   --exclude='var/' \
@@ -260,18 +269,17 @@ sudo rsync -a \
   --exclude='uploads/' \
   --exclude='assets/chat_media/' \
   --exclude='assets/profile_photos/' \
-  EMBER_COREUI_0_4_2_ALPHA/ /opt/ember-coreui/
+  EMBER_COREUI_0_4_3_ALPHA/ /opt/ember-coreui/
 
 cd /opt/ember-coreui
-sudo ./scripts/stack.sh up -d --force-recreate php web
+sudo ./scripts/stack.sh up -d --build --force-recreate php web browse pyworker
+sudo ./scripts/stack.sh scrub-thinking
 sudo ./scripts/preflight.sh
 ```
 
-`stack.sh up` refreshes the static runtime configuration, creates missing private storage directories with the appropriate container permissions, and automatically applies all pending migrations. Migration `006_account_security` adds password and login timestamps as well as revocable, hashed SQL authentication tokens. Existing PHP logins are transparently transferred to the new session layer on the first authenticated request. All changes remain in the isolated Ember CoreUI database; users, chat sessions, messages, Memories, Lore, and uploads are preserved.
+`stack.sh up` refreshes the non-secret runtime configuration and applies migration `007_remove_private_studio_lore`. The migration removes only the two historical accidental global source IDs; user knowledge, memories, messages, accounts, and other operator sources remain intact. The update also removes only the two exact historic manuscript filenames from an existing project directory. No private manuscript binary is present in the archive or imported by either installer.
 
-Regenerating the model, importing Lore again, or running an account bootstrap is not required. The existing `api/config.local.php` and the production address `https://coreui.starlight-unit.de` are preserved. For very old versions before `0.2.3-alpha`, the PHP image must be rebuilt once with `sudo ./scripts/stack.sh build --no-cache php` so that Poppler, GD, ZIP, and the required PHP extensions are available.
-
-After the update, login, password change, display of the current device login, a second browser login, revocation of that login, JSON account export, and the Ollama model list should be tested. Afterwards, continue by testing the Thinking switch in both positions, a message with ten small test files, session reload, RAG-Lite, and permanent session deletion.
+The first Python sandbox image build can take several minutes. Regenerating the Ember model or importing bundled Studio lore is not required. The existing `api/config.local.php` and the public address `https://coreui.starlight-unit.de` remain preserved.
 
 ## Testing without affecting existing domains
 
@@ -320,17 +328,17 @@ If Docker is missing and `COREUI_INSTALL_DOCKER=1` is active, the installer inst
 
 ## Installation process
 
-1. Validation of the operating system, project path, and inputs.
-2. Collision check for the dedicated ports and Compose project name.
-3. Creation of dedicated runtime directories and credentials.
-4. Validation and build of the PHP and browse images.
-5. Detection or download of a Gemma 4 base model.
-6. Creation of the separate model `ember-coreui:latest`.
-7. Start of the dedicated MariaDB and idempotent import of all SQL migrations.
-8. Creation of Ember, Admin, character, and `stu_kv`.
-9. Import of the two included Lore documents into RAG-Lite.
-10. Start of SearXNG, PHP-FPM, Nginx, and browse worker.
-11. Final health check.
+1. Validate the operating system, project path, and inputs.
+2. Check the dedicated ports and Compose project name for collisions.
+3. Create dedicated runtime directories and credentials.
+4. Validate and build the PHP, Python worker, and optional browse images.
+5. Detect or download a Gemma 4 base model.
+6. Create the separate model `ember-coreui:latest`.
+7. Start the dedicated MariaDB and idempotently apply all SQL migrations.
+8. Create Ember, the administrator, character, and `stu_kv` records on first installation.
+9. Remove only the exact historical accidental manuscript sources and files. No private Studio manuscript is bundled or imported.
+10. Start SearXNG, PHP-FPM, Nginx, browse worker, and Python worker.
+11. Run health, schema, upload-pipeline, private-RAG, session, Thinking, and Python-sandbox checks.
 
 ## Non-interactive installation
 
@@ -367,7 +375,6 @@ unset COREUI_ADMIN_PASSWORD
 | `COREUI_INSTALL_OLLAMA` | `1` | Installs Ollama if required |
 | `COREUI_INSTALL_SEARXNG` | `1` | Starts the dedicated SearXNG instance |
 | `COREUI_INSTALL_BROWSE` | `1` | Starts the dedicated browse worker |
-| `COREUI_SKIP_LORE` | `0` | Skips the Lore import |
 | `COREUI_SKIP_BOOTSTRAP` | `0` | Skips Admin and Ember bootstrap |
 | `COREUI_FORCE_CONFIG` | `0` | Regenerates `api/config.local.php` |
 
@@ -451,6 +458,8 @@ sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/thinking-sanitize-selft
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/reply-pipeline-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/session-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/profile-knowledge-selftest.php
+sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/attachment-pipeline-selftest.php
+sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/python-worker-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/logo-alpha-selftest.php
 sudo ./scripts/ollama-parallel-report.sh
 sudo grep -E 'ember_(video|pdf)_|ember_vision_payload' logs/stu_error.log | tail -n 30
@@ -515,8 +524,8 @@ ember-coreui/
   config/              runtime, Modelfile, and native templates
   css/                 independent Holo HUD design
   database/migrations/ complete Ember CoreUI schema
-  docker/              dedicated PHP and Playwright images
-  docs/                local Lore sources for RAG-Lite
+  docker/              dedicated PHP, Playwright, and Python-worker images
+  docs/                detailed public release changelogs
   images/              local UI images
   js/                  streaming, session, deduplication, and tool logic
   scripts/             parallel installer, native installer, and preflight
@@ -540,4 +549,4 @@ A complete German legal notice and a final privacy policy are deliberately not y
 
 ## Alpha status
 
-`0.4.2-alpha` introduces the free Ember CoreUI Community Source License, an explicit license history, binding trademark rules, an independence statement, and a zero-monetization policy. All features from `0.4.1-alpha` remain included. There is no user counting, no phone-home, no license keys, no paywall, and no paid Ember CoreUI offering.
+`0.4.3-alpha` fixes the installer, checksum workflow, attachment reconstruction, private RAG-Lite retrieval, and Python queue execution. It also removes accidentally bundled private Studio manuscripts and their two historic global source IDs. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.

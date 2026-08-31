@@ -32,12 +32,21 @@ install_runtime_file() {
 ensure_private_storage_dirs() {
   local profile_dir="$PROJECT_ROOT/var/profile_media"
   local knowledge_dir="$PROJECT_ROOT/var/knowledge_uploads"
+  local python_dir="$PROJECT_ROOT/var/ember_py"
   if (( EUID == 0 )); then
-    install -d -m 0770 -o 33 -g 33 "$profile_dir" "$knowledge_dir"
+    install -d -m 0770 -o 33 -g 33 "$profile_dir" "$knowledge_dir" "$python_dir"
     return
   fi
-  mkdir -p "$profile_dir" "$knowledge_dir"
-  chmod 0770 "$profile_dir" "$knowledge_dir" 2>/dev/null || true
+  mkdir -p "$profile_dir" "$knowledge_dir" "$python_dir"
+  chmod 0770 "$profile_dir" "$knowledge_dir" "$python_dir" 2>/dev/null || true
+}
+
+remove_private_studio_lore_files() {
+  # Exakte Altdateien aus versehentlichen Alpha-Paketen. Keine Globs und keine
+  # anderen Betreiberdateien im docs-Verzeichnis werden entfernt.
+  rm -f -- \
+    "$PROJECT_ROOT/docs/S.U. MASTER BIBEL v10.4.docx" \
+    "$PROJECT_ROOT/docs/STU_KOMPENDIUM_V6.docx"
 }
 
 [[ -f "$ENV_FILE" ]] || {
@@ -100,6 +109,7 @@ case "$STACK_ACTION" in
     exit 0
     ;;
   up|start|restart)
+    remove_private_studio_lore_files
     ensure_private_storage_dirs
     render_runtime_files
     ;;

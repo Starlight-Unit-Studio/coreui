@@ -2,6 +2,34 @@
 
 Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versioniert.
 
+## v0.4.3-alpha - 30.08.2026
+
+- Blitzinstallationsbefehl wieder direkt am Anfang der README aufgenommen.
+- `setup.sh` vollstaendig neu aufgebaut. ZIP und SHA-256-Datei werden in ein eindeutiges temporaeres Verzeichnis geladen, gemeinsam geprueft und erst danach nach `/opt/ember-coreui` uebertragen.
+- Veraltete Festverdrahtung auf `0.3.2-alpha` entfernt. Der Installer prueft Paketordner, Versionsdatei und alle zwingenden Skripte, bevor eine bestehende Installation veraendert wird.
+- Updatepfad des Blitzinstallers erhaelt `api/config.local.php`, `var`, Logs, Uploads, Chatmedien und Profilbilder. Erstinstallationen koennen weiter interaktiv oder ueber sichere Umgebungsvariablen laufen.
+- Release- und Setup-Pruefung lehnt Pakete mit den historischen privaten Manuskriptdateien ab.
+- Die zwei versehentlich mitgefuehrten privaten Studio-Dokumente aus dem Releasebaum entfernt. Sie werden nicht mehr installiert oder automatisch in RAG-Lite importiert.
+- Migration `007_remove_private_studio_lore` ergaenzt. Sie entfernt ausschliesslich die historischen Quellen `bibel_v10_4` und `kompendium_v6` aus bereits vorhandenen globalen Ember-CoreUI-Chunks.
+- Voreingestellte lokale Pfade zu privaten Studio-Manuskripten aus `api/config.php` entfernt. Der generische CLI-Importer bleibt fuer rechtmaessig bereitgestellte Betreiberquellen verfuegbar.
+- Private Console-Nachrichten adressieren Ember nun serverseitig. Das Frontend haengt kein kuenstliches `@Ember` mehr an, wodurch reine Datei-Turns nicht mehr als einzelnes `@` im Modellprompt erscheinen.
+- Gespeicherte 1:n-Anhangzuordnungen werden im SSE-Turn in stabiler Reihenfolge rekonstruiert und in interne Dateimarker umgewandelt, bevor die gemeinsame Anhangsauswertung laeuft.
+- Neuer End-to-End-Anhangtest legt echte TXT-, Python-, DOCX- und Text-PDF-Dateien an, bindet sie transaktional an eine Nachricht, rekonstruiert sie wie der SSE-Pfad und prueft ihren Inhalt im Modellprompt.
+- Maximal zehn Dateien pro Nachricht bleiben unveraendert. Rohe `[file:...]`-Marker und das historische Adresspraefix duerfen den Modellprompt nach dem Test nicht erreichen.
+- Gemeinsamen `rag_lite.php`-Kern fuer Extraktion, UTF-8-Normalisierung, ueberschneidendes Chunking, Suchbegriffe und Ranking eingefuehrt.
+- Privates RAG-Lite nutzt diesen gemeinsamen Kern, behaelt aber strikt benutzergebundene Quellen- und Chunk-Tabellen. Eine globale Tabelle ohne `user_id` wird nicht fuer private Daten wiederverwendet.
+- Beide Modell-Promptpfade begrenzen privates Benutzerwissen hart auf `channel === 'console'`. Globale Chatantworten koennen keine privaten RAG-Chunks mehr erhalten.
+- DOCX-Ueberschriften bleiben bei der Extraktion als Strukturhinweise erhalten. Volltextsuche verwendet fehlertolerantes OR-Ranking statt einer zu strikten Pflichtwort-Abfrage.
+- Generische Fragen wie "Fass meine hochgeladene Datei zusammen" koennen kontrolliert auf die zuletzt aktualisierte eigene Wissensquelle zurueckfallen.
+- Private RAG-Uploads zusaetzlich fuer Python-, CSV-, JSON-, XML-, YAML-, INI-, PHP-, JavaScript-, HTML-, CSS- und SQL-Textdateien freigegeben.
+- Fehlenden Python-Queue-Worker in den Compose-Stack aufgenommen. Der vertrauenswuerdige Worker besitzt den Docker-Socket, der generierte Modellcode laeuft dagegen ausschliesslich in einem wegwerfbaren Container ohne Projekt-, Konfigurations- oder Datenbank-Mount.
+- Eigenes `docker/pyworker`-Image und Native-systemd-Dienst ergaenzt. Das eigentliche Sandbox-Image `ember-py:1` wird beim ersten Start gebaut.
+- Echter Python-Preflight reiht einen Job ein, wartet auf den Worker und prueft die Ausgabe aus dem isolierten Sandbox-Container.
+- Compose-, Native-, Health-, Installer- und Preflight-Pfade auf Version `0.4.3-alpha`, Migration 007, Python-Worker und neue Pipeline-Selftests aktualisiert.
+- Veraltete Zukunftsaussage zur STU Console aus der README entfernt. Die interne STU Console wurde bereits mit Game Alpha `v1.1.1.98` am 20.08.2026 entfernt; Ember CoreUI ist ihre eigenstaendige Nachfolge- und Referenzoberflaeche und ersetzt nicht den Global-Chat.
+- Produktive Dokumentationsadresse bleibt `https://coreui.starlight-unit.de`.
+- Game, Homepage, KeyHelp, Apache, STU-Repack, Game-Datenbank und andere Projektpfade bleiben unangetastet.
+
 ## v0.4.2-alpha - 29.08.2026
 
 - Neue `Starlight Unit Studios Ember CoreUI Community Source Lizenz 1.0` eingefuehrt. Die deutsche Fassung in `LICENSE.de.md` ist rechtlich massgeblich; `LICENSE.md` enthaelt die englische Uebersetzung.

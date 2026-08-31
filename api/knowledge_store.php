@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/rag_lite.php';
+
 /**
  * Private RAG-Lite storage and retrieval.
  * User uploads never enter the global Studio lore table.
@@ -79,129 +81,31 @@ function coreui_knowledge_clean_title(string $value, string $fallback): string {
 }
 
 function coreui_knowledge_find_binary(string $name): ?string {
-  $name = basename($name);
-  foreach (['/usr/bin/' . $name, '/usr/local/bin/' . $name, '/bin/' . $name] as $path) {
-    if (is_file($path) && is_executable($path)) return $path;
-  }
-  return null;
+  return coreui_rag_find_binary($name);
 }
 
 function coreui_knowledge_normalize_text(string $text, int $maxChars): string {
-  $text = str_replace(["\r\n", "\r"], "\n", $text);
-  if (!mb_check_encoding($text, 'UTF-8')) {
-    $detected = mb_detect_encoding($text, ['UTF-8', 'Windows-1252', 'ISO-8859-1'], true);
-    $text = mb_convert_encoding($text, 'UTF-8', $detected ?: 'Windows-1252');
-  }
-  $text = (string)preg_replace('~[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]~u', '', $text);
-  $text = (string)preg_replace('~[ \t]+~u', ' ', $text);
-  $text = (string)preg_replace('~ *\n *~u', "\n", $text);
-  $text = (string)preg_replace('~\n{3,}~u', "\n\n", $text);
-  $text = trim($text);
-  if (mb_strlen($text, 'UTF-8') > $maxChars) {
-    $text = mb_substr($text, 0, $maxChars, 'UTF-8');
-  }
-  return trim($text);
+  return coreui_rag_normalize_text($text, $maxChars);
 }
 
 function coreui_knowledge_extract_plain(string $path, int $maxChars): string {
-  $raw = @file_get_contents($path, false, null, 0, 8 * 1024 * 1024);
-  return coreui_knowledge_normalize_text(is_string($raw) ? $raw : '', $maxChars);
+  return coreui_rag_extract_plain($path, $maxChars);
 }
 
 function coreui_knowledge_extract_docx(string $path, int $maxChars): string {
-  if (!class_exists('ZipArchive')) throw new RuntimeException('docx_support_unavailable');
-  $zip = new ZipArchive();
-  if ($zip->open($path) !== true) throw new RuntimeException('docx_open_failed');
-  $stat = $zip->statName('word/document.xml');
-  if (!$stat || (int)($stat['size'] ?? 0) > 16 * 1024 * 1024) {
-    $zip->close();
-    throw new RuntimeException('docx_content_too_large');
-  }
-  $xml = $zip->getFromName('word/document.xml');
-  $zip->close();
-  if (!is_string($xml) || $xml === '') throw new RuntimeException('docx_content_missing');
-  $dom = new DOMDocument();
-  $previous = libxml_use_internal_errors(true);
-  $loaded = $dom->loadXML($xml, LIBXML_NONET | LIBXML_COMPACT);
-  libxml_clear_errors();
-  libxml_use_internal_errors($previous);
-  if (!$loaded) throw new RuntimeException('docx_xml_invalid');
-  $xpath = new DOMXPath($dom);
-  $xpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
-  $paragraphs = [];
-  $nodes = $xpath->query('//w:p');
-  if ($nodes) {
-    foreach ($nodes as $paragraph) {
-      $line = '';
-      $texts = $xpath->query('.//w:t', $paragraph);
-      if ($texts) foreach ($texts as $textNode) $line .= (string)$textNode->nodeValue;
-      $line = trim((string)preg_replace('~\s+~u', ' ', $line));
-      if ($line !== '') $paragraphs[] = $line;
-      if (count($paragraphs) > 50000) throw new RuntimeException('docx_paragraph_limit_exceeded');
-    }
-  }
-  return coreui_knowledge_normalize_text(implode("\n\n", $paragraphs), $maxChars);
+  return coreui_rag_extract_docx($path, $maxChars);
 }
 
 function coreui_knowledge_extract_pdf(string $path, int $maxChars): string {
-  if (!function_exists('shell_exec')) throw new RuntimeException('pdf_text_support_unavailable');
-  $bin = coreui_knowledge_find_binary('pdftotext');
-  if ($bin === null) throw new RuntimeException('pdf_text_support_unavailable');
-  $outFile = tempnam(sys_get_temp_dir(), 'coreui_rag_');
-  if (!is_string($outFile) || $outFile === '') throw new RuntimeException('temporary_file_failed');
-  $timeout = coreui_knowledge_find_binary('timeout');
-  $command = ($timeout !== null ? (escapeshellcmd($timeout) . ' 45s ') : '')
-    . escapeshellcmd($bin) . ' -layout -q -enc UTF-8 '
-    . escapeshellarg($path) . ' ' . escapeshellarg($outFile) . ' 2>/dev/null';
-  @shell_exec($command);
-  $raw = @file_get_contents($outFile, false, null, 0, 8 * 1024 * 1024);
-  @unlink($outFile);
-  $text = coreui_knowledge_normalize_text(is_string($raw) ? $raw : '', $maxChars);
-  if ($text === '') throw new RuntimeException('pdf_has_no_text_layer');
-  return $text;
+  return coreui_rag_extract_pdf($path, $maxChars);
 }
 
 function coreui_knowledge_extract(string $path, string $extension, int $maxChars): string {
-  if ($extension === 'pdf') return coreui_knowledge_extract_pdf($path, $maxChars);
-  if ($extension === 'docx') return coreui_knowledge_extract_docx($path, $maxChars);
-  if (in_array($extension, ['txt', 'md'], true)) return coreui_knowledge_extract_plain($path, $maxChars);
-  throw new InvalidArgumentException('knowledge_format_not_allowed');
+  return coreui_rag_extract($path, $extension, $maxChars);
 }
 
 function coreui_knowledge_chunks(string $text, int $target, int $overlap, int $maxChunks): array {
-  $length = mb_strlen($text, 'UTF-8');
-  if ($length === 0) return [];
-  $chunks = [];
-  $position = 0;
-  while ($position < $length && count($chunks) < $maxChunks) {
-    $remaining = $length - $position;
-    $take = min($target, $remaining);
-    $slice = mb_substr($text, $position, $take, 'UTF-8');
-    $actual = mb_strlen($slice, 'UTF-8');
-    if ($remaining > $target) {
-      $cut = false;
-      foreach (["\n\n", ". ", "! ", "? ", "\n"] as $needle) {
-        $candidate = mb_strrpos($slice, $needle, 0, 'UTF-8');
-        if ($candidate !== false && $candidate >= (int)floor($target * 0.62)) {
-          $actual = $candidate + mb_strlen($needle, 'UTF-8');
-          $slice = mb_substr($slice, 0, $actual, 'UTF-8');
-          $cut = true;
-          break;
-        }
-      }
-      if (!$cut) $actual = mb_strlen($slice, 'UTF-8');
-    }
-    $slice = trim($slice);
-    if ($slice !== '') $chunks[] = $slice;
-    if ($remaining <= $actual) {
-      $position = $length;
-      break;
-    }
-    $advance = max(1, $actual - min($overlap, max(0, $actual - 1)));
-    $position += $advance;
-  }
-  if ($position < $length) throw new RuntimeException('knowledge_chunk_limit_exceeded');
-  return $chunks;
+  return coreui_rag_chunks($text, $target, $overlap, $maxChunks);
 }
 
 function coreui_knowledge_validate_upload(array $file, array $limits): array {
@@ -213,7 +117,8 @@ function coreui_knowledge_validate_upload(array $file, array $limits): array {
   if ($size > (int)$limits['max_file_bytes']) throw new InvalidArgumentException('knowledge_file_too_large');
   $name = coreui_knowledge_clean_filename((string)($file['name'] ?? 'dokument'));
   $extension = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
-  if (!in_array($extension, ['txt', 'md', 'pdf', 'docx'], true)) {
+  $plainExtensions = ['txt', 'md', 'py', 'csv', 'json', 'log', 'xml', 'yml', 'yaml', 'ini', 'php', 'js', 'html', 'css', 'sql'];
+  if (!in_array($extension, array_merge($plainExtensions, ['pdf', 'docx']), true)) {
     throw new InvalidArgumentException('knowledge_format_not_allowed');
   }
   $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -224,7 +129,9 @@ function coreui_knowledge_validate_upload(array $file, array $limits): array {
     'application/zip',
     'application/octet-stream',
   ], true)) throw new InvalidArgumentException('knowledge_mime_mismatch');
-  if (in_array($extension, ['txt', 'md'], true) && !str_starts_with($mime, 'text/') && $mime !== 'application/octet-stream') {
+  if (in_array($extension, $plainExtensions, true)
+      && !str_starts_with($mime, 'text/')
+      && !in_array($mime, ['application/octet-stream', 'application/json', 'application/xml'], true)) {
     throw new InvalidArgumentException('knowledge_mime_mismatch');
   }
   return ['tmp' => $tmp, 'size' => $size, 'name' => $name, 'extension' => $extension, 'mime' => $mime ?: 'application/octet-stream'];
@@ -346,24 +253,25 @@ function coreui_knowledge_delete(PDO $pdo, int $uid, string $uuid): bool {
 function coreui_private_knowledge_search(PDO $pdo, int $uid, string $query, int $limit = 4): array {
   if ($uid <= 0 || trim($query) === '' || !coreui_knowledge_schema_ready($pdo)) return [];
   $limit = max(1, min(8, $limit));
-  $lower = function_exists('mb_strtolower') ? mb_strtolower($query, 'UTF-8') : strtolower($query);
-  $parts = preg_split('~[^\pL\pN]+~u', $lower) ?: [];
-  $stop = ['der','die','das','und','oder','ein','eine','ist','sind','mit','von','auf','ich','du','mir','bitte','was','wie','wer','wo','mein','meine','aus'];
-  $terms = [];
-  foreach ($parts as $part) {
-    $part = trim($part);
-    $length = mb_strlen($part, 'UTF-8');
-    if ($length < 3 || in_array($part, $stop, true)) continue;
-    $terms[$part] = $length;
-  }
-  arsort($terms);
-  $terms = array_slice(array_keys($terms), 0, 6);
-  if (!$terms) return [];
+  $terms = coreui_rag_query_terms($query, 8);
+  $lower = mb_strtolower($query, 'UTF-8');
+  $genericDocumentQuestion = (bool)preg_match(
+    '~\b(?:dokument|datei|quelle|wissen|upload|hochgeladen|zusammenfass\w*)\b~u',
+    $lower
+  );
 
   $rows = [];
-  $ftTerms = array_values(array_filter($terms, static fn(string $term): bool => mb_strlen($term, 'UTF-8') >= 4));
+  $ftTerms = array_values(array_filter(
+    $terms,
+    static fn(string $term): bool => mb_strlen($term, 'UTF-8') >= 4
+  ));
   if ($ftTerms) {
-    $boolean = implode(' ', array_map(static fn(string $term): string => '+' . $term . '*', array_slice($ftTerms, 0, 3)));
+    // OR statt erzwungenem AND: natuerliche Fragen enthalten fast immer
+    // Fuellwoerter, die nicht in jedem relevanten Chunk vorkommen.
+    $boolean = implode(' ', array_map(
+      static fn(string $term): string => $term . '*',
+      array_slice($ftTerms, 0, 6)
+    ));
     try {
       $st = $pdo->prepare(
         "SELECT c.source_uuid, c.title, c.chunk_no, c.chunk_text,
@@ -372,7 +280,7 @@ function coreui_private_knowledge_search(PDO $pdo, int $uid, string $query, int 
            JOIN stu_user_knowledge_sources s ON s.uuid = c.source_uuid AND s.user_id = c.user_id
           WHERE c.user_id = ? AND s.status = 'ready'
             AND MATCH(c.chunk_text) AGAINST(? IN BOOLEAN MODE)
-          ORDER BY score DESC, c.id DESC LIMIT " . $limit
+          ORDER BY score DESC, c.id DESC LIMIT 80"
       );
       $st->execute([$boolean, $uid, $boolean]);
       $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -381,25 +289,61 @@ function coreui_private_knowledge_search(PDO $pdo, int $uid, string $query, int 
     }
   }
 
-  if (!$rows) {
+  if (!$rows && $terms) {
     $where = [];
     $params = [$uid];
-    foreach (array_slice($terms, 0, 3) as $term) {
+    foreach (array_slice($terms, 0, 6) as $term) {
       $where[] = '(c.chunk_text LIKE ? OR c.title LIKE ?)';
       $params[] = '%' . $term . '%';
       $params[] = '%' . $term . '%';
     }
     $st = $pdo->prepare(
       "SELECT c.source_uuid, c.title, c.chunk_no, c.chunk_text, 0.5 AS score
-         FROM stu_user_knowledge_chunks c
+        FROM stu_user_knowledge_chunks c
          JOIN stu_user_knowledge_sources s ON s.uuid = c.source_uuid AND s.user_id = c.user_id
         WHERE c.user_id = ? AND s.status = 'ready' AND (" . implode(' OR ', $where) . ')
-        ORDER BY c.id DESC LIMIT ' . $limit
+        ORDER BY c.id DESC LIMIT 80'
     );
     $st->execute($params);
     $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
   }
-  return $rows;
+
+  if ($rows) {
+    foreach ($rows as &$row) {
+      $row['score'] = max(
+        (float)($row['score'] ?? 0),
+        coreui_rag_score((string)($row['title'] ?? ''), (string)($row['chunk_text'] ?? ''), $terms)
+      );
+    }
+    unset($row);
+    usort($rows, static function (array $left, array $right): int {
+      $score = (float)($right['score'] ?? 0) <=> (float)($left['score'] ?? 0);
+      if ($score !== 0) return $score;
+      return (int)($right['chunk_no'] ?? 0) <=> (int)($left['chunk_no'] ?? 0);
+    });
+    return array_slice($rows, 0, $limit);
+  }
+
+  // "Fass meine hochgeladene Datei zusammen" enthaelt naturgemaess kein
+  // Schluesselwort aus dem Dokument. In genau diesem Fall werden die ersten
+  // Chunks der zuletzt aktualisierten eigenen Quelle verwendet.
+  if ($genericDocumentQuestion || $terms === []) {
+    $st = $pdo->prepare(
+      "SELECT c.source_uuid, c.title, c.chunk_no, c.chunk_text, 0.25 AS score
+         FROM stu_user_knowledge_chunks c
+         JOIN stu_user_knowledge_sources s ON s.uuid = c.source_uuid AND s.user_id = c.user_id
+        WHERE c.user_id = ? AND s.status = 'ready'
+          AND s.uuid = (
+            SELECT s2.uuid FROM stu_user_knowledge_sources s2
+             WHERE s2.user_id = ? AND s2.status = 'ready'
+             ORDER BY s2.updated_at DESC, s2.created_at DESC LIMIT 1
+          )
+        ORDER BY c.chunk_no ASC LIMIT " . $limit
+    );
+    $st->execute([$uid, $uid]);
+    return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+  }
+  return [];
 }
 
 function coreui_private_knowledge_block(PDO $pdo, int $uid, string $query, int $limit = 4): string {

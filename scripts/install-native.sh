@@ -81,9 +81,14 @@ wait_http() {
 [[ -f "$PROJECT_ROOT/database/migrations/004_profiles_knowledge.sql" ]] || die 'SQL-Profil- und Knowledge-Schema fehlt.'
 [[ -f "$PROJECT_ROOT/database/migrations/005_thinking_attachments.sql" ]] || die 'SQL-Thinking- und Anhangschema fehlt.'
 [[ -f "$PROJECT_ROOT/database/migrations/006_account_security.sql" ]] || die 'SQL-Kontosicherheitsschema fehlt.'
+[[ -f "$PROJECT_ROOT/database/migrations/007_remove_private_studio_lore.sql" ]] || die 'SQL-Datenschutzmigration fehlt.'
 [[ "$PROJECT_ROOT" =~ ^/[A-Za-z0-9._/-]+$ ]] || die 'Der Projektpfad darf nur Buchstaben, Zahlen, Punkt, Unterstrich, Bindestrich und Slash enthalten.'
 [[ "$PROJECT_ROOT" != /root/* ]] || die 'Bitte das Paket zuerst nach /opt/ember-coreui verschieben. Nginx darf Verzeichnisse unter /root nicht ausliefern.'
 [[ "$PROJECT_ROOT" != /home/* ]] || die 'Bitte das Paket zuerst nach /opt/ember-coreui verschieben. Der gehaertete Worker kapselt Benutzerverzeichnisse.'
+
+rm -f -- \
+  "$PROJECT_ROOT/docs/S.U. MASTER BIBEL v10.4.docx" \
+  "$PROJECT_ROOT/docs/STU_KOMPENDIUM_V6.docx"
 
 if [[ -r /etc/os-release ]]; then
   # shellcheck disable=SC1091
@@ -102,7 +107,6 @@ INSTALL_OLLAMA="${COREUI_INSTALL_OLLAMA:-1}"
 INSTALL_SEARXNG="${COREUI_INSTALL_SEARXNG:-1}"
 INSTALL_BROWSE="${COREUI_INSTALL_BROWSE:-1}"
 FORCE_CONFIG="${COREUI_FORCE_CONFIG:-0}"
-SKIP_LORE="${COREUI_SKIP_LORE:-0}"
 BASE_MODEL="${COREUI_BASE_MODEL:-}"
 MODEL_NAME="${COREUI_MODEL_NAME:-ember-coreui:latest}"
 LOCK_NAMESPACE="${COREUI_LOCK_NAMESPACE:-ember_coreui_native}"
@@ -148,6 +152,7 @@ apt-get update
 PACKAGES=(
   ca-certificates
   curl
+  docker.io
   ffmpeg
   mariadb-client
   mariadb-server
@@ -163,12 +168,10 @@ PACKAGES=(
   php-xml
   php-zip
   python3-pip
+  python3-pymysql
   python3-venv
   unzip
 )
-if is_enabled "$INSTALL_SEARXNG"; then
-  PACKAGES+=(docker.io)
-fi
 apt-get install -y "${PACKAGES[@]}"
 
 command -v php >/dev/null || die 'PHP wurde nicht gefunden.'
@@ -314,7 +317,7 @@ define('STU_EMBER_BROWSE_FRAME_BURST', 3);
 define('STU_EMBER_BROWSE_FRAME_INTERVAL_MS', 240);
 define('STU_EMBER_BROWSE_FRAME_RETENTION_HOURS', 24);
 define('STU_EMBER_BROWSE_SCREENSHOT_DIR', '$SCREENSHOT_DIR_PHP');
-define('STU_EMBER_PY_ENABLED', false);
+define('STU_EMBER_PY_ENABLED', true);
 PHP
   install -m 0640 -o root -g www-data "$CONFIG_TMP" "$CONFIG_FILE"
 fi
@@ -348,6 +351,7 @@ mariadb --defaults-extra-file="$DB_CLIENT_TMP" "$DB_NAME" < "$PROJECT_ROOT/datab
 mariadb --defaults-extra-file="$DB_CLIENT_TMP" "$DB_NAME" < "$PROJECT_ROOT/database/migrations/004_profiles_knowledge.sql"
 mariadb --defaults-extra-file="$DB_CLIENT_TMP" "$DB_NAME" < "$PROJECT_ROOT/database/migrations/005_thinking_attachments.sql"
 mariadb --defaults-extra-file="$DB_CLIENT_TMP" "$DB_NAME" < "$PROJECT_ROOT/database/migrations/006_account_security.sql"
+mariadb --defaults-extra-file="$DB_CLIENT_TMP" "$DB_NAME" < "$PROJECT_ROOT/database/migrations/007_remove_private_studio_lore.sql"
 
 log 'Initialisiere Ember und das Administratorkonto.'
 COREUI_ADMIN_EMAIL="$ADMIN_EMAIL" \
@@ -391,20 +395,6 @@ if [[ "$MODEL_NAME" != "$BASE_MODEL" ]]; then
   ollama create "$MODEL_NAME" -f "$MODELFILE_GENERATED"
 else
   warn 'COREUI_MODEL_NAME entspricht dem Basismodell. Das eigene Modelfile wird deshalb nicht erzeugt.'
-fi
-
-if ! is_enabled "$SKIP_LORE"; then
-  log 'Importiere die lokalen Lore-Dokumente in RAG-Lite.'
-  php "$PROJECT_ROOT/tools/ingest_docx_knowledge.php" \
-    --file="$PROJECT_ROOT/docs/S.U. MASTER BIBEL v10.4.docx" \
-    --source=bibel_v10_4 \
-    --truncate
-  php "$PROJECT_ROOT/tools/ingest_docx_knowledge.php" \
-    --file="$PROJECT_ROOT/docs/STU_KOMPENDIUM_V6.docx" \
-    --source=kompendium_v6 \
-    --truncate
-else
-  warn 'Lore-Import wurde durch COREUI_SKIP_LORE=1 uebersprungen.'
 fi
 
 if is_enabled "$INSTALL_SEARXNG"; then
@@ -458,6 +448,13 @@ if is_enabled "$INSTALL_BROWSE"; then
     > /etc/systemd/system/ember-coreui-browse.service
 fi
 
+log 'Baue das isolierte Python-Sandbox-Image.'
+docker build -t ember-py:1 -f "$PROJECT_ROOT/tools/ember_py.Dockerfile" "$PROJECT_ROOT/tools"
+sed \
+  -e "s|@@COREUI_ROOT@@|$PROJECT_ROOT|g" \
+  "$PROJECT_ROOT/config/ember-py-worker.service.template" \
+  > /etc/systemd/system/ember-coreui-python.service
+
 chgrp -R www-data "$PROJECT_ROOT"
 chmod -R g+rX,o-rwx "$PROJECT_ROOT"
 chown -R www-data:www-data \
@@ -492,8 +489,9 @@ chmod 0750 "$PROJECT_ROOT/var"
 chmod 0640 "$CONFIG_FILE"
 chmod 0750 "$PROJECT_ROOT/scripts/install-native.sh" "$PROJECT_ROOT/scripts/preflight-native.sh" 2>/dev/null || true
 
+systemctl daemon-reload
+systemctl enable --now ember-coreui-python.service
 if is_enabled "$INSTALL_BROWSE"; then
-  systemctl daemon-reload
   systemctl enable --now ember-coreui-browse.service
 fi
 

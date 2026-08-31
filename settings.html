@@ -6,13 +6,13 @@
   <meta name="language" content="de-DE" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#f0f4fa" />
-  <meta name="application-version" content="0.4.2-alpha" />
+  <meta name="application-version" content="0.4.3-alpha" />
   <meta name="application-name" content="Ember CoreUI" />
   <meta name="robots" content="noindex,nofollow" />
   <title>Ember CoreUI - Einstellungen</title>
-  <link rel="stylesheet" href="./css/console.css?v=0.4.2-alpha" />
-  <script src="./js/console-gate.js?v=0.4.2-alpha"></script>
-  <script src="./js/coreui-preferences.js?v=0.4.2-alpha"></script>
+  <link rel="stylesheet" href="./css/console.css?v=0.4.3-alpha" />
+  <script src="./js/console-gate.js?v=0.4.3-alpha"></script>
+  <script src="./js/coreui-preferences.js?v=0.4.3-alpha"></script>
 </head>
 <body class="settings-body">
   <div class="settings-page">
@@ -27,7 +27,7 @@
           <h1>EINSTELLUNGEN</h1>
         </div>
       </div>
-      <div class="settings-version">EMBER COREUI // v0.4.2-alpha</div>
+      <div class="settings-version">EMBER COREUI // v0.4.3-alpha</div>
     </header>
 
     <main class="settings-grid">
@@ -187,10 +187,10 @@
           </label>
           <label class="knowledge-file-drop" for="knowledgeFile">
             <span class="knowledge-file-glyph" aria-hidden="true">⇧</span>
-            <strong id="knowledgeFileName">TXT, MD, PDF ODER DOCX AUSWÄHLEN</strong>
+            <strong id="knowledgeFileName">DOKUMENT ODER CODEDATEI AUSWÄHLEN</strong>
             <small>Text-PDFs werden direkt verarbeitet. Scan-PDFs ohne Textebene werden abgelehnt.</small>
           </label>
-          <input class="visually-hidden" id="knowledgeFile" type="file" accept=".txt,.md,.pdf,.docx,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+          <input class="visually-hidden" id="knowledgeFile" type="file" accept=".txt,.md,.pdf,.docx,.py,.csv,.json,.xml,.yml,.yaml,.ini,.php,.js,.html,.css,.sql,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
           <button class="settings-action knowledge-upload-button" id="uploadKnowledge" type="button">HOCHLADEN UND CHUNKEN</button>
         </div>
         <div class="knowledge-totals" id="knowledgeTotals">
@@ -305,6 +305,6 @@
     <div class="settings-save-state" id="settingsSaveState" role="status" aria-live="polite">LOKAL GESPEICHERT</div>
   </div>
 
-  <script src="./js/settings.js?v=0.4.2-alpha"></script>
+  <script src="./js/settings.js?v=0.4.3-alpha"></script>
 </body>
 </html>

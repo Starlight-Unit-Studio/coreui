@@ -1,0 +1,105 @@
+PROJECT STΛRLIɢHT: EMBER COREUI
+VERSION 0.4.3-ALPHA
+DATUM 30.08.2026
+
+AUSFUEHRLICHES CHANGELOG
+
+1. BLITZINSTALLATION UND PRUEFSUMME
+
+* Der Blitzinstallationsbefehl steht wieder direkt am Anfang der README:
+  curl -fsSL https://raw.githubusercontent.com/pschildgen87-code/coreui/main/setup.sh | sudo bash
+* setup.sh wurde vollstaendig neu aufgebaut und verweist nicht mehr auf den veralteten Stand 0.3.2-alpha.
+* ZIP und SHA-256-Datei werden gemeinsam in ein zufaelliges temporaeres Verzeichnis geladen.
+* Die Pruefsumme wird geprueft, bevor /opt/ember-coreui veraendert wird.
+* Nach dem Entpacken werden VERSION, README, Compose-Datei, Installer, Stack-Wrapper und Preflight geprueft.
+* Das Paket muss exakt 0.4.3-alpha melden und den erwarteten obersten Paketordner enthalten.
+* Bei einem Update bleiben config.local.php, compose.env, Datenbank, Sitzungen, Uploads, Logs, Chatmedien und Profilbilder erhalten.
+* Bei einer Erstinstallation kann der Installer wieder am echten Terminal nach Admin-E-Mail und Passwort fragen.
+* Der Setup-Pfad entfernt nur die zwei exakt bekannten Altdateien aus frueheren Alpha-Paketen und laesst andere Betreiberdateien unangetastet.
+
+2. DATENSCHUTZ FUER STUDIO-MANUSKRIPTE
+
+* Die versehentlich paketierten privaten Studio-Dokumente wurden aus dem Releasebaum geloescht.
+* Weder Compose- noch Native-Installer importieren paketierte Studio-Lore.
+* api/config.php enthaelt keine voreingestellten lokalen Manuskriptpfade mehr.
+* Migration 007_remove_private_studio_lore entfernt ausschliesslich die historischen globalen Source-IDs bibel_v10_4 und kompendium_v6.
+* Private Benutzerquellen, Memories, Nachrichten und andere Betreiberquellen werden durch Migration 007 nicht geloescht.
+* Setup und Preflight lehnen ein Release ab, falls erneut eine Datei mit dem historischen Bibel- oder Kompendium-Dateinamen enthalten ist.
+* Der generische CLI-RAG-Importer bleibt ohne private Beispieldateinamen fuer eigene, rechtmaessig bereitgestellte Betreiberquellen erhalten.
+
+3. NACHRICHTEN-UPLOADS UND DAS EINZELNE @
+
+* Der private Console-Kanal adressiert Ember nun serverseitig.
+* Das Frontend sendet nicht mehr kuenstlich "@Ember " vor jeder privaten Nachricht.
+* Ein Turn, der nur Dateien und keinen Begleittext enthaelt, beginnt deshalb nicht mehr mit einem einzelnen @.
+* Bis zu zehn Upload-UUIDs werden weiterhin serverseitig gegen den angemeldeten Benutzer geprueft.
+* Nachricht und geordnete 1:n-Anhangzuordnungen werden gemeinsam in einer SQL-Transaktion gespeichert.
+* Der SSE-Pfad laedt die Anhangzuordnungen anhand der authentifizierten Turn-ID wieder aus der Datenbank.
+* Erst intern werden daraus Dateimarker erzeugt. Die gemeinsame Anhangsauswertung entfernt diese Marker vor dem Modellprompt.
+* TXT, Python, DOCX und PDF werden dadurch nicht nur im Upload-Endpunkt angenommen, sondern erreichen nachweislich den Modellprompt.
+* Bilder, Videos, Audio, Archive und Scan-PDFs behalten ihre bisherigen spezialisierten Pfade und Limits.
+
+4. VERPFLICHTENDER DATEI-END-TO-END-TEST
+
+* scripts/attachment-pipeline-selftest.php wurde ergaenzt.
+* Der Test erzeugt echte TXT-, PY-, DOCX- und Text-PDF-Dateien im privaten Runtime-Ordner.
+* Er legt passende private Mediendatensaetze, eine Testnachricht und vier geordnete Anhangzuordnungen an.
+* Er rekonstruiert die UUID-Liste mit denselben Funktionen wie der SSE-Endpunkt.
+* Er prueft fuer jedes Format ein eindeutiges Inhaltstoken im finalen Anhangblock.
+* Er lehnt rohe file-Marker und einen verlorenen Reihenfolgenbezug ab.
+* Alle SQL-Aenderungen werden zurueckgerollt und alle Testdateien danach geloescht.
+
+5. GEMEINSAMER RAG-LITE-KERN
+
+* api/rag_lite.php fuehrt Extraktion, UTF-8-Normalisierung, Chunking, Suchwortbildung und Ranking zusammen.
+* Privates RAG-Lite nutzt denselben Dokumentkern wie Betreiber-RAG, bleibt aber in stu_user_knowledge_sources und stu_user_knowledge_chunks nach user_id isoliert.
+* Globale ember_knowledge_chunks werden nicht fuer private Benutzerdateien missbraucht, da die globale Tabelle keine sichere Benutzergrenze besitzt.
+* Beide Modell-Promptpfade erlauben private RAG-Chunks ausschliesslich bei channel=console. Globale Chatantworten erhalten niemals privates Benutzerwissen.
+* DOCX-Ueberschriften werden als Strukturhinweise in den extrahierten Text uebernommen.
+* PDF-Dateien mit Textebene werden ueber pdftotext gelesen.
+* TXT, Markdown und gaengige Code- und Datenformate werden als normalisierter Text gelesen.
+* Chunking behaelt Ueberlappung und bevorzugt Absatz-, Ueberschrifts- und Satzgrenzen.
+* Die private Volltextsuche verwendet mehrere Begriffe als fehlertolerante OR-Suche und bewertet Titel- sowie Texttreffer gemeinsam.
+* Falls eine natuerliche Frage nur auf "meine hochgeladene Datei" verweist, werden kontrolliert die ersten Chunks der zuletzt aktualisierten eigenen Quelle verwendet.
+* Der Profil- und Knowledge-Selftest prueft jetzt auch Python-Extraktion, generische Dokumentfragen und unveraenderte Benutzerisolation.
+
+6. ERWEITERTE PRIVATE RAG-FORMATE
+
+* In den Einstellungen koennen TXT, MD, PDF und DOCX weiterhin hochgeladen werden.
+* Neu als private Textquellen zugelassen sind PY, CSV, JSON, XML, YML, YAML, INI, PHP, JS, HTML, CSS und SQL.
+* MIME-Pruefung bleibt aktiv. Binäre oder falsch deklarierte Inhalte werden nicht blind als Text akzeptiert.
+* Scan-PDFs ohne Textebene bleiben im privaten RAG-Upload abgelehnt, statt erfundenen Text zu erzeugen.
+
+7. FUNKTIONSFAEHIGER PYTHON-WORKER
+
+* Der bisher fehlende dauerhafte Queue-Verbraucher ist jetzt Bestandteil von compose.yaml.
+* docker/pyworker enthaelt nur den vertrauenswuerdigen Worker, PyMySQL und Docker CLI.
+* Der Worker liest die geschuetzte Ember-CoreUI-Konfiguration und pollt die eigene MariaDB auf Loopback.
+* Generierter Modellcode laeuft niemals im Workerprozess.
+* Fuer jeden Job wird ein wegwerfbarer ember-py:1-Container mit read-only Rootfs, unprivilegiertem Benutzer, entfernten Linux-Capabilities, no-new-privileges, CPU-, RAM-, Prozess- und Zeitlimit gestartet.
+* Der Sandbox-Container erhaelt keinen Mount von Projekt, config.local.php, MariaDB oder Ollama.
+* Nur ein separates temporaeres Jobverzeichnis wird in die Sandbox eingebunden und danach entfernt.
+* Der Native-Installer erhaelt einen eigenen systemd-Dienst ember-coreui-python.service.
+* scripts/python-worker-selftest.php reiht echten Python-Code ein und prueft die Ausgabe aus dem Sandbox-Container.
+
+8. PREFLIGHT, UPDATE UND BETRIEB
+
+* Compose-Preflight verlangt den laufenden pyworker-Dienst.
+* Native-Preflight verlangt den laufenden Python-systemd-Dienst.
+* Beide Preflights pruefen Migration 007 und das Fehlen privater Manuskriptdateien.
+* Die PHP-Syntaxpruefung umfasst den neuen RAG-Kern und beide neuen Selftests.
+* Die Updateanweisung baut und startet php, web, browse und pyworker gemeinsam.
+* Die Health-API liest die Version jetzt direkt aus VERSION statt aus einem hart codierten String.
+* Die veraltete Zukunftsaussage zur STU Console wurde korrigiert: Sie wurde bereits mit Game Alpha v1.1.1.98 am 20.08.2026 entfernt. Ember CoreUI ist ihre eigenstaendige Nachfolge- und Referenzoberflaeche und ersetzt nicht den Global-Chat.
+* Die produktive Adresse lautet weiterhin https://coreui.starlight-unit.de.
+
+9. UNVERAENDERTE GRENZEN
+
+* Maximal zehn Dateien je Nachricht.
+* Rohe Thinking-Tokens verlassen den Server nicht.
+* Private RAG-Quellen bleiben pro Benutzer isoliert.
+* api/config.local.php und var/compose.env bleiben bei Updates erhalten.
+* Game, Homepage, KeyHelp, Apache, STU-Repack und Game-Datenbank werden nicht veraendert.
+* Lizenz und kostenloses Community-Modell aus 0.4.2-alpha bleiben unveraendert.
+
+ENDE CHANGELOG 0.4.3-ALPHA

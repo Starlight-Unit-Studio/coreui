@@ -8,7 +8,6 @@
   // ── Konfiguration ────────────────────────────────────────
   var API_BASE          = new URL('./api', document.baseURI).pathname.replace(/\/$/, '');
   var CHANNEL           = 'console';       // Privater Ember-Kanal
-  var EMBER_PREFIX      = '@Ember ';
   var POLL_FAST_MS      = 1500;   // während Ember antwortet
   var POLL_BG_MS        = 3000;   // Hintergrund-Poll
   var MAX_POLL_ATTEMPTS = 700;    // ~17,5 Minuten: lokale Gemma-4-Generierung plus Werkzeugpfad
@@ -1164,8 +1163,10 @@
     inputEl.value = '';
     btnSend.disabled = true;
 
-    // @Ember Prefix nur intern - für Anzeige ohne Prefix
-    var msgToSend = EMBER_PREFIX + userText;
+    // Der private Kanal adressiert Ember serverseitig. Ein kuenstliches
+    // @Ember-Praefix wuerde bei reinen Datei-Turns als einzelnes @ im
+    // Modellprompt uebrig bleiben.
+    var msgToSend = userText;
     appendMessageEl('user', userText, state.userDisplayName || state.charName, null, atts, sentCreatedAt);
     clearAttachments();
     scrollToBottom();
@@ -1244,7 +1245,7 @@
           reply_to_id: 0,
           character_id: state.characterId,
           character_name: state.charName,
-          message: EMBER_PREFIX + userText,
+          message: userText,
           is_ember: false,
           thinking_content: null,
           attachments: atts,

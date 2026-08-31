@@ -19,6 +19,11 @@ function coreui_pk_assert(bool $condition, string $message): void {
 $pdo = stu_pdo();
 coreui_pk_assert(coreui_profile_schema_ready($pdo), 'Migration 004 Profil-Schema fehlt.');
 coreui_pk_assert(coreui_knowledge_schema_ready($pdo), 'Migration 004 Knowledge-Schema fehlt.');
+$chatSource = (string)file_get_contents(__DIR__ . '/../api/chat.php');
+coreui_pk_assert(
+  substr_count($chatSource, "\$channel === 'console' && function_exists('coreui_private_knowledge_block')") >= 2,
+  'Privates RAG-Lite ist nicht an beiden Promptpfaden hart auf den privaten Console-Kanal begrenzt.'
+);
 
 $sample = str_repeat(
   "Alpha Chronicle beschreibt einen privaten Testinhalt mit eindeutigen Fakten.\n\n"
@@ -28,6 +33,12 @@ $sample = str_repeat(
 $chunks = coreui_knowledge_chunks($sample, 500, 80, 100);
 coreui_pk_assert(count($chunks) >= 4, 'RAG-Chunker erzeugt zu wenige Chunks.');
 coreui_pk_assert(mb_strlen($chunks[0], 'UTF-8') <= 500, 'RAG-Chunker ueberschreitet das Zielbudget.');
+$codePath = tempnam(sys_get_temp_dir(), 'coreui-rag-code-');
+coreui_pk_assert(is_string($codePath) && $codePath !== '', 'RAG-Code-Testdatei konnte nicht angelegt werden.');
+file_put_contents($codePath, "def private_rag_probe():\n    return 'PRIVATE_RAG_CODE_OK'\n");
+$codeText = coreui_knowledge_extract($codePath, 'py', 4000);
+@unlink($codePath);
+coreui_pk_assert(str_contains($codeText, 'PRIVATE_RAG_CODE_OK'), 'Gemeinsamer RAG-Lite-Kern liest Python-Text nicht.');
 
 $suffix = bin2hex(random_bytes(6));
 $emailA = 'selftest-a-' . $suffix . '@coreui.invalid';
@@ -63,8 +74,10 @@ try {
 
   $alphaRows = coreui_private_knowledge_search($pdo, $uidA, 'Was steht in alphachronicle?', 4);
   $betaRows = coreui_private_knowledge_search($pdo, $uidB, 'Was steht in alphachronicle?', 4);
+  $genericRows = coreui_private_knowledge_search($pdo, $uidA, 'Fass meine hochgeladene Datei zusammen.', 4);
   coreui_pk_assert(count($alphaRows) === 1, 'Eigene RAG-Quelle wurde nicht gefunden.');
   coreui_pk_assert(count($betaRows) === 0, 'Private RAG-Quelle ist kontouebergreifend sichtbar.');
+  coreui_pk_assert(count($genericRows) === 1, 'Die zuletzt hochgeladene eigene Quelle wird bei einer generischen Dokumentfrage nicht gefunden.');
 
   $pdo->rollBack();
 } catch (Throwable $e) {

@@ -1,0 +1,23 @@
+[Unit]
+Description=Ember CoreUI isolated Python job worker
+After=network-online.target mariadb.service docker.service
+Wants=network-online.target docker.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=@@COREUI_ROOT@@
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 @@COREUI_ROOT@@/tools/ember_py_worker.py --config @@COREUI_ROOT@@/api/config.local.php --poll 2
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=@@COREUI_ROOT@@/var/ember_py
+
+[Install]
+WantedBy=multi-user.target

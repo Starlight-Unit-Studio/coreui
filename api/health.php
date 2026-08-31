@@ -57,6 +57,13 @@ try {
       if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_005_thinking_attachments';
       $stMigration->execute(['006_account_security']);
       if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_006_account_security';
+      $stMigration->execute(['007_remove_private_studio_lore']);
+      if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_007_remove_private_studio_lore';
+      $stPrivateLore = $pdo->prepare(
+        'SELECT COUNT(*) FROM ember_knowledge_chunks WHERE source IN (?, ?)'
+      );
+      $stPrivateLore->execute(['bibel_v10_4', 'kompendium_v6']);
+      if ((int)$stPrivateLore->fetchColumn() !== 0) $missing[] = 'private_studio_lore_not_removed';
     } catch (Throwable $eSchema) {
       $missing[] = 'console_session_columns';
     }
@@ -104,7 +111,7 @@ http_response_code($ok ? 200 : 503);
 echo json_encode([
   'ok' => $ok,
   'project' => 'Project STΛRLIɢHT: Ember CoreUI',
-  'version' => '0.4.2-alpha',
+  'version' => trim((string)@file_get_contents(dirname(__DIR__) . '/VERSION')) ?: 'unknown',
   'model' => STU_EMBER_MODEL,
   'checks' => $checks,
   'missing_tables' => $missing ?? [],
