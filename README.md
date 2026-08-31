@@ -511,6 +511,8 @@ sudo tar -C /opt -czf /var/backups/ember-coreui/files.tgz \
 
 ## Uninstallation
 
+These commands apply to the standard isolated Compose installation. The native installer changes shared host services and therefore requires an operator-controlled rollback instead of this removal procedure.
+
 To remove the running Ember CoreUI services while retaining all accounts, database data, uploads, configuration, images, and the dedicated Ollama model for a later reinstall:
 
 ```bash
