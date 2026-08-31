@@ -3,7 +3,7 @@ set -Eeuo pipefail
 IFS=$'\n\t'
 umask 027
 
-REPOSITORY='pschildgen87-code/coreui'
+REPOSITORY='Starlight-Unit-Studio/coreui'
 VERSION='0.4.3-alpha'
 TAG="v${VERSION}"
 ARCHIVE='EMBER_COREUI_0_4_3_ALPHA.zip'
