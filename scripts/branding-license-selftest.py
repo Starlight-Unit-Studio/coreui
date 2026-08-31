@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_VERSION = "0.4.3-alpha"
+EXPECTED_VERSION = "0.4.4-alpha"
 PUBLIC_PAGES = (
     "index.html",
     "login.html",

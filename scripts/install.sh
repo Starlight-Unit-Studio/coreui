@@ -624,7 +624,7 @@ fi
 log 'Baue das wegwerfbare Python-Sandbox-Image ohne Projekt- oder Geheimnis-Mounts.'
 docker build -t ember-py:1 -f "$PROJECT_ROOT/tools/ember_py.Dockerfile" "$PROJECT_ROOT/tools"
 
-compose run --rm --no-deps php sh -ec \
+compose run -T --rm --no-deps php sh -ec \
   'find api scripts tools -type f -name "*.php" -print0 | xargs -0 -r -n1 php -l >/dev/null'
 
 ensure_ollama_model
@@ -641,7 +641,7 @@ log 'Importiere alle Ember CoreUI-Migrationen in die eigene Container-Datenbank.
 
 if ! is_enabled "$SKIP_BOOTSTRAP"; then
   log 'Initialisiere Ember und das Ember CoreUI-Administratorkonto.'
-  compose run --rm --no-deps \
+  compose run -T --rm --no-deps \
     -e "COREUI_ADMIN_EMAIL=$ADMIN_EMAIL" \
     -e "COREUI_ADMIN_PASSWORD=$ADMIN_PASSWORD" \
     -e "COREUI_ADMIN_NAME=$ADMIN_NAME" \
