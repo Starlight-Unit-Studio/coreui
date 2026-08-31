@@ -10,10 +10,10 @@ Current version: `0.4.4-alpha`
 The installer downloads the archive and its SHA-256 file into a unique temporary directory, verifies both before changing `/opt/ember-coreui`, and preserves local configuration, database data, accounts, sessions, uploads, logs, chat media, and profile images during updates.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh | sudo bash
+( setup_file="$(mktemp)" && trap 'rm -f -- "$setup_file"' EXIT && curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh -o "$setup_file" && sudo bash "$setup_file" )
 ```
 
-A fresh interactive installation asks for the administrator email address and password at the real terminal. The setup explicitly connects the account bootstrap to `/dev/tty`, while non-interactive Docker Compose calls run without a TTY requirement. Its verified archive, checksum, and unpacked files use a unique temporary directory that is removed automatically. For unattended first installation, provide `COREUI_ADMIN_EMAIL` and `COREUI_ADMIN_PASSWORD` as environment variables.
+A fresh interactive installation asks for the administrator email address and password at the real terminal. The one-line SSH command stores the launcher in a protected, uniquely named temporary file and removes it on exit. The setup explicitly connects the account bootstrap to `/dev/tty`, while non-interactive Docker Compose calls run without a TTY requirement. Its verified archive, checksum, and unpacked files use a separate unique temporary directory that is also removed automatically. For unattended first installation, provide `COREUI_ADMIN_EMAIL` and `COREUI_ADMIN_PASSWORD` as environment variables.
 
 ## Independence and mandatory product name
 
@@ -39,9 +39,9 @@ Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNIT
 
 `0.4.4-alpha` is a focused installer and TTY hotfix for `0.4.3-alpha`.
 
-- The quick installation is a single SSH command, while the account bootstrap remains connected to the real terminal through `/dev/tty`.
+- The quick installation is a single SSH command that executes the setup from a protected temporary file, while the account bootstrap remains connected to the real terminal through `/dev/tty`.
 - Both temporary `docker compose run` calls explicitly use `-T`, so existing and unattended installations no longer fail with `the input device is not a TTY`.
-- No predictable launcher file remains under `/tmp`; the setup removes its uniquely named temporary working directory automatically.
+- No predictable launcher file remains under `/tmp`; both the launcher and the setup working directory are removed automatically.
 
 All stability, privacy, upload, private RAG-Lite, and Python-runtime changes from `0.4.3-alpha` remain included:
 
