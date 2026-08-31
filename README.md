@@ -551,21 +551,32 @@ The block refuses to continue while any Docker container still exists, displays 
 (
   set -Eeuo pipefail
 
-  if [[ -n "$(sudo docker ps -aq)" ]]; then
+  COREUI_REMAINING_CONTAINERS="$(sudo docker ps -aq)" || {
+    printf '[ABORT] Docker could not be queried safely.\n' >&2
+    exit 1
+  }
+  if [[ -n "$COREUI_REMAINING_CONTAINERS" ]]; then
     printf '[ABORT] Other Docker containers still exist:\n' >&2
     sudo docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' >&2
     exit 1
   fi
 
-  printf 'Remaining Ollama models that will be deleted:\n'
-  ollama list 2>/dev/null || true
+  OLLAMA_BIN="$(command -v ollama || true)"
+  if [[ -n "$OLLAMA_BIN" ]]; then
+    printf 'Remaining Ollama models that will be deleted:\n'
+    ollama list || {
+      printf '[ABORT] Ollama models could not be listed safely.\n' >&2
+      exit 1
+    }
+  else
+    printf 'Ollama is not installed; only Docker cleanup remains.\n'
+  fi
   read -r -p 'Type REMOVE COREUI HOST to remove Docker, Ollama, and all of their data: ' COREUI_HOST_CONFIRM </dev/tty
   [[ "$COREUI_HOST_CONFIRM" == 'REMOVE COREUI HOST' ]] || {
     printf 'Cleanup cancelled.\n'
     exit 1
   }
 
-  OLLAMA_BIN="$(command -v ollama || true)"
   sudo systemctl disable --now ollama.service 2>/dev/null || true
   sudo rm -f -- /etc/systemd/system/ollama.service
   sudo rm -rf -- /etc/systemd/system/ollama.service.d
