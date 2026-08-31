@@ -1,0 +1,97 @@
+name: One-time repository transfer repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-org-transfer.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace old repository references and rebuild release pair
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import hashlib
+          import subprocess
+          import zipfile
+
+          old = b'pschildgen87-code/coreui'
+          new = b'Starlight-Unit-Studio/coreui'
+          release_zip = Path('releases/v0.4.3-alpha/EMBER_COREUI_0_4_3_ALPHA.zip')
+          release_sha = Path('releases/v0.4.3-alpha/EMBER_COREUI_0_4_3_ALPHA.zip.sha256')
+
+          tracked = subprocess.check_output(['git', 'ls-files', '-z']).split(b'\0')
+          for raw in tracked:
+              if not raw:
+                  continue
+              p = Path(raw.decode())
+              if p in (release_zip, release_sha) or not p.is_file():
+                  continue
+              data = p.read_bytes()
+              if old in data:
+                  p.write_bytes(data.replace(old, new))
+                  print(f'updated {p}')
+
+          if not release_zip.is_file():
+              raise SystemExit(f'missing release archive: {release_zip}')
+
+          temp_zip = release_zip.with_suffix('.zip.tmp')
+          replacements = 0
+          with zipfile.ZipFile(release_zip, 'r') as zin, zipfile.ZipFile(temp_zip, 'w') as zout:
+              for info in zin.infolist():
+                  data = zin.read(info.filename)
+                  if old in data:
+                      data = data.replace(old, new)
+                      replacements += 1
+                      print(f'updated archive member {info.filename}')
+                  zout.writestr(info, data)
+          temp_zip.replace(release_zip)
+
+          with zipfile.ZipFile(release_zip, 'r') as z:
+              leftovers = [i.filename for i in z.infolist() if old in z.read(i.filename)]
+          if leftovers:
+              raise SystemExit('old repository path remains in archive: ' + ', '.join(leftovers))
+
+          digest = hashlib.sha256(release_zip.read_bytes()).hexdigest()
+          release_sha.write_text(f'{digest}  EMBER_COREUI_0_4_3_ALPHA.zip\n', encoding='ascii')
+          print('archive replacements:', replacements)
+          print('new sha256:', digest)
+          PY
+
+          if git grep -n -I 'pschildgen87-code/coreui' -- . ':(exclude)releases/v0.4.3-alpha/EMBER_COREUI_0_4_3_ALPHA.zip' ; then
+            echo 'Old repository path still exists in tracked text files.' >&2
+            exit 1
+          fi
+
+          cd releases/v0.4.3-alpha
+          sha256sum -c EMBER_COREUI_0_4_3_ALPHA.zip.sha256
+          cd ../..
+          git diff --check
+
+      - name: Commit repaired sources and release pair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Starlight Unit Studios Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/fix-org-transfer.yml
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes required.'
+            exit 0
+          fi
+          git commit -m 'Update repository links after organization transfer'
+          git push origin HEAD:main
