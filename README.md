@@ -513,6 +513,8 @@ sudo tar -C /opt -czf /var/backups/ember-coreui/files.tgz \
 
 These commands apply to the standard isolated Compose installation. The native installer changes shared host services and therefore requires an operator-controlled rollback instead of this removal procedure.
 
+On an otherwise clean supported server, the standard installer installs Docker and Docker Compose when they are missing, installs Ollama through its official Linux installer when required, pulls `gemma4:e4b` when no selected Gemma 4 base model is available, and creates the dedicated CoreUI model. Nginx, PHP-FPM, MariaDB, SearXNG, and the workers run as containers; the standard installer does not install or reconfigure a host web server. Docker, Ollama, and the base model remain after uninstallation even when CoreUI originally installed or downloaded them, because they may have become shared dependencies. Only the model recorded by CoreUI in `var/model.owner` is treated as installer-owned and removed by the complete procedure below.
+
 To remove the running Ember CoreUI services while retaining all accounts, database data, uploads, configuration, images, and the dedicated Ollama model for a later reinstall:
 
 ```bash
