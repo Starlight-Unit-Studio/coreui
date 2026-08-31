@@ -541,6 +541,73 @@ The following complete removal is irreversible. Create the backup described abov
 
 The base Gemma model, Docker, Ollama, host web servers, other applications, and manually created reverse-proxy configuration remain untouched. A reverse-proxy entry that points to Ember CoreUI can be removed separately by its operator after the service has been uninstalled.
 
+### Additional cleanup for a CoreUI-only server
+
+Use this final cleanup only after the complete removal above and only when the server was prepared exclusively for Ember CoreUI. It removes all remaining Ollama models and data, Ollama itself, Docker, Docker Compose, and all Docker image and volume data. It must not be used on a server that runs another container or uses Ollama for another application.
+
+The block refuses to continue while any Docker container still exists, displays the remaining Ollama models, and requires the exact confirmation `REMOVE COREUI HOST`:
+
+```bash
+(
+  set -Eeuo pipefail
+
+  COREUI_REMAINING_CONTAINERS="$(sudo docker ps -aq)" || {
+    printf '[ABORT] Docker could not be queried safely.\n' >&2
+    exit 1
+  }
+  if [[ -n "$COREUI_REMAINING_CONTAINERS" ]]; then
+    printf '[ABORT] Other Docker containers still exist:\n' >&2
+    sudo docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' >&2
+    exit 1
+  fi
+
+  OLLAMA_BIN="$(command -v ollama || true)"
+  if [[ -n "$OLLAMA_BIN" ]]; then
+    printf 'Remaining Ollama models that will be deleted:\n'
+    ollama list || {
+      printf '[ABORT] Ollama models could not be listed safely.\n' >&2
+      exit 1
+    }
+  else
+    printf 'Ollama is not installed; only Docker cleanup remains.\n'
+  fi
+  read -r -p 'Type REMOVE COREUI HOST to remove Docker, Ollama, and all of their data: ' COREUI_HOST_CONFIRM </dev/tty
+  [[ "$COREUI_HOST_CONFIRM" == 'REMOVE COREUI HOST' ]] || {
+    printf 'Cleanup cancelled.\n'
+    exit 1
+  }
+
+  sudo systemctl disable --now ollama.service 2>/dev/null || true
+  sudo rm -f -- /etc/systemd/system/ollama.service
+  sudo rm -rf -- /etc/systemd/system/ollama.service.d
+  case "$OLLAMA_BIN" in
+    /usr/local/bin/ollama|/usr/bin/ollama|/bin/ollama)
+      sudo rm -f -- "$OLLAMA_BIN"
+      ;;
+    '') ;;
+    *) printf '[WARN] Unknown Ollama binary path remains: %s\n' "$OLLAMA_BIN" >&2 ;;
+  esac
+  sudo rm -rf -- /usr/local/lib/ollama /usr/lib/ollama /lib/ollama /usr/share/ollama
+  sudo userdel ollama 2>/dev/null || true
+  sudo groupdel ollama 2>/dev/null || true
+  sudo systemctl daemon-reload
+
+  COREUI_DOCKER_PACKAGES=()
+  for package in docker.io docker-compose docker-compose-v2 docker-compose-plugin; do
+    if dpkg-query -W -f='${db:Status-Abbrev}' "$package" 2>/dev/null | grep -q '^ii '; then
+      COREUI_DOCKER_PACKAGES+=("$package")
+    fi
+  done
+  if (( ${#COREUI_DOCKER_PACKAGES[@]} > 0 )); then
+    sudo apt-get purge -y "${COREUI_DOCKER_PACKAGES[@]}"
+  fi
+  sudo apt-get autoremove -y
+  sudo rm -rf -- /var/lib/docker /var/lib/containerd
+)
+```
+
+The system packages used for normal administration, such as `curl`, certificate support, Python, and archive tools, are deliberately retained. Current upstream removal references: [Ollama Linux uninstall](https://docs.ollama.com/linux#uninstall) and [Docker Engine uninstall](https://docs.docker.com/engine/install/debian/#uninstall-docker-engine).
+
 ## Native installer for an empty standalone server
 
 The previous host installer remains included as `scripts/install-native.sh`. It installs Nginx, PHP-FPM, and MariaDB directly on the host and is therefore not intended for the parallel STU production server.
