@@ -6,7 +6,7 @@ Copyright (c) 2026 Patrick Schildgen, Starlight Unit Studios.
 
 Official public interface: <https://coreui.starlight-unit.de>
 
-Official source repository: <https://github.com/pschildgen87-code/coreui>
+Official source repository: <https://github.com/Starlight-Unit-Studio/coreui>
 
 Ember CoreUI is independently developed and is not based on, affiliated with, sponsored by, or endorsed by the unrelated admin-template and UI-component project available at `coreui.io`.
 
