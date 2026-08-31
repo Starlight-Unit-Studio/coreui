@@ -509,6 +509,36 @@ sudo tar -C /opt -czf /var/backups/ember-coreui/files.tgz \
   ember-coreui/var/knowledge_uploads
 ```
 
+## Uninstallation
+
+These commands apply to the standard isolated Compose installation. The native installer changes shared host services and therefore requires an operator-controlled rollback instead of this removal procedure.
+
+To remove the running Ember CoreUI services while retaining all accounts, database data, uploads, configuration, images, and the dedicated Ollama model for a later reinstall:
+
+```bash
+cd /opt/ember-coreui
+sudo ./scripts/stack.sh down --remove-orphans
+```
+
+The following complete removal is irreversible. Create the backup described above first if any CoreUI data may still be needed. It removes the Compose services, locally built CoreUI images, the installer-owned Ollama model, and the entire `/opt/ember-coreui` directory including its database and uploads:
+
+```bash
+(
+  set -Eeuo pipefail
+  cd /opt/ember-coreui
+  COREUI_OWNED_MODEL="$(sudo sed -n '1p' var/model.owner 2>/dev/null || true)"
+  sudo ./scripts/stack.sh down --remove-orphans --volumes --rmi local
+  if [[ "$COREUI_OWNED_MODEL" =~ ^[A-Za-z0-9][A-Za-z0-9._:/-]*$ ]]; then
+    sudo ollama rm "$COREUI_OWNED_MODEL" 2>/dev/null || true
+  fi
+  sudo docker image rm ember-py:1 2>/dev/null || true
+  cd /opt
+  sudo rm -rf -- /opt/ember-coreui
+)
+```
+
+The base Gemma model, Docker, Ollama, host web servers, other applications, and manually created reverse-proxy configuration remain untouched. A reverse-proxy entry that points to Ember CoreUI can be removed separately by its operator after the service has been uninstalled.
+
 ## Native installer for an empty standalone server
 
 The previous host installer remains included as `scripts/install-native.sh`. It installs Nginx, PHP-FPM, and MariaDB directly on the host and is therefore not intended for the parallel STU production server.
