@@ -43,6 +43,13 @@ cleanup_legacy_release_dirs() {
     [[ ! -L "$legacy_dir" ]] || die "Unsicherer symbolischer Altversionspfad erkannt: $legacy_dir"
     [[ "$legacy_dir" == "$TARGET_DIR"/EMBER_COREUI_*_ALPHA ]] \
       || die "Unsicherer Altversionspfad erkannt: $legacy_dir"
+    if [[ ! -f "$legacy_dir/VERSION" || ! -f "$legacy_dir/scripts/install.sh" ]]; then
+      log "WARN: $legacy_name sieht nur dem Namen nach wie eine Altversion aus und bleibt deshalb erhalten."
+      continue
+    fi
+    if command -v mountpoint >/dev/null 2>&1 && mountpoint -q "$legacy_dir"; then
+      die "Altversionsordner ist ein Einhaengepunkt und wird nicht automatisch entfernt: $legacy_dir"
+    fi
 
     log "Entferne vollstaendig entpackte Altversion: $legacy_name"
     rm -rf -- "$legacy_dir"
