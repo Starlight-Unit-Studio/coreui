@@ -62,7 +62,7 @@ try {
   $export = [
     'format' => 'ember-coreui-account-export',
     'format_version' => 1,
-    'coreui_version' => '0.4.3-alpha',
+    'coreui_version' => '0.4.4-alpha',
     'generated_at' => gmdate('c'),
     'public_base_url' => defined('STU_PUBLIC_BASE_URL') ? (string)STU_PUBLIC_BASE_URL : '',
     'account' => $accountRows[0],

@@ -1,0 +1,75 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+VERSION 0.4.4-ALPHA
+DATUM 31.08.2026
+
+======================================================================
+INSTALLATION UND TTY
+======================================================================
+
+* Der Installationsabbruch `the input device is not a TTY` nach einem
+  erfolgreichen Container-Image-Build wurde behoben.
+* Ursache waren zwei temporaere `docker compose run`-Aufrufe ohne explizite
+  TTY-Deaktivierung. Docker Compose versuchte bei einem ueber eine Pipe
+  gestarteten Setup ein Pseudo-Terminal zu oeffnen, obwohl die Standardeingabe
+  kein Terminal mehr war.
+* Der PHP-Lint-Container verwendet nun `docker compose run -T`.
+* Der Account-Bootstrap-Container verwendet nun ebenfalls
+  `docker compose run -T`.
+* Bestehende Installationen, automatisierte Updates und Ersteinrichtungen
+  koennen dadurch denselben verifizierten Installationspfad verwenden.
+
+======================================================================
+SCHNELLINSTALLATION
+======================================================================
+
+* Die README dokumentiert Download und Ausfuehrung als zwei getrennte Befehle:
+
+    curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh -o /tmp/ember-coreui-setup.sh
+    sudo bash /tmp/ember-coreui-setup.sh
+
+* Dadurch bleibt das echte SSH-Terminal fuer interaktive Admin-Eingaben
+  erhalten.
+* Die getrennte Form verhindert ausserdem, dass beim Einfuegen der Dateiname
+  und der nachfolgende `bash`-Befehl zu `setup.shbash` zusammengezogen werden.
+* Die Root-Fehlermeldung in `setup.sh` verweist nicht mehr auf den ueberholten
+  Pipe-Aufruf.
+
+======================================================================
+PAKETSICHERHEIT
+======================================================================
+
+* ZIP und SHA-256-Datei bleiben ein festes Releasepaar.
+* Die Pruefsumme wird vor jeder Aenderung an `/opt/ember-coreui` geprueft.
+* Paketwurzel, Versionsdatei, Compose-Datei, Installer, `stack.sh` und
+  `preflight.sh` muessen im geprueften ZIP vorhanden sein.
+* Lokale Konfiguration, Datenbankdaten, Konten, Sitzungen, Uploads, Logs,
+  Chatmedien und Profilbilder bleiben bei Updates erhalten.
+* Private Studio-Manuskripte bleiben aus Quellbaum, ZIP und Installation
+  ausgeschlossen.
+
+======================================================================
+UEBERNOMMENE FUNKTIONEN AUS 0.4.3-ALPHA
+======================================================================
+
+* Reparierte TXT-, PDF-, DOCX- und Python-Anhangrekonstruktion.
+* Maximal zehn Dateien pro Nachricht.
+* Kein kuenstliches `@Ember` und kein einzelnes `@` bei reinen Dateiturns.
+* Benutzergebundenes privates RAG-Lite mit harter Trennung vom Global Chat.
+* Gemeinsame Extraktions-, Chunking-, Such- und Ranking-Engine.
+* Isolierter Python-Queue-Worker und wegwerfbarer Ausfuehrungscontainer.
+* Migration 007 entfernt nur die beiden historischen versehentlichen globalen
+  Studio-Lore-Quellen.
+* Die interne STU Console gilt weiterhin als bereits mit Game Alpha v1.1.1.98
+  entfernt. Ember CoreUI ist die eigenstaendige Nachfolge- und
+  Referenzoberflaeche und ersetzt nicht den Global Chat.
+
+======================================================================
+ISOLATION
+======================================================================
+
+* Game, Homepage, Repack, KeyHelp, Apache, Host-PHP und Game-Datenbank werden
+  nicht veraendert.
+* Produktive Adresse bleibt https://coreui.starlight-unit.de.
+* Produktname bleibt immer Ember CoreUI.
+
+ENDE CHANGELOG 0.4.4-ALPHA
