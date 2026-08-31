@@ -3,17 +3,18 @@
 
 Ember CoreUI is an independent WebUI for a local E.M.B.E.R. core. Until its final inclusion in the STU Repack, it has its own versioning and its own release cycle.
 
-Current version: `0.4.3-alpha`
+Current version: `0.4.4-alpha`
 
 ## Quick installation
 
 The installer downloads the archive and its SHA-256 file into a unique temporary directory, verifies both before changing `/opt/ember-coreui`, and preserves local configuration, database data, accounts, sessions, uploads, logs, chat media, and profile images during updates.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh -o /tmp/ember-coreui-setup.sh
+sudo bash /tmp/ember-coreui-setup.sh
 ```
 
-A fresh interactive installation asks for the administrator email address and password at the terminal. For unattended first installation, provide `COREUI_ADMIN_EMAIL` and `COREUI_ADMIN_PASSWORD` as environment variables.
+A fresh interactive installation asks for the administrator email address and password at the real terminal. Download and execution are deliberately separate so that Docker Compose and the account bootstrap do not lose their TTY. For unattended first installation, provide `COREUI_ADMIN_EMAIL` and `COREUI_ADMIN_PASSWORD` as environment variables.
 
 ## Independence and mandatory product name
 
@@ -37,7 +38,13 @@ Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNIT
 
 ## Result of this release
 
-`0.4.3-alpha` is a stability, privacy, upload, private RAG-Lite, and Python-runtime release.
+`0.4.4-alpha` is a focused installer and TTY hotfix for `0.4.3-alpha`.
+
+- The quick installation now downloads `setup.sh` first and runs it in a separate command with the real terminal attached.
+- Both temporary `docker compose run` calls explicitly use `-T`, so existing and unattended installations no longer fail with `the input device is not a TTY`.
+- A pasted download command can no longer accidentally join the output filename and `bash` invocation when the documented two-line form is used.
+
+All stability, privacy, upload, private RAG-Lite, and Python-runtime changes from `0.4.3-alpha` remain included:
 
 - The quick installer has been rebuilt. It no longer points to `0.3.2-alpha`, verifies the exact package root and version, and never unpacks an extra directory level into `/opt/ember-coreui`.
 - Private console turns address Ember on the server. Attachment-only messages therefore no longer leave an artificial `@Ember` prefix or a single `@` in the model prompt.
@@ -117,6 +124,7 @@ Only Ollama is shared as an already existing local model interface. Ember CoreUI
 - local reference operation with Gemma 4 and Ollama
 
 Profile images are not served as freely accessible static files. The private media endpoint verifies the session and always serves only the current avatar of the signed-in account. JPEG and PNG uploads are decoded, center-cropped to a square, limited to a maximum of 512 pixels, and saved as a new PNG file without third-party metadata.
+
 Private RAG-Lite accepts `.txt`, `.md`, `.pdf`, `.docx`, `.py`, `.csv`, `.json`, `.xml`, `.yml`, `.yaml`, `.ini`, `.php`, `.js`, `.html`, `.css`, and `.sql`. PDFs require a real text layer for this settings import; scanned PDFs without readable text are explicitly rejected. Extraction, UTF-8 normalization, overlapping chunking, query-term generation, and relevance ranking use the shared RAG-Lite engine. Sources and chunks remain strictly bound to the authenticated user, and both model prompt paths hard-limit private knowledge to the private console channel. By default, limits are 20 MiB per file, 40 sources, and a total of 5,000,000 extracted characters per account. Account-specific MariaDB locks prevent concurrent uploads from jointly bypassing these quotas. Document contents are marked as untrusted data and never as system instructions.
 
 The prepared external provider adapter remains disabled by default. API keys are never stored in the browser. Only a later server-side tested implementation can enable it; there is no compatibility guarantee for arbitrary cloud providers.
@@ -236,13 +244,14 @@ The same verified flow used by the quick installer can be run manually:
 
 ```bash
 cd /home/users/game/tmp
-BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.4.3-alpha'
-curl -fL "$BASE/EMBER_COREUI_0_4_3_ALPHA.zip" -o EMBER_COREUI_0_4_3_ALPHA.zip
-curl -fL "$BASE/EMBER_COREUI_0_4_3_ALPHA.zip.sha256" -o EMBER_COREUI_0_4_3_ALPHA.zip.sha256
-sha256sum -c EMBER_COREUI_0_4_3_ALPHA.zip.sha256
-unzip -q EMBER_COREUI_0_4_3_ALPHA.zip
+BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.4.4-alpha'
 
-sudo mv EMBER_COREUI_0_4_3_ALPHA /opt/ember-coreui
+curl -fL "$BASE/EMBER_COREUI_0_4_4_ALPHA.zip" -o EMBER_COREUI_0_4_4_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_4_4_ALPHA.zip.sha256" -o EMBER_COREUI_0_4_4_ALPHA.zip.sha256
+sha256sum -c EMBER_COREUI_0_4_4_ALPHA.zip.sha256
+unzip -q EMBER_COREUI_0_4_4_ALPHA.zip
+
+sudo mv EMBER_COREUI_0_4_4_ALPHA /opt/ember-coreui
 cd /opt/ember-coreui
 sudo chmod 0750 setup.sh scripts/*.sh
 sudo ./scripts/install.sh
@@ -250,14 +259,14 @@ sudo ./scripts/install.sh
 
 The installer asks for the administrator email address, a password of at least 12 characters, and an optional display name through `COREUI_ADMIN_NAME`.
 
-## Update to 0.4.3-alpha
+## Update to 0.4.4-alpha
 
 The existing database, accounts, sessions, uploads, and protected credentials are preserved. The package is copied only over static project files and templates.
 
 ```bash
 cd /home/users/game/tmp
-sha256sum -c EMBER_COREUI_0_4_3_ALPHA.zip.sha256
-unzip -q -o EMBER_COREUI_0_4_3_ALPHA.zip
+sha256sum -c EMBER_COREUI_0_4_4_ALPHA.zip.sha256
+unzip -q -o EMBER_COREUI_0_4_4_ALPHA.zip
 
 sudo apt-get update
 sudo apt-get install -y rsync
@@ -268,7 +277,7 @@ sudo rsync -a \
   --exclude='uploads/' \
   --exclude='assets/chat_media/' \
   --exclude='assets/profile_photos/' \
-  EMBER_COREUI_0_4_3_ALPHA/ /opt/ember-coreui/
+  EMBER_COREUI_0_4_4_ALPHA/ /opt/ember-coreui/
 
 cd /opt/ember-coreui
 sudo ./scripts/stack.sh up -d --build --force-recreate php web browse pyworker
@@ -355,6 +364,7 @@ unset COREUI_ADMIN_PASSWORD
 ```
 
 ## Important options
+
 | Variable | Default | Meaning |
 |---|---:|---|
 | `COREUI_HTTP_PORT` | `9080` | Dedicated web port |
@@ -547,4 +557,4 @@ A complete German legal notice and a final privacy policy are deliberately not y
 
 ## Alpha status
 
-`0.4.3-alpha` fixes the installer, checksum workflow, attachment reconstruction, private RAG-Lite retrieval, and Python queue execution. It also removes accidentally bundled private Studio manuscripts and their two historic global source IDs. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.
+`0.4.4-alpha` fixes the interactive and non-interactive TTY paths of the verified installer. The checksum, attachment reconstruction, private RAG-Lite retrieval, Python queue execution, and private-manuscript removal from `0.4.3-alpha` remain included. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.

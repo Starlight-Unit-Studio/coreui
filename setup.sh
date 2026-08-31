@@ -4,11 +4,11 @@ IFS=$'\n\t'
 umask 027
 
 REPOSITORY='Starlight-Unit-Studio/coreui'
-VERSION='0.4.3-alpha'
+VERSION='0.4.4-alpha'
 TAG="v${VERSION}"
-ARCHIVE='EMBER_COREUI_0_4_3_ALPHA.zip'
+ARCHIVE='EMBER_COREUI_0_4_4_ALPHA.zip'
 CHECKSUM="${ARCHIVE}.sha256"
-PACKAGE_ROOT='EMBER_COREUI_0_4_3_ALPHA'
+PACKAGE_ROOT='EMBER_COREUI_0_4_4_ALPHA'
 TARGET_DIR='/opt/ember-coreui'
 # Release-Paare liegen absichtlich gemeinsam im Repository. Dadurch bleibt die
 # Blitzinstallation nutzbar, ohne dass ZIP und SHA-Datei aus zwei verschiedenen
@@ -32,7 +32,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-[[ "${EUID:-$(id -u)}" -eq 0 ]] || die 'Bitte mit curl ... | sudo bash ausfuehren.'
+[[ "${EUID:-$(id -u)}" -eq 0 ]] || die 'Bitte das heruntergeladene Setup mit sudo bash ausfuehren.'
 
 packages=()
 command -v curl >/dev/null 2>&1 || packages+=(ca-certificates curl)

@@ -2,6 +2,18 @@
 
 Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versioniert.
 
+## v0.4.4-alpha - 31.08.2026
+
+- Offizielles Repository auf die Starlight-Unit-Studio-Organisation umgestellt. Installer, README, Metadaten und Releasepfade verwenden nun `Starlight-Unit-Studio/coreui`.
+- TTY-Abbruch der Blitzinstallation nach dem erfolgreichen Image-Build behoben.
+- Die beiden temporaeren `docker compose run`-Aufrufe fuer PHP-Lint und Account-Bootstrap verwenden nun explizit `-T`.
+- Bestehende und nicht-interaktive Installationen koennen dadurch ohne Pseudo-TTY weiterlaufen.
+- Schnellinstallation in der README in einen getrennten Download- und Ausfuehrungsschritt aufgeteilt. Die eigentliche Installation laeuft damit direkt am echten Terminal.
+- Irrefuehrende Root-Fehlermeldung in `setup.sh` korrigiert. Sie verweist nicht mehr auf den alten Pipe-Aufruf.
+- Releasepaar, Paketwurzel und Pflichtdateien werden weiterhin vor jeder Aenderung an `/opt/ember-coreui` geprueft.
+- Alle Upload-, RAG-Lite-, Python-, Datenschutz- und Installerkorrekturen aus `0.4.3-alpha` bleiben unveraendert enthalten.
+- Game, Homepage, Repack, KeyHelp, Apache, Host-PHP und Game-Datenbank bleiben unangetastet.
+
 ## v0.4.3-alpha - 30.08.2026
 
 - Blitzinstallationsbefehl wieder direkt am Anfang der README aufgenommen.
