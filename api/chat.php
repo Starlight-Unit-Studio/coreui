@@ -445,6 +445,11 @@ function ember_debug_log(string $type, array $meta = []): void {
   stu__log_error(array_merge(['type' => $type], $meta));
 }
 
+function ember_max_reply_chars_for_values(int $configured, int $numPredict): int {
+  $budgetChars = $numPredict > 0 ? $numPredict * 8 : 60000;
+  return min(60000, max(24000, $configured, $budgetChars));
+}
+
 function ember_max_reply_chars(): int {
   // Bestehende 0.2.x-Installationen behalten config.local.php beim Update. Dort
   // kann deshalb noch der fruehere 7200-Zeichen-Wert stehen. Dieser Altwert darf
@@ -454,8 +459,7 @@ function ember_max_reply_chars(): int {
   $numPredict = array_key_exists('num_predict', $runtime)
     ? (int)$runtime['num_predict']
     : (int)ember_cfg('STU_EMBER_NUM_PREDICT', 6500);
-  $budgetChars = $numPredict > 0 ? $numPredict * 8 : 60000;
-  return min(60000, max(24000, $configured, $budgetChars));
+  return ember_max_reply_chars_for_values($configured, $numPredict);
 }
 
 function ember_keep_alive() {

@@ -65,12 +65,28 @@ function attachment_test_docx(string $path, string $token): void {
   $zip->close();
 }
 
+function attachment_test_encoding_cases(): void {
+  $token = 'TXT-CODIERUNG: Grüße für Köln';
+  $cases = [
+    'utf8-bom' => "\xEF\xBB\xBF" . $token,
+    'utf16le-bom' => "\xFF\xFE" . mb_convert_encoding($token, 'UTF-16LE', 'UTF-8'),
+    'utf16be-bom' => "\xFE\xFF" . mb_convert_encoding($token, 'UTF-16BE', 'UTF-8'),
+    'utf16le-ohne-bom' => mb_convert_encoding($token, 'UTF-16LE', 'UTF-8'),
+    'windows-1252' => mb_convert_encoding($token, 'Windows-1252', 'UTF-8'),
+  ];
+  foreach ($cases as $name => $bytes) {
+    $decoded = ember_attach_clean_text($bytes, 4000);
+    attachment_test_assert(str_contains($decoded, $token), 'TXT-Codierung wurde nicht erkannt: ' . $name);
+  }
+}
+
 $pdo = stu_pdo();
 $mediaDir = $projectRoot . '/var/console_media';
 $created = [];
 $exitCode = 0;
 
 try {
+  attachment_test_encoding_cases();
   attachment_test_assert(is_dir($mediaDir) && is_writable($mediaDir), 'var/console_media ist nicht beschreibbar.');
   attachment_test_assert(coreui_console_attachment_schema_ready($pdo), 'Migration 005 fuer Anhangzuordnungen fehlt.');
   attachment_test_assert(class_exists('ZipArchive'), 'PHP-Zip fuer DOCX fehlt.');
@@ -81,7 +97,7 @@ try {
   $suffix = bin2hex(random_bytes(8));
   $sessionId = 'cs_test_' . $suffix;
   $specs = [
-    ['txt', 'text/plain', 'ATTACHMENT_TXT_' . $suffix, null],
+    ['txt', 'text/plain', 'ATTACHMENT_TXT_' . $suffix . '_Grüße', 'windows-1252'],
     ['py', 'text/x-python', 'ATTACHMENT_PY_' . $suffix, null],
     ['docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'ATTACHMENT_DOCX_' . $suffix, 'docx'],
     ['pdf', 'application/pdf', 'ATTACHMENT_PDF_' . $suffix, 'pdf'],
@@ -99,6 +115,7 @@ try {
     $path = $mediaDir . '/' . $stored;
     if ($generator === 'docx') attachment_test_docx($path, $token);
     elseif ($generator === 'pdf') file_put_contents($path, attachment_test_text_pdf($token));
+    elseif ($generator === 'windows-1252') file_put_contents($path, mb_convert_encoding($token . "\nZeichensatztest\n", 'Windows-1252', 'UTF-8'));
     else file_put_contents($path, $token . "\nprint('pipeline')\n");
     attachment_test_assert(is_file($path) && filesize($path) > 0, 'Testdatei wurde nicht geschrieben: ' . $extension);
     $created[] = $path;
@@ -138,7 +155,7 @@ try {
   );
 
   $pdo->rollBack();
-  echo 'Attachment-Pipeline-Selftest OK: TXT, PDF, DOCX und Python erreichen Ember ohne @- oder Markerrest.' . "\n";
+  echo 'Attachment-Pipeline-Selftest OK: UTF-8/16/Windows-TXT, PDF, DOCX und Python erreichen Ember ohne @- oder Markerrest.' . "\n";
 } catch (Throwable $e) {
   if ($pdo->inTransaction()) $pdo->rollBack();
   fwrite(STDERR, 'Attachment-Pipeline-Selftest FEHLER: ' . $e->getMessage() . "\n");

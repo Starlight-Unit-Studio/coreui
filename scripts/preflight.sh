@@ -118,7 +118,10 @@ UI_FILES=(
   scripts/python-worker-selftest.php
   scripts/profile-knowledge-selftest.php
   scripts/account-security-selftest.php
+  scripts/frontend-regression-selftest.php
   scripts/branding-license-selftest.py
+  docs/changelogs-txt/CHANGELOG_0_4_5_ALPHA.txt
+  docs/UEBERGABEPROTOKOLL_0_4_5_ALPHA.txt
   docker/pyworker/Dockerfile
   docker/pyworker/entrypoint.sh
   images/starlight_unit_studios_logo_original.png
@@ -375,6 +378,15 @@ if (( ${#COMPOSE_CMD[@]} > 0 )); then
   else
     logo_selftest="${logo_selftest//$'\r'/}"
     fail "$logo_selftest"
+  fi
+
+  frontend_selftest=''
+  if frontend_selftest="$(compose exec -T -u 33:33 php php scripts/frontend-regression-selftest.php 2>&1)"; then
+    frontend_selftest="${frontend_selftest//$'\r'/}"
+    ok "$frontend_selftest"
+  else
+    frontend_selftest="${frontend_selftest//$'\r'/}"
+    fail "$frontend_selftest"
   fi
 
   if is_enabled "${COREUI_INSTALL_BROWSE:-0}"; then

@@ -1,0 +1,81 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+VERSION 0.4.5-ALPHA
+DATUM 31.08.2026
+
+======================================================================
+NAVIGATION
+======================================================================
+
+* Der Schalter CORE CHANNEL verwendet in den Einstellungen kein
+  history.back() mehr. Er oeffnet app.html als festes Ziel.
+* Der Rueckweg aus Admin Core ersetzt seinen Verlaufseintrag beim Wechsel zu
+  den Einstellungen.
+* Einstellungen, Admin Core und Core Channel bilden dadurch keine
+  Navigationsschleife mehr.
+
+======================================================================
+TXT-DATEIEN UND ANHAENGE
+======================================================================
+
+* Textbytes werden vor allen Unicode-Regulaerausdruecken normalisiert.
+* Unterstuetzt werden UTF-8 mit BOM, UTF-16 LE und BE mit oder ohne BOM,
+  UTF-32 mit BOM sowie Windows-1252.
+* ANSI-TXT-Dateien aus Windows, WPS oder mobilen Editoren behalten dadurch
+  Umlaute und erreichen den Modellprompt als UTF-8.
+* Auffaellige C0-Steuerzeichen verhindern, dass eine falsch benannte
+  Binaerdatei als Text an das Modell weitergereicht wird.
+* Der Anhang-Selftest verwendet eine echte Windows-1252-Datei mit deutschen
+  Umlauten und prueft weitere UTF-Varianten getrennt.
+
+======================================================================
+PROFILBILDER IM CHAT
+======================================================================
+
+* Benutzer- und CoreAI-Bilder werden im Chat als echte IMG-Elemente geladen.
+* Die Initialen bleiben sichtbar, bis das Bild erfolgreich geladen wurde.
+* Bei einem HTTP-, Datei- oder Decodierfehler entfernt der Client das defekte
+  Bild und zeigt wieder die eindeutigen Initialen.
+* Profil-API und Medienendpunkt verwenden dieselbe serverseitige Pruefung der
+  gespeicherten Datei.
+* Der Profil/RAG-Selftest erzeugt ein echtes Test-PNG und prueft URL,
+  Kontozuordnung und Lesbarkeit fuer den Medienendpunkt.
+
+======================================================================
+PREFLIGHT UND PHP-WARNUNG
+======================================================================
+
+* Der Reply-Selftest definiert keine Produktionskonstanten mehr vor dem Laden
+  der vorhandenen config.local.php.
+* Die Warnung zu einer bereits definierten Konstante wie
+  STU_EMBER_NUM_PREDICT entfaellt.
+* Die historische 7200-Zeichen-Konfiguration wird ueber eine getrennte reine
+  Budgetfunktion getestet.
+* Ein neuer Frontend-Regressions-Selftest kontrolliert Navigation,
+  Bildladezustand, Fehler-Fallback und gemeinsame Medienaufloesung.
+* Der neue Test wird von Compose- und Native-Preflight ausgefuehrt.
+
+======================================================================
+STUDIO-LOGO
+======================================================================
+
+* Das von Starlight Unit Studios freigegebene Original-PNG ersetzt die
+  fehlerhafte Variante mit schwarzen Konturen.
+* Ein neuer Assetname umgeht alte Browser-Caches.
+* Startseite, Login, Einstellungen und Admin Core verwenden dasselbe Original.
+* Der Logo-Selftest prueft zusaetzlich den exakten SHA-256-Fingerabdruck.
+* Die alte fehlerhafte Assetdatei ist nicht mehr im Release enthalten.
+
+======================================================================
+UPDATE UND DATENBESTAND
+======================================================================
+
+* Es gibt keine neue Datenbankmigration.
+* api/config.local.php, Datenbank, Konten, Sitzungen, Nachrichten, Uploads,
+  private RAG-Quellen und Profilbilder bleiben beim Update erhalten.
+* Setup, sichtbare Versionen, Cache-Buster, README, Kontoexport, Changelogs
+  und Branding-Test verwenden 0.4.5-alpha.
+* Ein neues Uebergabeprotokoll dokumentiert den vollstaendigen Release-Stand.
+* Game, Homepage, Repack, KeyHelp, Apache, Host-PHP und Game-Datenbank bleiben
+  unangetastet.
+
+ENDE CHANGELOG 0.4.5-ALPHA

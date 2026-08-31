@@ -13,20 +13,12 @@ if (!in_array($slot, ['user', 'assistant'], true)) {
   exit;
 }
 
-$st = $pdo->prepare(
-  'SELECT stored_name, mime_type, file_size FROM stu_coreui_profile_media WHERE user_id = ? AND slot = ? LIMIT 1'
-);
-$st->execute([$uid, $slot]);
-$row = $st->fetch(PDO::FETCH_ASSOC);
+$row = coreui_profile_media_record($pdo, $uid, $slot);
 if (!$row) {
   http_response_code(404);
   exit;
 }
-$path = coreui_profile_media_dir() . '/' . basename((string)$row['stored_name']);
-if (!is_file($path) || !is_readable($path)) {
-  http_response_code(404);
-  exit;
-}
+$path = (string)$row['path'];
 
 header('Content-Type: ' . ((string)$row['mime_type'] ?: 'image/png'));
 header('Content-Length: ' . (string)filesize($path));

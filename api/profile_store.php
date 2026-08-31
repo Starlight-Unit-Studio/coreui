@@ -50,11 +50,12 @@ function coreui_profile_load(PDO $pdo, int $uid): array {
 
   $avatars = ['user' => null, 'assistant' => null];
   if (coreui_profile_schema_ready($pdo)) {
-    $stMedia = $pdo->prepare('SELECT slot, uuid, created_at FROM stu_coreui_profile_media WHERE user_id = ?');
+    $stMedia = $pdo->prepare('SELECT slot, uuid, stored_name, mime_type, created_at FROM stu_coreui_profile_media WHERE user_id = ?');
     $stMedia->execute([$uid]);
     foreach ($stMedia->fetchAll(PDO::FETCH_ASSOC) ?: [] as $media) {
       $slot = (string)($media['slot'] ?? '');
       if (!array_key_exists($slot, $avatars)) continue;
+      if (coreui_profile_media_path((string)($media['stored_name'] ?? '')) === null) continue;
       // Die zufaellige Medien-ID ist ein genauer Cache-Buster, auch wenn zwei
       // Uploads innerhalb derselben DATETIME-Sekunde stattfinden.
       $version = (string)($media['uuid'] ?? '');
@@ -88,6 +89,28 @@ function coreui_profile_save(PDO $pdo, int $uid, string $displayName, string $as
 
 function coreui_profile_media_dir(): string {
   return dirname(__DIR__) . '/var/profile_media';
+}
+
+function coreui_profile_media_path(string $storedName): ?string {
+  $storedName = trim($storedName);
+  if ($storedName === '' || basename($storedName) !== $storedName) return null;
+  $path = coreui_profile_media_dir() . '/' . $storedName;
+  return is_file($path) && is_readable($path) ? $path : null;
+}
+
+function coreui_profile_media_record(PDO $pdo, int $uid, string $slot): ?array {
+  if ($uid <= 0 || !in_array($slot, ['user', 'assistant'], true)) return null;
+  $st = $pdo->prepare(
+    'SELECT uuid, stored_name, mime_type, file_size, width_px, height_px '
+    . 'FROM stu_coreui_profile_media WHERE user_id = ? AND slot = ? LIMIT 1'
+  );
+  $st->execute([$uid, $slot]);
+  $row = $st->fetch(PDO::FETCH_ASSOC);
+  if (!is_array($row)) return null;
+  $path = coreui_profile_media_path((string)($row['stored_name'] ?? ''));
+  if ($path === null) return null;
+  $row['path'] = $path;
+  return $row;
 }
 
 function coreui_profile_delete_avatar(PDO $pdo, int $uid, string $slot): bool {

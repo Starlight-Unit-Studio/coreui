@@ -3,7 +3,7 @@
 
 Ember CoreUI is an independent WebUI for a local E.M.B.E.R. core. Until its final inclusion in the STU Repack, it has its own versioning and its own release cycle.
 
-Current version: `0.4.4-alpha`
+Current version: `0.4.5-alpha`
 
 ## Quick installation
 
@@ -37,17 +37,20 @@ Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNIT
 
 ## Result of this release
 
-`0.4.4-alpha` is a focused installer and TTY hotfix for `0.4.3-alpha`.
+`0.4.5-alpha` is a focused frontend, attachment, profile-image, and regression release for `0.4.4-alpha`.
 
-- The quick installation is a single SSH command that executes the setup from a protected temporary file, while the account bootstrap remains connected to the real terminal through `/dev/tty`.
-- Both temporary `docker compose run` calls explicitly use `-T`, so existing and unattended installations no longer fail with `the input device is not a TTY`.
-- No predictable launcher file remains under `/tmp`; both the launcher and the setup working directory are removed automatically.
+- Leaving Settings now always opens the Core Channel directly. Returning from Admin Core no longer creates the browser-history loop that previously trapped users between Admin Core and Settings.
+- Chat profile images are rendered as real image elements with verified load and error states. Initials remain visible until the selected user or CoreAI image has loaded successfully.
+- Plain-text attachments are normalized before Unicode cleanup. UTF-8 with BOM, UTF-16 LE/BE, UTF-32 BOM files, BOM-less UTF-16 text, and Windows-1252 text with German characters are supported.
+- The reply pipeline no longer predefines production constants during its self-test, removing the misleading `already defined` PHP warnings from installed `config.local.php` files.
+- The exact approved Starlight Unit Studios logo replaces the outlined variant. A new asset name invalidates stale browser caches, and its SHA-256 fingerprint is enforced by the logo self-test.
+- A dedicated frontend regression self-test verifies deterministic navigation, actual image rendering, failure fallback, and the shared server-side profile-media resolver in both installation modes.
 
-All stability, privacy, upload, private RAG-Lite, and Python-runtime changes from `0.4.3-alpha` remain included:
+All installer, privacy, upload, private RAG-Lite, and Python-runtime changes from `0.4.4-alpha` remain included:
 
 - The quick installer has been rebuilt. It no longer points to `0.3.2-alpha`, verifies the exact package root and version, and never unpacks an extra directory level into `/opt/ember-coreui`.
 - Private console turns address Ember on the server. Attachment-only messages therefore no longer leave an artificial `@Ember` prefix or a single `@` in the model prompt.
-- The authenticated turn ID now restores all ordered message attachments before prompt construction. A real end-to-end preflight verifies TXT, Python, DOCX, and text-PDF contents from storage mapping through to the final model attachment block.
+- The authenticated turn ID now restores all ordered message attachments before prompt construction. A real end-to-end preflight verifies Windows-1252 TXT, UTF-8/16 decoding, Python, DOCX, and text-PDF contents from storage mapping through to the final model attachment block.
 - Up to ten files per message remain supported and are stored in stable order with the exact user and session.
 - Private RAG-Lite now uses the same shared extraction, normalization, chunking, query, and ranking engine as the operator RAG path, while keeping every source and chunk in user-scoped tables.
 - Private knowledge uploads additionally accept common source and data formats such as Python, CSV, JSON, XML, YAML, PHP, JavaScript, HTML, CSS, and SQL.
@@ -243,14 +246,14 @@ The same verified flow used by the quick installer can be run manually:
 
 ```bash
 cd /home/users/game/tmp
-BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.4.4-alpha'
+BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.4.5-alpha'
 
-curl -fL "$BASE/EMBER_COREUI_0_4_4_ALPHA.zip" -o EMBER_COREUI_0_4_4_ALPHA.zip
-curl -fL "$BASE/EMBER_COREUI_0_4_4_ALPHA.zip.sha256" -o EMBER_COREUI_0_4_4_ALPHA.zip.sha256
-sha256sum -c EMBER_COREUI_0_4_4_ALPHA.zip.sha256
-unzip -q EMBER_COREUI_0_4_4_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_4_5_ALPHA.zip" -o EMBER_COREUI_0_4_5_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_4_5_ALPHA.zip.sha256" -o EMBER_COREUI_0_4_5_ALPHA.zip.sha256
+sha256sum -c EMBER_COREUI_0_4_5_ALPHA.zip.sha256
+unzip -q EMBER_COREUI_0_4_5_ALPHA.zip
 
-sudo mv EMBER_COREUI_0_4_4_ALPHA /opt/ember-coreui
+sudo mv EMBER_COREUI_0_4_5_ALPHA /opt/ember-coreui
 cd /opt/ember-coreui
 sudo chmod 0750 setup.sh scripts/*.sh
 sudo ./scripts/install.sh
@@ -258,14 +261,14 @@ sudo ./scripts/install.sh
 
 The installer asks for the administrator email address, a password of at least 12 characters, and an optional display name through `COREUI_ADMIN_NAME`.
 
-## Update to 0.4.4-alpha
+## Update to 0.4.5-alpha
 
 The existing database, accounts, sessions, uploads, and protected credentials are preserved. The package is copied only over static project files and templates.
 
 ```bash
 cd /home/users/game/tmp
-sha256sum -c EMBER_COREUI_0_4_4_ALPHA.zip.sha256
-unzip -q -o EMBER_COREUI_0_4_4_ALPHA.zip
+sha256sum -c EMBER_COREUI_0_4_5_ALPHA.zip.sha256
+unzip -q -o EMBER_COREUI_0_4_5_ALPHA.zip
 
 sudo apt-get update
 sudo apt-get install -y rsync
@@ -276,7 +279,7 @@ sudo rsync -a \
   --exclude='uploads/' \
   --exclude='assets/chat_media/' \
   --exclude='assets/profile_photos/' \
-  EMBER_COREUI_0_4_4_ALPHA/ /opt/ember-coreui/
+  EMBER_COREUI_0_4_5_ALPHA/ /opt/ember-coreui/
 
 cd /opt/ember-coreui
 sudo ./scripts/stack.sh up -d --build --force-recreate php web browse pyworker
@@ -468,6 +471,7 @@ sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/profile-knowledge-selft
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/attachment-pipeline-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/python-worker-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/logo-alpha-selftest.php
+sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/frontend-regression-selftest.php
 sudo ./scripts/ollama-parallel-report.sh
 sudo grep -E 'ember_(video|pdf)_|ember_vision_payload' logs/stu_error.log | tail -n 30
 ```
@@ -649,10 +653,10 @@ Ember CoreUI versions are not equivalent to Repack versions. The mobile fix from
 
 Copyright: `© 2026 Patrick Schildgen, Starlight Unit Studios.`
 
-The studio logo is used from the provided original file. For the light Ember CoreUI interface, only the black background was made transparent; the motif, wording, proportions, and existing dark outlines remain unchanged. The licenses of the locally bundled fonts are documented separately under `assets/fonts/LICENSES.md`. The new license does not replace the still-pending legal review of a later final release.
+The studio logo is used byte-for-byte from the approved original PNG supplied by Starlight Unit Studios. Ember CoreUI does not redraw its contours or add a dark outline. The approved SHA-256 fingerprint is enforced by the release self-test. The licenses of the locally bundled fonts are documented separately under `assets/fonts/LICENSES.md`. The new license does not replace the still-pending legal review of a later final release.
 
 A complete German legal notice and a final privacy policy are deliberately not yet included as finished legal pages. Before the public final release, the actual operator information, serviceable address, representation details, contact channels, hosting data-processing arrangement, and desired privacy texts must be established. The package does not invent such information.
 
 ## Alpha status
 
-`0.4.4-alpha` fixes the interactive and non-interactive TTY paths of the verified installer. The checksum, attachment reconstruction, private RAG-Lite retrieval, Python queue execution, and private-manuscript removal from `0.4.3-alpha` remain included. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.
+`0.4.5-alpha` fixes Settings/Admin navigation, real chat-avatar rendering, common TXT encodings, the reply self-test warning, and the incorrect outlined logo asset. The verified installer, checksum, attachment reconstruction, private RAG-Lite retrieval, Python queue execution, and private-manuscript removal from the preceding releases remain included. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.

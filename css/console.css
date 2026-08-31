@@ -1,6 +1,6 @@
 /* ========================================================================== */
 /* Project STΛRLIɢHT: Ember CoreUI                                            */
-/* Stand: Ember CoreUI 0.4.4-alpha                                           */
+/* Stand: Ember CoreUI 0.4.5-alpha                                           */
 /* Helles, eigenständiges Ren- und Ayal'ren-Holo-Interface                   */
 /* ========================================================================== */
 
@@ -1611,8 +1611,24 @@ a:focus-visible {
 .msg-avatar::before,
 .msg-avatar::after {
   position: absolute;
+  z-index: 2;
   content: "";
   pointer-events: none;
+}
+
+.msg-avatar-image {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
+
+.msg-avatar.has-image .msg-avatar-image {
+  opacity: 1;
 }
 
 .msg-avatar::before {

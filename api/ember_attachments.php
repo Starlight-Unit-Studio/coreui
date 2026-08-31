@@ -45,15 +45,77 @@ function ember_attach_strip_marker(string $s): string {
   return trim((string)preg_replace('~\s{2,}~u', ' ', (string)$s));
 }
 
+function ember_attach_convert_encoding(string $bytes, string $sourceEncoding): string {
+  try {
+    $converted = mb_convert_encoding($bytes, 'UTF-8', $sourceEncoding);
+  } catch (Throwable $e) {
+    return '';
+  }
+  return mb_check_encoding($converted, 'UTF-8') ? $converted : '';
+}
+
+function ember_attach_normalize_encoding(string $bytes): string {
+  if ($bytes === '') return '';
+
+  // BOMs zuerst und UTF-32 vor UTF-16 pruefen, weil UTF-32LE ebenfalls mit
+  // FF FE beginnt. Notepad, WPS und mobile Editoren erzeugen diese Varianten.
+  if (str_starts_with($bytes, "\x00\x00\xFE\xFF")) {
+    return ember_attach_convert_encoding(substr($bytes, 4), 'UTF-32BE');
+  }
+  if (str_starts_with($bytes, "\xFF\xFE\x00\x00")) {
+    return ember_attach_convert_encoding(substr($bytes, 4), 'UTF-32LE');
+  }
+  if (str_starts_with($bytes, "\xFE\xFF")) {
+    return ember_attach_convert_encoding(substr($bytes, 2), 'UTF-16BE');
+  }
+  if (str_starts_with($bytes, "\xFF\xFE")) {
+    return ember_attach_convert_encoding(substr($bytes, 2), 'UTF-16LE');
+  }
+  if (str_starts_with($bytes, "\xEF\xBB\xBF")) {
+    $bytes = substr($bytes, 3);
+  }
+
+  // UTF-16 kommt gelegentlich ohne BOM. Bei lateinischem Text befinden sich
+  // die Nullbytes dann fast ausschliesslich auf einer Byteposition.
+  $sample = substr($bytes, 0, 8192);
+  $sampleLength = strlen($sample);
+  if ($sampleLength >= 8) {
+    $evenNulls = 0;
+    $oddNulls = 0;
+    for ($i = 0; $i < $sampleLength; $i++) {
+      if ($sample[$i] !== "\x00") continue;
+      if (($i % 2) === 0) $evenNulls++; else $oddNulls++;
+    }
+    $positions = max(1, (int)floor($sampleLength / 2));
+    if ($oddNulls >= 3 && $oddNulls > $evenNulls * 3 && ($oddNulls / $positions) >= 0.20) {
+      return ember_attach_convert_encoding($bytes, 'UTF-16LE');
+    }
+    if ($evenNulls >= 3 && $evenNulls > $oddNulls * 3 && ($evenNulls / $positions) >= 0.20) {
+      return ember_attach_convert_encoding($bytes, 'UTF-16BE');
+    }
+  }
+
+  // Unerwartete Steuerbytes sprechen fuer eine falsch benannte Binaerdatei.
+  // Windows-1252 selbst nutzt den Bereich 80-9F fuer druckbare Zeichen, daher
+  // werden nur echte C0-Steuerzeichen gezaehlt.
+  $controls = preg_match_all('~[\x00-\x08\x0B\x0C\x0E-\x1F]~', $bytes);
+  if (is_int($controls) && $controls > max(8, (int)floor(strlen($bytes) * 0.02))) return '';
+
+  if (mb_check_encoding($bytes, 'UTF-8')) return $bytes;
+
+  // Windows-1252 ist fuer westliche ANSI-TXT-Dateien die nuetzlichere
+  // Auffangcodierung und deckt ISO-8859-1-Inhalte ohne Datenverlust mit ab.
+  return ember_attach_convert_encoding($bytes, 'Windows-1252');
+}
+
 function ember_attach_clean_text(string $t, int $max): string {
+  $t = ember_attach_normalize_encoding($t);
+  if ($t === '') return '';
   $t = preg_replace('~\r\n?~', "\n", $t);
   $t = preg_replace('~[\x00-\x08\x0B\x0C\x0E-\x1F]~u', '', (string)$t);
   $t = preg_replace('~\n{3,}~', "\n\n", (string)$t);
   $t = preg_replace('~[ \t]{2,}~', ' ', (string)$t);
   $t = trim((string)$t);
-  if (!mb_check_encoding($t, 'UTF-8')) {
-    $t = mb_convert_encoding($t, 'UTF-8', 'UTF-8');
-  }
   if (mb_strlen($t, 'UTF-8') > $max) {
     // Kopf UND Fuss behalten: bei Dokumenten steht die Einordnung vorn,
     // das Fazit hinten. Reines Abschneiden verliert immer eines von beidem.
