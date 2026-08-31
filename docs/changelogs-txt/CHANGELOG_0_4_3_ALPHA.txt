@@ -7,7 +7,7 @@ AUSFUEHRLICHES CHANGELOG
 1. BLITZINSTALLATION UND PRUEFSUMME
 
 * Der Blitzinstallationsbefehl steht wieder direkt am Anfang der README:
-  curl -fsSL https://raw.githubusercontent.com/pschildgen87-code/coreui/main/setup.sh | sudo bash
+  curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh | sudo bash
 * setup.sh wurde vollstaendig neu aufgebaut und verweist nicht mehr auf den veralteten Stand 0.3.2-alpha.
 * ZIP und SHA-256-Datei werden gemeinsam in ein zufaelliges temporaeres Verzeichnis geladen.
 * Die Pruefsumme wird geprueft, bevor /opt/ember-coreui veraendert wird.
