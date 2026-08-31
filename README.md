@@ -10,11 +10,10 @@ Current version: `0.4.4-alpha`
 The installer downloads the archive and its SHA-256 file into a unique temporary directory, verifies both before changing `/opt/ember-coreui`, and preserves local configuration, database data, accounts, sessions, uploads, logs, chat media, and profile images during updates.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh -o /tmp/ember-coreui-setup.sh
-sudo bash /tmp/ember-coreui-setup.sh
+curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh | sudo bash
 ```
 
-A fresh interactive installation asks for the administrator email address and password at the real terminal. Download and execution are deliberately separate so that Docker Compose and the account bootstrap do not lose their TTY. For unattended first installation, provide `COREUI_ADMIN_EMAIL` and `COREUI_ADMIN_PASSWORD` as environment variables.
+A fresh interactive installation asks for the administrator email address and password at the real terminal. The setup explicitly connects the account bootstrap to `/dev/tty`, while non-interactive Docker Compose calls run without a TTY requirement. Its verified archive, checksum, and unpacked files use a unique temporary directory that is removed automatically. For unattended first installation, provide `COREUI_ADMIN_EMAIL` and `COREUI_ADMIN_PASSWORD` as environment variables.
 
 ## Independence and mandatory product name
 
@@ -40,9 +39,9 @@ Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNIT
 
 `0.4.4-alpha` is a focused installer and TTY hotfix for `0.4.3-alpha`.
 
-- The quick installation now downloads `setup.sh` first and runs it in a separate command with the real terminal attached.
+- The quick installation is a single SSH command, while the account bootstrap remains connected to the real terminal through `/dev/tty`.
 - Both temporary `docker compose run` calls explicitly use `-T`, so existing and unattended installations no longer fail with `the input device is not a TTY`.
-- A pasted download command can no longer accidentally join the output filename and `bash` invocation when the documented two-line form is used.
+- No predictable launcher file remains under `/tmp`; the setup removes its uniquely named temporary working directory automatically.
 
 All stability, privacy, upload, private RAG-Lite, and Python-runtime changes from `0.4.3-alpha` remain included:
 
