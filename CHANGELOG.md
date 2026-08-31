@@ -2,6 +2,27 @@
 
 Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versioniert.
 
+## v0.4.5-alpha - 31.08.2026
+
+- Navigationsschleife zwischen Einstellungen und Admin Core behoben. `CORE CHANNEL` verwendet kein `history.back()` mehr, sondern oeffnet die App deterministisch.
+- Rueckweg aus Admin Core ersetzt den Admin-Verlaufseintrag. Die Abfolge Core Channel, Einstellungen, Admin Core, Einstellungen und Core Channel bleibt dadurch bedienbar.
+- TXT-Decodierung vor die Unicode-Bereinigung verschoben. Ungueltig decodierte Bytes koennen den Inhalt nicht mehr vorzeitig in einen leeren String verwandeln.
+- UTF-8 mit BOM, UTF-16 LE/BE mit und ohne BOM, UTF-32 mit BOM sowie Windows-1252 als reale TXT-Varianten ergaenzt.
+- Binaerpruefung fuer falsch benannte Textdateien eingebaut. Auffaellige C0-Steuerzeichen werden nicht als vermeintlicher Text an das Modell weitergereicht.
+- Anhang-Pipeline-Selftest um deutsche Umlaute, Windows-1252 und mehrere UTF-Codierungen erweitert.
+- Chat-Profilbilder von einem nicht ueberpruefbaren CSS-Hintergrund auf echte `<img>`-Elemente mit Lade- und Fehlerbehandlung umgestellt.
+- Initialen bleiben sichtbar, bis das Benutzer- oder CoreAI-Bild erfolgreich geladen wurde. Fehlende oder unlesbare Dateien erzeugen wieder einen eindeutigen Fallback.
+- Profil-API und Medienendpunkt verwenden nun dieselbe serverseitige Dateiaufloesung. Nicht vorhandene Datenbankdateien werden nicht mehr als gueltige Avatar-URL ausgegeben.
+- Profil/RAG-Selftest erzeugt ein echtes PNG, prueft dessen kontogebundene URL und die lesbare Datei fuer den Medienendpunkt.
+- Reply-Pipeline-Selftest definiert vor dem Laden der Installation keine Produktionskonstanten mehr. Die PHP-Warnung zu bereits definiertem `STU_EMBER_NUM_PREDICT` und verwandten Werten entfaellt.
+- Reine Budgetpruefung als eigene Funktion aus dem Laufzeitpfad getrennt, damit historische 7200-Zeichen-Konfigurationen ohne Eingriff in `config.local.php` getestet werden koennen.
+- Neuer Frontend-Regressions-Selftest fuer Navigation, Bildladezustand, Avatar-Fallback und gemeinsame Medienaufloesung in Compose und Native ergaenzt.
+- Freigegebenes Original-Logo unter neuem Assetnamen eingebunden. Start, Login, Einstellungen und Admin Core verwenden dieselbe Datei ohne die fehlerhaften schwarzen Konturen.
+- Logo-Selftest an den exakten SHA-256-Fingerabdruck des freigegebenen Originals gebunden. Die alte fehlerhafte Assetdatei wurde entfernt.
+- Version, Cache-Buster, Setup, Kontoexport, README, Changelog-Archiv und Branding-Test auf `0.4.5-alpha` aktualisiert.
+- Neues Uebergabeprotokoll dokumentiert Quellstand, Tests, Installationspfade, bekannte Grenzen und die geplanten Funktionsstufen ab `0.5.x`.
+- Keine neue Datenbankmigration. Konten, Sitzungen, Nachrichten, Uploads, private RAG-Quellen, Profilbilder und lokale Konfiguration bleiben beim Update erhalten.
+
 ## v0.4.4-alpha - 31.08.2026
 
 - Offizielles Repository auf die Starlight-Unit-Studio-Organisation umgestellt. Installer, README, Metadaten und Releasepfade verwenden nun `Starlight-Unit-Studio/coreui`.

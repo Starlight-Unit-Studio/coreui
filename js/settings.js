@@ -785,7 +785,7 @@
   }
   if (backButton) {
     backButton.addEventListener('click', function () {
-      history.length > 1 ? history.back() : location.href = 'app.html';
+      location.replace('app.html');
     });
   }
 

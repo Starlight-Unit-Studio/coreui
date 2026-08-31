@@ -8,6 +8,7 @@
   var runtimeState = {};
   var flash = document.getElementById('adminFlash');
   var identity = document.getElementById('adminIdentity');
+  var backButton = document.getElementById('adminBack');
 
   function show(message, error) {
     if (!flash) return;
@@ -348,6 +349,12 @@
   }
 
   function bind() {
+    if (backButton) {
+      backButton.addEventListener('click', function (event) {
+        event.preventDefault();
+        location.replace('../settings.html');
+      });
+    }
     document.querySelectorAll('[data-panel]').forEach(function (button) {
       button.addEventListener('click', function () { switchPanel(button.getAttribute('data-panel')); });
     });

@@ -587,8 +587,23 @@
     var isUser = role === 'user';
     var url = isUser ? state.userAvatarUrl : state.assistantAvatarUrl;
     element.textContent = profileInitials(name, isUser ? 'DU' : 'EM');
-    element.classList.toggle('has-image', !!url);
-    element.style.backgroundImage = url ? ('url("' + String(url).replace(/"/g, '%22') + '")') : '';
+    element.classList.remove('has-image');
+    if (!url) return;
+
+    var image = document.createElement('img');
+    image.className = 'msg-avatar-image';
+    image.alt = '';
+    image.decoding = 'async';
+    image.loading = 'eager';
+    image.addEventListener('load', function () {
+      if (image.parentNode === element) element.classList.add('has-image');
+    });
+    image.addEventListener('error', function () {
+      if (image.parentNode === element) element.removeChild(image);
+      element.classList.remove('has-image');
+    });
+    element.appendChild(image);
+    image.src = String(url);
   }
 
   // ── DOM: Nachricht einfügen ──────────────────────────────

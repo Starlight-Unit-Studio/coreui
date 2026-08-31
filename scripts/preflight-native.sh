@@ -84,7 +84,10 @@ UI_FILES=(
   scripts/python-worker-selftest.php
   scripts/profile-knowledge-selftest.php
   scripts/account-security-selftest.php
+  scripts/frontend-regression-selftest.php
   scripts/branding-license-selftest.py
+  docs/changelogs-txt/CHANGELOG_0_4_5_ALPHA.txt
+  docs/UEBERGABEPROTOKOLL_0_4_5_ALPHA.txt
   images/starlight_unit_studios_logo_original.png
 )
 for ui_file in "${UI_FILES[@]}"; do
@@ -235,6 +238,15 @@ if command -v php >/dev/null 2>&1; then
   else
     logo_selftest="${logo_selftest//$'\r'/}"
     fail "$logo_selftest"
+  fi
+
+  frontend_selftest=''
+  if frontend_selftest="$(runuser -u www-data -- php "$PROJECT_ROOT/scripts/frontend-regression-selftest.php" 2>&1)"; then
+    frontend_selftest="${frontend_selftest//$'\r'/}"
+    ok "$frontend_selftest"
+  else
+    frontend_selftest="${frontend_selftest//$'\r'/}"
+    fail "$frontend_selftest"
   fi
 
   if [[ -f "$CONFIG_FILE" ]]; then

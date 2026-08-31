@@ -1,0 +1,280 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+UEBERGABEPROTOKOLL 0.4.5-ALPHA
+STAND 31.08.2026
+
+======================================================================
+1. VERBINDLICHER QUELLSTAND
+======================================================================
+
+Repository:
+https://github.com/Starlight-Unit-Studio/coreui
+
+Release-Branch:
+release/0.4.5-alpha
+
+Ziel-Branch:
+main
+
+Produktversion:
+0.4.5-alpha
+
+Paketwurzel:
+EMBER_COREUI_0_4_5_ALPHA
+
+Releasepaar:
+EMBER_COREUI_0_4_5_ALPHA.zip
+EMBER_COREUI_0_4_5_ALPHA.zip.sha256
+
+Produktive Adresse:
+https://coreui.starlight-unit.de
+
+Das Produkt heisst immer Ember CoreUI. Technische Kennungen wie coreui,
+ember-coreui und COREUI_* bleiben reine Kompatibilitaetsnamen.
+
+======================================================================
+2. RELEASEZIEL 0.4.5-ALPHA
+======================================================================
+
+0.4.5-alpha ist ein Stabilitaetsrelease ohne neue Datenbankmigration.
+Behoben werden vier vom produktiven Einsatz bestaetigte Fehler:
+
+1. Navigationsschleife zwischen Einstellungen und Admin Core.
+2. Leere oder unlesbare normale TXT-Anhaenge aus Windows, WPS und mobilen
+   Editoren.
+3. Falsche oder undefinierte Darstellung des eigenen Profilbilds im Chat.
+4. PHP-Warnungen des Reply-Selftests wegen vorab definierter Konstanten.
+
+Zusaetzlich wurde das freigegebene Studio-Original-Logo wiederhergestellt und
+gegen unbeabsichtigte Bearbeitung abgesichert.
+
+======================================================================
+3. NAVIGATION
+======================================================================
+
+Betroffene Dateien:
+
+* js/settings.js
+* admin/index.html
+* js/admin.js
+* scripts/frontend-regression-selftest.php
+
+Der Schalter CORE CHANNEL verwendet location.replace('app.html'). Er ist nicht
+mehr vom aktuellen Browser-Verlauf abhaengig. Der Admin-Rueckweg verwendet
+location.replace('../settings.html') und verhindert einen zusaetzlichen
+problematischen Admin-Verlaufseintrag.
+
+Der erwartete Ablauf lautet:
+
+Core Channel -> Einstellungen -> Admin Core -> Einstellungen -> Core Channel
+
+Jeder sichtbare Rueckschalter besitzt damit ein festes Ziel.
+
+======================================================================
+4. TXT-ANHAENGE
+======================================================================
+
+Betroffene Dateien:
+
+* api/ember_attachments.php
+* scripts/attachment-pipeline-selftest.php
+
+ember_attach_normalize_encoding() laeuft vor Unicode-Regulaerausdruecken.
+Unterstuetzt werden:
+
+* UTF-8 ohne BOM
+* UTF-8 mit BOM
+* UTF-16LE und UTF-16BE mit BOM
+* UTF-16LE und UTF-16BE ohne BOM bei erkennbarem Nullbyte-Muster
+* UTF-32LE und UTF-32BE mit BOM
+* Windows-1252 als Auffangcodierung fuer westliche ANSI-Dateien
+
+Falsch benannte Binaerdateien werden anhand auffaelliger C0-Steuerzeichen
+abgelehnt. Der vorhandene Schutz gegen Prompt-Anweisungen innerhalb von
+Anhaengen bleibt unveraendert.
+
+Der Pipeline-Selftest prueft deutsche Umlaute in Windows-1252 sowie separate
+UTF-8- und UTF-16-Varianten. TXT, Python, DOCX und Text-PDF muessen weiterhin
+ueber die persistente Turn-Zuordnung den Modellprompt erreichen.
+
+======================================================================
+5. PROFILBILDER
+======================================================================
+
+Betroffene Dateien:
+
+* js/console-app.js
+* css/console.css
+* api/profile_store.php
+* api/profile_media.php
+* scripts/profile-knowledge-selftest.php
+* scripts/frontend-regression-selftest.php
+
+Chat-Avatare werden als echte IMG-Elemente erzeugt. Die CSS-Klasse has-image
+wird erst nach einem erfolgreichen load-Ereignis gesetzt. Bei error wird das
+Bild entfernt und die Initialen bleiben sichtbar.
+
+coreui_profile_media_record() ist die gemeinsame serverseitige Aufloesung fuer
+Profil-API und Auslieferungsendpunkt. Eine Datenbankzeile mit fehlender oder
+nicht lesbarer Datei erzeugt keine Avatar-URL mehr.
+
+Der Profil/RAG-Selftest erzeugt innerhalb der Testtransaktion ein echtes PNG,
+prueft die kontogebundene URL und die lesbare Datei und entfernt das Testbild
+anschliessend wieder.
+
+======================================================================
+6. PHP-WARNUNG
+======================================================================
+
+Betroffene Dateien:
+
+* api/chat.php
+* scripts/reply-pipeline-selftest.php
+
+Der Reply-Selftest definiert STU_EMBER_MAX_REPLY_CHARS und
+STU_EMBER_NUM_PREDICT nicht mehr vor dem Laden von config.local.php.
+
+ember_max_reply_chars_for_values() kapselt die reine Budgetberechnung. Der
+historische 7200-Zeichen-Fall kann dadurch ohne Veraenderung oder Doppeldefinition
+produktiver Konstanten geprueft werden.
+
+======================================================================
+7. STUDIO-LOGO
+======================================================================
+
+Freigegebenes Asset:
+images/starlight_unit_studios_logo_original.png
+
+SHA-256:
+3463758e8e2265315267fa2c45ea5f377b03df37beee9df878331873a4971274
+
+Abmessungen:
+1120 x 589 Pixel, RGBA-PNG
+
+Verwendung:
+
+* index.html
+* login.html
+* settings.html
+* admin/index.html
+
+Die alte Variante mit schwarzen Konturen ist entfernt. Der neue Dateiname
+umgeht vorhandene Browser-Caches. scripts/logo-alpha-selftest.php prueft den
+exakten Fingerabdruck und die Randtransparenz.
+
+======================================================================
+8. INSTALLATION UND UPDATE
+======================================================================
+
+Empfohlener SSH-Einzeiler:
+
+( setup_file="$(mktemp)" && trap 'rm -f -- "$setup_file"' EXIT && curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh -o "$setup_file" && sudo bash "$setup_file" )
+
+Der Setup-Launcher laedt ZIP und SHA-Datei aus:
+
+releases/v0.4.5-alpha/
+
+Bei einem Update bleiben insbesondere erhalten:
+
+* api/config.local.php
+* var/compose.env
+* MariaDB-Daten
+* Konten und Login-Sitzungen
+* Chat-Sitzungen und Nachrichten
+* Uploads und private RAG-Quellen
+* Benutzer- und CoreAI-Profilbilder
+* Logs und Browsermedien
+
+Vollstaendig entpackte historische Unterordner direkt unter
+/opt/ember-coreui werden nur entfernt, wenn Name, VERSION und Installerstruktur
+eindeutig als alte Ember-CoreUI-Version erkannt wurden.
+
+======================================================================
+9. TESTMATRIX
+======================================================================
+
+Lokal ohne PHP-Laufzeit geprueft:
+
+* node --check js/console-app.js
+* node --check js/settings.js
+* node --check js/admin.js
+* bash -n setup.sh
+* bash -n scripts/install.sh
+* bash -n scripts/install-native.sh
+* bash -n scripts/preflight.sh
+* bash -n scripts/preflight-native.sh
+* python3 scripts/branding-license-selftest.py
+* verbotene private Manuskriptdateien
+* verbotene Unicode-Langstriche in Textdateien
+* Versions- und Releasepfade
+* exakter SHA-256-Fingerabdruck des Studio-Logos
+
+Im installierten Compose- oder Native-System zwingend durch Preflight:
+
+* PHP-Syntax aller PHP-Dateien
+* Reply-Pipeline-Selftest
+* Attachment-Pipeline-Selftest
+* Profil/RAG-Selftest
+* Frontend-Regressions-Selftest
+* Session-, Thinking-, Konto-, PDF-, Video- und Python-Worker-Selftests
+* Datenbankmigrationen 001 bis 007
+* private Endpunktrouten und Healthcheck
+
+Die lokale Arbeitsumgebung fuer die Quellpruefung besitzt kein PHP. Deshalb
+werden die PHP- und Datenbanktests innerhalb des ausgelieferten PHP-Containers
+erneut ausgefuehrt.
+
+======================================================================
+10. DATENSCHUTZ UND ISOLATION
+======================================================================
+
+Keine private Starlight Unit Bibel und kein privates Kompendium duerfen im
+Quellbaum, ZIP, Setup oder automatischen RAG-Import enthalten sein.
+
+Migration 007 entfernt nur die zwei historischen versehentlichen globalen
+Quellen bibel_v10_4 und kompendium_v6. Private Benutzerquellen bleiben strikt
+an user_id gebunden.
+
+Game, Global Chat, Homepage, Repack, KeyHelp, Apache, Host-PHP, Host-Webserver,
+bestehende STU-Datenbank und fremde Anwendungen werden nicht veraendert.
+
+======================================================================
+11. BEKANNTE GRENZEN UND NAECHSTE FUNKTIONSSTUFEN
+======================================================================
+
+0.4.5-alpha erweitert bewusst keine Modellwerkzeuge und keine Audiofunktion.
+Der naechste geplante Funktionsblock ab 0.5.x umfasst insbesondere:
+
+* Werkzeugleiste unter jeder Agentenantwort
+* Kopieren, erneutes Generieren und Feedback
+* kontrollierte Quellen-, Datei- und Tool-Aktionen
+* erweiterbares Werkzeugmenue am Eingabefeld
+
+Der geplante Audiofunktionsblock ab 0.6.x umfasst insbesondere:
+
+* Spracheingabe und Aufnahmezustand
+* serverseitig kontrollierte Audiouebergabe an kompatible Modelle
+* Transkription und Audioanhaenge
+* separate Sprachausgabe fuer gesprochene Antworten
+* klare Trennung von Modell-Audioverstehen und TTS-Ausgabe
+
+Audio wird erst freigegeben, wenn Modelltransport, Laufzeitgrenzen,
+Berechtigungen, Speicherung, Loeschung und sichtbarer Fallback gemeinsam
+getestet sind.
+
+======================================================================
+12. FORTSETZUNG IN EINEM NEUEN CHAT
+======================================================================
+
+Ein neuer Arbeitschat soll zuerst dieses Protokoll, VERSION, CHANGELOG.md,
+README.md und den offenen Release-Branch lesen. Historische Annahmen duerfen
+den hier dokumentierten Stand nicht ueberschreiben.
+
+Vor jeder weiteren Versionsstufe:
+
+1. Aktuellen main und Release-Branch vergleichen.
+2. Preflight-Ausgabe des realen Servers auswerten.
+3. Keine Zugangsdaten oder private Manuskripte in Git oder Release aufnehmen.
+4. Version nur nach bestandenem Paket- und SHA-Test freigeben.
+5. Nach jeder Version ein neues vollstaendiges Uebergabeprotokoll erstellen.
+
+ENDE UEBERGABEPROTOKOLL 0.4.5-ALPHA

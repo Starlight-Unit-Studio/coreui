@@ -6,10 +6,6 @@ if (PHP_SAPI !== 'cli') {
   exit(1);
 }
 
-// Simuliert eine erhaltene 0.2.x-Konfiguration. Der fruehere 7200er-Wert darf
-// das aktuelle Benutzerbudget nicht mehr abschneiden.
-if (!defined('STU_EMBER_MAX_REPLY_CHARS')) define('STU_EMBER_MAX_REPLY_CHARS', 7200);
-if (!defined('STU_EMBER_NUM_PREDICT')) define('STU_EMBER_NUM_PREDICT', 6500);
 define('STU_CHAT_LIB', 1);
 require dirname(__DIR__) . '/api/chat.php';
 
@@ -39,7 +35,10 @@ if (ember_num_predict() !== 6500 || ember_num_predict_for_model('ember-coreui:la
   reply_test_fail('Das Benutzerbudget wird nicht unveraendert an Ollama weitergegeben.');
 }
 
-if (ember_max_reply_chars() < 52000) {
+// Simuliert eine erhaltene 0.2.x-Konfiguration, ohne vor dem Laden der echten
+// config.local.php Konstanten zu definieren. Dadurch bleibt der Test frei von
+// "already defined"-Warnungen auf aktualisierten Installationen.
+if (ember_max_reply_chars_for_values(7200, 6500) < 52000) {
   reply_test_fail('Eine erhaltene 7200er-Konfiguration kann Antworten weiterhin kuerzen.');
 }
 

@@ -45,6 +45,7 @@ $emailA = 'selftest-a-' . $suffix . '@coreui.invalid';
 $emailB = 'selftest-b-' . $suffix . '@coreui.invalid';
 $uuidA = bin2hex(random_bytes(16));
 $uuidB = bin2hex(random_bytes(16));
+$avatarPath = null;
 
 $pdo->beginTransaction();
 try {
@@ -58,6 +59,36 @@ try {
   $profile = coreui_profile_save($pdo, $uidA, 'Alpha Sichtbar', 'Nova Core');
   coreui_pk_assert(($profile['display_name'] ?? '') === 'Alpha Sichtbar', 'Benutzername wurde nicht gespeichert.');
   coreui_pk_assert(($profile['assistant_name'] ?? '') === 'Nova Core', 'CoreAI-Name wurde nicht gespeichert.');
+
+  $avatarUuid = bin2hex(random_bytes(16));
+  $avatarStoredName = $avatarUuid . '.png';
+  $avatarPath = coreui_profile_media_dir() . '/' . $avatarStoredName;
+  $avatar = imagecreatetruecolor(48, 48);
+  coreui_pk_assert($avatar !== false, 'Avatar-Testbild konnte nicht erzeugt werden.');
+  $avatarColor = imagecolorallocate($avatar, 91, 146, 255);
+  imagefill($avatar, 0, 0, $avatarColor);
+  $avatarWritten = imagepng($avatar, $avatarPath, 6);
+  imagedestroy($avatar);
+  coreui_pk_assert($avatarWritten && is_file($avatarPath), 'Avatar-Testbild konnte nicht gespeichert werden.');
+  $pdo->prepare(
+    'INSERT INTO stu_coreui_profile_media '
+    . '(uuid,user_id,slot,original_name,stored_name,mime_type,file_size,width_px,height_px,created_at) '
+    . 'VALUES (?,?,?,?,?,?,?,?,?,NOW())'
+  )->execute([
+    $avatarUuid, $uidA, 'user', 'selftest.png', $avatarStoredName, 'image/png',
+    (int)filesize($avatarPath), 48, 48,
+  ]);
+  $profileWithAvatar = coreui_profile_load($pdo, $uidA);
+  $avatarUrl = (string)($profileWithAvatar['avatars']['user'] ?? '');
+  coreui_pk_assert(
+    str_contains($avatarUrl, 'api/profile_media.php?slot=user') && str_contains($avatarUrl, $avatarUuid),
+    'Profil-API liefert keinen eindeutigen Benutzerbild-Endpunkt.'
+  );
+  $avatarRecord = coreui_profile_media_record($pdo, $uidA, 'user');
+  coreui_pk_assert(
+    is_array($avatarRecord) && ($avatarRecord['path'] ?? '') === $avatarPath,
+    'Gespeichertes Benutzerbild ist fuer den Auslieferungsendpunkt nicht lesbar.'
+  );
 
   $stSource = $pdo->prepare(
     "INSERT INTO stu_user_knowledge_sources
@@ -80,10 +111,12 @@ try {
   coreui_pk_assert(count($genericRows) === 1, 'Die zuletzt hochgeladene eigene Quelle wird bei einer generischen Dokumentfrage nicht gefunden.');
 
   $pdo->rollBack();
+  if (is_string($avatarPath)) @unlink($avatarPath);
 } catch (Throwable $e) {
   if ($pdo->inTransaction()) $pdo->rollBack();
+  if (is_string($avatarPath)) @unlink($avatarPath);
   fwrite(STDERR, 'Profil/RAG-Selftest fehlgeschlagen: ' . $e->getMessage() . "\n");
   exit(2);
 }
 
-echo 'Profil/RAG-Selftest erfolgreich: Accounts, Profile, Chunker und Nutzerisolation geprueft.' . "\n";
+echo 'Profil/RAG-Selftest erfolgreich: Accounts, Profile, Avatar-Auslieferung, Chunker und Nutzerisolation geprueft.' . "\n";
