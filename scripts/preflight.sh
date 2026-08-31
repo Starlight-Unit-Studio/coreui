@@ -132,9 +132,19 @@ if (( FAILURES == 0 )); then
   ok 'Ember-CoreUI-Branding, Lizenzunterlagen, KI-Einstellungen und Admin Core sind paketiert.'
 fi
 
-if find "$PROJECT_ROOT" -type f \
-    \( -iname '*master*bibel*' -o -iname '*kompendium*v6*' \) -print -quit | grep -q .; then
-  fail 'Privates Bibel- oder Kompendium-Material ist noch im Release enthalten.'
+PRIVATE_RELEASE_FILES=()
+mapfile -d '' -n 1 PRIVATE_RELEASE_FILES < <(
+  find -P "$PROJECT_ROOT" \
+    \( -path "$PROJECT_ROOT/var" \
+       -o -path "$PROJECT_ROOT/logs" \
+       -o -path "$PROJECT_ROOT/uploads" \
+       -o -path "$PROJECT_ROOT/assets/chat_media" \
+       -o -path "$PROJECT_ROOT/assets/profile_photos" \) -prune \
+    -o -type f \( -iname '*master*bibel*' -o -iname '*kompendium*v6*' \) -print0
+)
+if (( ${#PRIVATE_RELEASE_FILES[@]} > 0 )); then
+  private_release_file="${PRIVATE_RELEASE_FILES[0]#"$PROJECT_ROOT"/}"
+  fail "Privates Bibel- oder Kompendium-Material ist noch im Release enthalten: $private_release_file"
 else
   ok 'Das Release enthaelt kein privates Bibel- oder Kompendium-Dokument.'
 fi
