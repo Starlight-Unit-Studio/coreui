@@ -24,7 +24,9 @@ try {
   $settings = frontend_test_read($root . '/js/settings.js');
   $admin = frontend_test_read($root . '/js/admin.js');
   $adminHtml = frontend_test_read($root . '/admin/index.html');
+  $appHtml = frontend_test_read($root . '/app.html');
   $console = frontend_test_read($root . '/js/console-app.js');
+  $markdown = frontend_test_read($root . '/js/coreui-markdown.js');
   $css = frontend_test_read($root . '/css/console.css');
   $profileStore = frontend_test_read($root . '/api/profile_store.php');
   $profileMedia = frontend_test_read($root . '/api/profile_media.php');
@@ -55,8 +57,21 @@ try {
       && str_contains($profileMedia, 'coreui_profile_media_record($pdo, $uid, $slot)'),
     'Profil-API und Medienendpunkt verwenden nicht dieselbe Dateipruefung.'
   );
+  $markdownScriptPos = strpos($appHtml, 'js/coreui-markdown.js');
+  $consoleScriptPos = strpos($appHtml, 'js/console-app.js');
+  frontend_test_assert(
+    $markdownScriptPos !== false && $consoleScriptPos !== false && $markdownScriptPos < $consoleScriptPos,
+    'Markdown-Renderer wird nicht vor dem Chatclient geladen.'
+  );
+  frontend_test_assert(!str_contains($markdown, '.innerHTML'), 'Markdown-Renderer verwendet innerHTML.');
+  frontend_test_assert(
+    str_contains($console, 'buildMessageActions(role, text, record || null)')
+      && str_contains($css, '.msg-actions')
+      && str_contains($css, '.md-codeblock'),
+    'Nachrichtenaktionen oder Codeblockdarstellung sind nicht vollstaendig verdrahtet.'
+  );
 
-  fwrite(STDOUT, "Frontend-Regressions-Selftest OK: Navigation und Chat-Avatare sind fehlersicher verdrahtet.\n");
+  fwrite(STDOUT, "Frontend-Regressions-Selftest OK: Navigation, Avatare, Markdown und Nachrichtenaktionen sind fehlersicher verdrahtet.\n");
 } catch (Throwable $e) {
   fwrite(STDERR, 'Frontend-Regressions-Selftest FEHLER: ' . $e->getMessage() . "\n");
   exit(2);

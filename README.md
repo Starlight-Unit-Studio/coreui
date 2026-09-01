@@ -3,7 +3,7 @@
 
 Ember CoreUI is an independent WebUI for a local E.M.B.E.R. core. Until its final inclusion in the STU Repack, it has its own versioning and its own release cycle.
 
-Current version: `0.4.5-alpha`
+Current version: `0.5.0-alpha`
 
 ## Quick installation
 
@@ -37,16 +37,23 @@ Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNIT
 
 ## Result of this release
 
-`0.4.5-alpha` is a focused frontend, attachment, profile-image, and regression release for `0.4.4-alpha`.
+`0.5.0-alpha` is the first message-comfort release after the verified `0.4.5-alpha` stability baseline.
 
-- Leaving Settings now always opens the Core Channel directly. Returning from Admin Core no longer creates the browser-history loop that previously trapped users between Admin Core and Settings.
-- Chat profile images are rendered as real image elements with verified load and error states. Initials remain visible until the selected user or CoreAI image has loaded successfully.
-- Plain-text attachments are normalized before Unicode cleanup. UTF-8 with BOM, UTF-16 LE/BE, UTF-32 BOM files, BOM-less UTF-16 text, and Windows-1252 text with German characters are supported.
-- The reply pipeline no longer predefines production constants during its self-test, removing the misleading `already defined` PHP warnings from installed `config.local.php` files.
-- The exact approved Starlight Unit Studios logo replaces the outlined variant. A new asset name invalidates stale browser caches, and its SHA-256 fingerprint is enforced by the logo self-test.
-- A dedicated frontend regression self-test verifies deterministic navigation, actual image rendering, failure fallback, and the shared server-side profile-media resolver in both installation modes.
+- Ember and user messages now use a local Markdown renderer for headings, emphasis, lists, blockquotes, links, tables, inline code, and fenced code blocks.
+- Raw HTML is always rendered as text. Clickable links are restricted to HTTP, HTTPS, and mail addresses. The renderer does not use `innerHTML`, `eval`, a remote CDN, or executable model output.
+- Fenced code blocks show a language label, local syntax coloring, horizontal scrolling, and their own copy control.
+- Every user message receives copy and edit-as-new-message actions. The stored original is never changed by the edit control.
+- Every Ember answer receives copy, positive feedback, negative feedback, alternative generation, continuation, and answer-detail controls.
+- Feedback is stored server-side and restricted to the authenticated user, exact private session, and exact Ember message.
+- Alternative answers keep the original response and use the same `reply_to_id`. The previous response is excluded from the regeneration context so the alternative does not merely repeat it.
+- Continuations are stored as separate Ember messages and remain linked to the original user turn.
+- Migration `008_message_actions` stores short-lived, account-bound generation requests. A fixed message-ID floor lets a reconnect recover only the answer created after that request, without repeating or losing the existing answer.
+- Concurrent answer actions in one session are serialized. Permanent session deletion is blocked while an alternative or continuation is still active.
+- Live SSE answers and loaded history now use the same Markdown and action rendering path.
+- Tool-based answer actions retain their exact private browser-job ID, so reconnects resume the same job and worker failures do not leave the session blocked.
+- The private account export includes feedback and generation history without exporting temporary request tokens.
 
-All installer, privacy, upload, private RAG-Lite, and Python-runtime changes from `0.4.4-alpha` remain included:
+All installer, privacy, upload, profile, navigation, private RAG-Lite, and Python-runtime changes from `0.4.5-alpha` remain included:
 
 - The quick installer has been rebuilt. It no longer points to `0.3.2-alpha`, verifies the exact package root and version, and never unpacks an extra directory level into `/opt/ember-coreui`.
 - Private console turns address Ember on the server. Attachment-only messages therefore no longer leave an artificial `@Ember` prefix or a single `@` in the model prompt.
@@ -246,14 +253,14 @@ The same verified flow used by the quick installer can be run manually:
 
 ```bash
 cd /home/users/game/tmp
-BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.4.5-alpha'
+BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.5.0-alpha'
 
-curl -fL "$BASE/EMBER_COREUI_0_4_5_ALPHA.zip" -o EMBER_COREUI_0_4_5_ALPHA.zip
-curl -fL "$BASE/EMBER_COREUI_0_4_5_ALPHA.zip.sha256" -o EMBER_COREUI_0_4_5_ALPHA.zip.sha256
-sha256sum -c EMBER_COREUI_0_4_5_ALPHA.zip.sha256
-unzip -q EMBER_COREUI_0_4_5_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_5_0_ALPHA.zip" -o EMBER_COREUI_0_5_0_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_5_0_ALPHA.zip.sha256" -o EMBER_COREUI_0_5_0_ALPHA.zip.sha256
+sha256sum -c EMBER_COREUI_0_5_0_ALPHA.zip.sha256
+unzip -q EMBER_COREUI_0_5_0_ALPHA.zip
 
-sudo mv EMBER_COREUI_0_4_5_ALPHA /opt/ember-coreui
+sudo mv EMBER_COREUI_0_5_0_ALPHA /opt/ember-coreui
 cd /opt/ember-coreui
 sudo chmod 0750 setup.sh scripts/*.sh
 sudo ./scripts/install.sh
@@ -261,14 +268,14 @@ sudo ./scripts/install.sh
 
 The installer asks for the administrator email address, a password of at least 12 characters, and an optional display name through `COREUI_ADMIN_NAME`.
 
-## Update to 0.4.5-alpha
+## Update to 0.5.0-alpha
 
 The existing database, accounts, sessions, uploads, and protected credentials are preserved. The package is copied only over static project files and templates.
 
 ```bash
 cd /home/users/game/tmp
-sha256sum -c EMBER_COREUI_0_4_5_ALPHA.zip.sha256
-unzip -q -o EMBER_COREUI_0_4_5_ALPHA.zip
+sha256sum -c EMBER_COREUI_0_5_0_ALPHA.zip.sha256
+unzip -q -o EMBER_COREUI_0_5_0_ALPHA.zip
 
 sudo apt-get update
 sudo apt-get install -y rsync
@@ -279,7 +286,7 @@ sudo rsync -a \
   --exclude='uploads/' \
   --exclude='assets/chat_media/' \
   --exclude='assets/profile_photos/' \
-  EMBER_COREUI_0_4_5_ALPHA/ /opt/ember-coreui/
+  EMBER_COREUI_0_5_0_ALPHA/ /opt/ember-coreui/
 
 cd /opt/ember-coreui
 sudo ./scripts/stack.sh up -d --build --force-recreate php web browse pyworker
@@ -287,7 +294,7 @@ sudo ./scripts/stack.sh scrub-thinking
 sudo ./scripts/preflight.sh
 ```
 
-`stack.sh up` refreshes the non-secret runtime configuration and applies migration `007_remove_private_studio_lore`. The migration removes only the two historical accidental global source IDs; user knowledge, memories, messages, accounts, and other operator sources remain intact. The update also removes only the two exact historic manuscript filenames from an existing project directory. No private manuscript binary is present in the archive or imported by either installer.
+`stack.sh up` refreshes the non-secret runtime configuration and applies migrations `007_remove_private_studio_lore` and `008_message_actions`. Migration 007 removes only the two historical accidental global source IDs. Migration 008 adds account-bound feedback and generation-request metadata without rewriting existing messages. User knowledge, memories, messages, accounts, and other operator sources remain intact. The update also removes only the two exact historic manuscript filenames from an existing project directory. No private manuscript binary is present in the archive or imported by either installer.
 
 The first Python sandbox image build can take several minutes. Regenerating the Ember model or importing bundled Studio lore is not required. The existing `api/config.local.php` and the public address `https://coreui.starlight-unit.de` remain preserved.
 
@@ -472,6 +479,7 @@ sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/attachment-pipeline-sel
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/python-worker-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/logo-alpha-selftest.php
 sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/frontend-regression-selftest.php
+sudo ./scripts/stack.sh exec -T -u 33:33 php php scripts/message-actions-selftest.php
 sudo ./scripts/ollama-parallel-report.sh
 sudo grep -E 'ember_(video|pdf)_|ember_vision_payload' logs/stu_error.log | tail -n 30
 ```
@@ -659,4 +667,4 @@ A complete German legal notice and a final privacy policy are deliberately not y
 
 ## Alpha status
 
-`0.4.5-alpha` fixes Settings/Admin navigation, real chat-avatar rendering, common TXT encodings, the reply self-test warning, and the incorrect outlined logo asset. The verified installer, checksum, attachment reconstruction, private RAG-Lite retrieval, Python queue execution, and private-manuscript removal from the preceding releases remain included. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.
+`0.5.0-alpha` adds safe local Markdown, code blocks, message copying, persistent feedback, alternative answers, continuations, and response details. The verified navigation, profile images, TXT decoding, installer, checksum, attachment reconstruction, private RAG-Lite retrieval, Python queue execution, and private-manuscript removal from the preceding releases remain included. Speech input, native model audio transport, and spoken TTS output remain scheduled for the separate audio stage. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.

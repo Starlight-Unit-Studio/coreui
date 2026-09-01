@@ -52,6 +52,7 @@ UI_FILES=(
   protocols.html
   css/console.css
   js/console-app.js
+  js/coreui-markdown.js
   js/coreui-preferences.js
   js/settings.js
   js/admin.js
@@ -68,6 +69,8 @@ UI_FILES=(
   api/console_session_store.php
   api/console_sessions.php
   api/console_messages.php
+  api/console_action_store.php
+  api/console_actions.php
   api/account_store.php
   api/profile_store.php
   api/profile.php
@@ -79,15 +82,18 @@ UI_FILES=(
   database/migrations/005_thinking_attachments.sql
   database/migrations/006_account_security.sql
   database/migrations/007_remove_private_studio_lore.sql
+  database/migrations/008_message_actions.sql
   scripts/session-selftest.php
   scripts/attachment-pipeline-selftest.php
   scripts/python-worker-selftest.php
   scripts/profile-knowledge-selftest.php
   scripts/account-security-selftest.php
   scripts/frontend-regression-selftest.php
+  scripts/message-actions-selftest.php
+  scripts/markdown-selftest.js
   scripts/branding-license-selftest.py
-  docs/changelogs-txt/CHANGELOG_0_4_5_ALPHA.txt
-  docs/UEBERGABEPROTOKOLL_0_4_5_ALPHA.txt
+  docs/changelogs-txt/CHANGELOG_0_5_0_ALPHA.txt
+  docs/UEBERGABEPROTOKOLL_0_5_0_ALPHA.txt
   images/starlight_unit_studios_logo_original.png
 )
 for ui_file in "${UI_FILES[@]}"; do
@@ -249,6 +255,15 @@ if command -v php >/dev/null 2>&1; then
     fail "$frontend_selftest"
   fi
 
+  message_actions_selftest=''
+  if message_actions_selftest="$(runuser -u www-data -- php "$PROJECT_ROOT/scripts/message-actions-selftest.php" 2>&1)"; then
+    message_actions_selftest="${message_actions_selftest//$'\r'/}"
+    ok "$message_actions_selftest"
+  else
+    message_actions_selftest="${message_actions_selftest//$'\r'/}"
+    fail "$message_actions_selftest"
+  fi
+
   if [[ -f "$CONFIG_FILE" ]]; then
     if php -r "require '$PROJECT_ROOT/api/db.php'; echo (int)stu_pdo()->query('SELECT COUNT(*) FROM stu_schema_migrations')->fetchColumn();" >/dev/null 2>&1; then
       ok 'MariaDB-Verbindung und Core-Schema funktionieren.'
@@ -290,6 +305,12 @@ if command -v php >/dev/null 2>&1; then
       ok 'Migration 007: versehentlich importiertes privates Studio-Lore ist entfernt.'
     else
       fail 'Migration 007 fehlt oder privates Studio-Lore liegt noch in der Datenbank.'
+    fi
+
+    if php -r "require '$PROJECT_ROOT/api/db.php'; \$p=stu_pdo(); \$p->query('SELECT response_floor_id,mode,status,response_message_id,browse_job_id FROM stu_console_generation_requests LIMIT 0');" >/dev/null 2>&1; then
+      ok 'Migration 008: Feedback, Alternativen und Fortsetzungen sind bereit.'
+    else
+      fail 'Migration 008 fehlt.'
     fi
 
     if systemctl is-active --quiet ember-coreui-python.service; then

@@ -3686,7 +3686,8 @@ function ember_build_context(
   int $limit = 10,
   string $channel = 'global',
   int $consoleUid = 0,
-  ?string $consoleSessionId = null
+  ?string $consoleSessionId = null,
+  ?int $excludeReplyToId = null
 ): string {
   $limit = max(4, min(20, $limit));
   try { $pdo->query('SELECT 1 FROM stu_chat_messages LIMIT 1'); } catch (Throwable $e) { return ''; }
@@ -3696,8 +3697,18 @@ function ember_build_context(
     // ein Vermischen zweier Unterhaltungen.
     $sessionId = coreui_console_session_normalize_id($consoleSessionId ?? '');
     if ($sessionId === '') return '';
-    $st = $pdo->prepare("SELECT user_id, character_id, character_name, message FROM stu_chat_messages WHERE channel='console' AND user_id=? AND session_id=? AND alliance_id IS NULL ORDER BY id DESC LIMIT $limit");
-    $st->execute([$consoleUid, $sessionId]);
+    $excludeSql = ($excludeReplyToId !== null && $excludeReplyToId > 0)
+      ? ' AND (reply_to_id IS NULL OR reply_to_id<>?)'
+      : '';
+    $st = $pdo->prepare(
+      "SELECT user_id, character_id, character_name, message FROM stu_chat_messages
+        WHERE channel='console' AND user_id=? AND session_id=? AND alliance_id IS NULL"
+      . $excludeSql
+      . " ORDER BY id DESC LIMIT $limit"
+    );
+    $params = [$consoleUid, $sessionId];
+    if ($excludeSql !== '') $params[] = $excludeReplyToId;
+    $st->execute($params);
   } else {
     // GLOBAL: nur oeffentlicher Verlauf (keine privaten Console-Zeilen)
     $st = $pdo->prepare("SELECT user_id, character_id, character_name, message FROM stu_chat_messages WHERE channel='global' AND alliance_id IS NULL ORDER BY id DESC LIMIT $limit");
@@ -3749,7 +3760,8 @@ function ember_build_chat_prompt(
   ?string $imageUrl = null,
   string $channel = 'global',
   int $consoleUid = 0,
-  ?string $consoleSessionId = null
+  ?string $consoleSessionId = null,
+  ?int $excludeReplyToId = null
 ): array {
   // v1.1.1.92: Anhang HIER aufloesen, nicht nur in ember_generate_reply().
   // console_stream.php ruft ausschliesslich diesen Bauer auf -- die Console, also
@@ -3762,7 +3774,14 @@ function ember_build_chat_prompt(
   // Erst NACH dem Entfernen pruefen, sonst landet der Hex-String als Lore-Suchbegriff.
   $useLore = ember_should_use_lore_for_message($userMsg);
   $ctxLimit = ($channel === 'console') ? ($useLore ? 6 : 12) : ($useLore ? 4 : 8);
-  $ctx = ember_build_context($pdo, $ctxLimit, $channel, $consoleUid, $consoleSessionId);
+  $ctx = ember_build_context(
+    $pdo,
+    $ctxLimit,
+    $channel,
+    $consoleUid,
+    $consoleSessionId,
+    $excludeReplyToId
+  );
   $uid = (int)($senderChar['user_id'] ?? 0);
   $cid = (string)($senderChar['id'] ?? '');
   if (function_exists('coreui_ai_runtime_apply')) coreui_ai_runtime_apply($pdo, $uid);
@@ -3879,7 +3898,8 @@ function ember_generate_reply(
   $imageUrl = null,
   string $channel = 'global',
   int $consoleUid = 0,
-  ?string $consoleSessionId = null
+  ?string $consoleSessionId = null,
+  ?int $excludeReplyToId = null
 ): ?string {
   // v1.1.1.07: Smalltalk-/Fast-Conversation-Routing und Tool-Fastpaths entfernt.
   // Jede @Ember-Nachricht bekommt jetzt vollen Kontext, Memory und Lore-Routing ohne
@@ -3930,7 +3950,14 @@ function ember_generate_reply(
   // sonst als Suchbegriff im Kanon gelandet.
   $useLore = ember_should_use_lore_for_message($userMsg);
   $ctxLimit = ($channel === 'console') ? ($useLore ? 6 : 12) : ($useLore ? 4 : 8);
-  $ctx = ember_build_context($pdo, $ctxLimit, $channel, $consoleUid, $consoleSessionId);
+  $ctx = ember_build_context(
+    $pdo,
+    $ctxLimit,
+    $channel,
+    $consoleUid,
+    $consoleSessionId,
+    $excludeReplyToId
+  );
   $uid = (int)($senderChar['user_id'] ?? 0);
   $cid = (string)($senderChar['id'] ?? '');
   if (function_exists('coreui_ai_runtime_apply')) coreui_ai_runtime_apply($pdo, $uid);

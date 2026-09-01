@@ -117,6 +117,7 @@
     messageCacheBySession: {},
     historyHasMoreBySession: {},
     historyOldestBySession: {},
+    generationPollTimers: {},
     showArchived: false
   };
 
@@ -272,7 +273,9 @@
   function clearSessionRuntime(sessionId) {
     sessionId = String(sessionId || '');
     if (state.pollTimers[sessionId]) clearTimeout(state.pollTimers[sessionId]);
+    if (state.generationPollTimers[sessionId]) clearTimeout(state.generationPollTimers[sessionId]);
     delete state.pollTimers[sessionId];
+    delete state.generationPollTimers[sessionId];
     delete state.pollAttemptsBySession[sessionId];
     delete state.pendingBySession[sessionId];
     delete state.sendTimestampBySession[sessionId];
@@ -478,11 +481,11 @@
   function renderMessageRecord(m) {
     var text = m.message || '';
     if (m.is_ember === true || isEmberMsg(m)) {
-      appendMessageEl('ember', text, state.assistantName, m.thinking_content || null, m.attachments || m.attachment || null, m.created_at);
+      appendMessageEl('ember', text, state.assistantName, m.thinking_content || null, m.attachments || m.attachment || null, m.created_at, m);
     } else if (String(m.character_name || '').toLowerCase() === 'system' || String(m.character_id || '').toLowerCase() === 'system') {
       appendMessageEl('system', text);
     } else {
-      appendMessageEl('user', stripEmberPrefix(text), state.userDisplayName || m.character_name || state.charName, null, m.attachments || m.attachment || null, m.created_at);
+      appendMessageEl('user', stripEmberPrefix(text), state.userDisplayName || m.character_name || state.charName, null, m.attachments || m.attachment || null, m.created_at, m);
     }
   }
 
@@ -607,9 +610,11 @@
   }
 
   // ── DOM: Nachricht einfügen ──────────────────────────────
-  function appendMessageEl(role, text, name, thinkingText, attachment, createdAt) {
+  function appendMessageEl(role, text, name, thinkingText, attachment, createdAt, record) {
     var row = document.createElement('div');
     row.className = 'msg-row ' + role;
+    var messageId = record && Number(record.id) > 0 ? Number(record.id) : 0;
+    if (messageId > 0) row.setAttribute('data-message-id', String(messageId));
 
     if (role === 'system') {
       var bubble = document.createElement('div');
@@ -673,8 +678,12 @@
     content.appendChild(nameEl);
 
     var bubble = document.createElement('div');
-    bubble.className = 'msg-bubble';
-    bubble.textContent = text;
+    bubble.className = 'msg-bubble msg-markdown';
+    if (window.CoreUIMarkdown && typeof window.CoreUIMarkdown.render === 'function') {
+      window.CoreUIMarkdown.render(bubble, text);
+    } else {
+      bubble.textContent = text;
+    }
     var attachments = Array.isArray(attachment) ? attachment : (attachment ? [attachment] : []);
     // Leere Blase unterdruecken, wenn nur Anhaenge gesendet wurden.
     if (text || attachments.length === 0) content.appendChild(bubble);
@@ -684,6 +693,9 @@
     attachments.slice(0, MAX_MESSAGE_ATTACHMENTS).forEach(function (item) {
       content.appendChild(buildAttachmentEl(item));
     });
+
+    var actions = buildMessageActions(role, text, record || null);
+    if (actions) content.appendChild(actions);
 
     // Zeitstempel
     var timeEl = document.createElement('div');
@@ -697,6 +709,234 @@
     row.appendChild(content);
     messagesInner.appendChild(row);
     return row;
+  }
+
+  function actionIconPath(name) {
+    var paths = {
+      copy: 'M8 8h11v13H8z M5 3h11v3H6v11H3V3z',
+      edit: 'M4 17.2V21h3.8L19 9.8 14.2 5 3 16.2z M20.7 7.1c.4-.4.4-1 0-1.4l-2.4-2.4a1 1 0 0 0-1.4 0L15 5.2 19.8 10z',
+      up: 'M12 4 4 13h5v7h6v-7h5z',
+      down: 'M12 20 4 11h5V4h6v7h5z',
+      retry: 'M18.4 5.6A9 9 0 1 0 21 12h-2.4a6.6 6.6 0 1 1-1.9-4.6L13 11h8V3z',
+      more: 'M11 3h2v2h-2z M11 8h2v13h-2z',
+      continue: 'M7 4l11 8L7 20z'
+    };
+    return paths[name] || paths.more;
+  }
+
+  function createActionButton(icon, label) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'msg-action';
+    button.title = label;
+    button.setAttribute('aria-label', label);
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', actionIconPath(icon));
+    svg.appendChild(path);
+    button.appendChild(svg);
+    return button;
+  }
+
+  function copyMessageText(button, text) {
+    var copier = window.CoreUIMarkdown && window.CoreUIMarkdown.copyText;
+    var promise;
+    if (typeof copier === 'function') promise = copier(String(text || ''), document);
+    else if (navigator.clipboard && navigator.clipboard.writeText) promise = navigator.clipboard.writeText(String(text || ''));
+    else promise = Promise.reject(new Error('copy_unavailable'));
+    button.disabled = true;
+    promise.then(function () {
+      button.classList.add('success');
+      button.setAttribute('aria-label', 'Kopiert');
+    }).catch(function () {
+      button.classList.add('error');
+      button.setAttribute('aria-label', 'Kopieren fehlgeschlagen');
+    }).finally(function () {
+      setTimeout(function () {
+        button.disabled = false;
+        button.classList.remove('success', 'error');
+        button.setAttribute('aria-label', 'Nachricht kopieren');
+      }, 1300);
+    });
+  }
+
+  function postConsoleAction(payload) {
+    return fetch(API_BASE + '/console_actions.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CoreUI-CSRF': state.csrfToken
+      },
+      body: JSON.stringify(payload || {})
+    }).then(function (response) {
+      return response.json().then(function (data) {
+        if (!response.ok || !data || !data.ok) throw new Error((data && data.error) || 'console_action_failed');
+        return data;
+      });
+    });
+  }
+
+  function toggleMessageFeedback(record, value, button, otherButton) {
+    var ses = activeSession();
+    if (!record || !ses || Number(record.id) <= 0 || !state.characterId) return;
+    button.disabled = true;
+    if (otherButton) otherButton.disabled = true;
+    postConsoleAction({
+      action: 'feedback',
+      session_id: String(ses.id),
+      message_id: Number(record.id),
+      value: value,
+      character_id: state.characterId
+    }).then(function (data) {
+      record.feedback = data.feedback || null;
+      button.classList.toggle('active', record.feedback === value);
+      button.setAttribute('aria-pressed', record.feedback === value ? 'true' : 'false');
+      if (otherButton) {
+        var otherActive = !!record.feedback && record.feedback !== value;
+        otherButton.classList.toggle('active', otherActive);
+        otherButton.setAttribute('aria-pressed', otherActive ? 'true' : 'false');
+      }
+    }).catch(function () {
+      button.classList.add('error');
+      setTimeout(function () { button.classList.remove('error'); }, 1200);
+    }).finally(function () {
+      button.disabled = false;
+      if (otherButton) otherButton.disabled = false;
+    });
+  }
+
+  function generationActionError(error) {
+    var map = {
+      generation_busy: 'Eine Antwort wird bereits erzeugt.',
+      session_busy: 'Die Sitzung fuehrt gerade ein Werkzeug aus.',
+      message_actions_migration_required: 'Migration 008 fehlt. Bitte Preflight ausfuehren.',
+      source_turn_missing: 'Der zugehoerige Benutzer-Turn fehlt.',
+      source_response_missing: 'Die Quellantwort ist nicht mehr verfuegbar.',
+      generation_request_expired: 'Die Nachrichtenaktion ist abgelaufen. Bitte erneut starten.',
+      expired: 'Die Nachrichtenaktion ist abgelaufen. Bitte erneut starten.',
+      generation_timeout: 'Die lokale Generierung hat das Zeitlimit erreicht.',
+      browse_failed: 'Die Browser-Recherche ist fehlgeschlagen.',
+      browse_result_missing: 'Die Browser-Recherche lieferte keine Antwort.',
+      session_not_found: 'Die Sitzung ist nicht mehr aktiv.',
+      csrf_failed: 'Die Sitzung wurde erneuert. Bitte Seite neu laden.'
+    };
+    appendMessageEl('system', '\u26a0 ' + (map[error] || 'Nachrichtenaktion fehlgeschlagen.'));
+    scrollToBottom();
+  }
+
+  function startGenerationAction(record, mode, button) {
+    var ses = activeSession();
+    if (!record || !ses || Number(record.id) <= 0 || Number(record.reply_to_id) <= 0) return;
+    if (state.pendingBySession[ses.id]) {
+      generationActionError('generation_busy');
+      return;
+    }
+    button.disabled = true;
+    postConsoleAction({
+      action: 'prepare_generation',
+      mode: mode,
+      session_id: String(ses.id),
+      source_response_id: Number(record.id),
+      character_id: state.characterId
+    }).then(function (data) {
+      var request = data.request || {};
+      if (!request.id) throw new Error('generation_request_missing');
+      state.pendingBySession[ses.id] = Number(request.trigger_message_id) || true;
+      updateActivePendingUi();
+      setStatus('waiting', mode === 'continue' ? 'EMBER SETZT FORT\u2026' : 'EMBER ERZEUGT ALTERNATIVE\u2026');
+      showTypingIndicator();
+      startCountdown();
+      openStreamForReply(ses, Number(request.trigger_message_id) || 0, request);
+    }).catch(function (error) {
+      generationActionError(error && error.message ? error.message : 'console_action_failed');
+    }).finally(function () {
+      button.disabled = false;
+    });
+  }
+
+  function buildMessageDetails(record) {
+    var details = document.createElement('div');
+    details.className = 'msg-action-details';
+    details.hidden = true;
+    var mode = record && record.generation && record.generation.mode;
+    var modeLabel = mode === 'regenerate' ? 'ALTERNATIVE ANTWORT'
+      : (mode === 'continue' ? 'FORTSETZUNG' : 'NORMALE ANTWORT');
+    var values = [
+      ['TYP', modeLabel],
+      ['NACHRICHT', '#' + String(Number(record && record.id) || 0)],
+      ['TURN', '#' + String(Number(record && record.reply_to_id) || 0)]
+    ];
+    values.forEach(function (entry) {
+      var line = document.createElement('span');
+      var key = document.createElement('b');
+      key.textContent = entry[0] + ': ';
+      line.appendChild(key);
+      line.appendChild(document.createTextNode(entry[1]));
+      details.appendChild(line);
+    });
+    return details;
+  }
+
+  function buildMessageActions(role, text, record) {
+    if (role !== 'user' && role !== 'ember') return null;
+    var actions = document.createElement('div');
+    actions.className = 'msg-actions';
+    actions.setAttribute('role', 'toolbar');
+    actions.setAttribute('aria-label', role === 'ember' ? 'Aktionen fuer Ember-Antwort' : 'Aktionen fuer Benutzernachricht');
+
+    var copy = createActionButton('copy', 'Nachricht kopieren');
+    copy.addEventListener('click', function () { copyMessageText(copy, text); });
+    actions.appendChild(copy);
+
+    if (role === 'user') {
+      var edit = createActionButton('edit', 'Text als neue Nachricht bearbeiten');
+      edit.addEventListener('click', function () {
+        if (!inputEl) return;
+        inputEl.value = String(text || '');
+        inputEl.focus();
+        inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
+      });
+      actions.appendChild(edit);
+      return actions;
+    }
+
+    var messageId = Number(record && record.id) || 0;
+    var turnId = Number(record && record.reply_to_id) || 0;
+    if (messageId <= 0 || turnId <= 0) return actions;
+
+    var up = createActionButton('up', 'Antwort hilfreich');
+    var down = createActionButton('down', 'Antwort nicht hilfreich');
+    up.classList.toggle('active', record && record.feedback === 'up');
+    down.classList.toggle('active', record && record.feedback === 'down');
+    up.setAttribute('aria-pressed', record && record.feedback === 'up' ? 'true' : 'false');
+    down.setAttribute('aria-pressed', record && record.feedback === 'down' ? 'true' : 'false');
+    up.addEventListener('click', function () { toggleMessageFeedback(record, 'up', up, down); });
+    down.addEventListener('click', function () { toggleMessageFeedback(record, 'down', down, up); });
+    actions.appendChild(up);
+    actions.appendChild(down);
+
+    var regenerate = createActionButton('retry', 'Alternative Antwort erzeugen');
+    regenerate.addEventListener('click', function () { startGenerationAction(record, 'regenerate', regenerate); });
+    actions.appendChild(regenerate);
+
+    var continueButton = createActionButton('continue', 'Antwort fortsetzen');
+    continueButton.addEventListener('click', function () { startGenerationAction(record, 'continue', continueButton); });
+    actions.appendChild(continueButton);
+
+    var details = buildMessageDetails(record);
+    var info = createActionButton('more', 'Antwortdetails anzeigen');
+    info.setAttribute('aria-expanded', 'false');
+    info.addEventListener('click', function () {
+      details.hidden = !details.hidden;
+      info.classList.toggle('active', !details.hidden);
+      info.setAttribute('aria-expanded', details.hidden ? 'false' : 'true');
+    });
+    actions.appendChild(info);
+    actions.appendChild(details);
+    return actions;
   }
 
   // Anhang-Element bauen (v1.1.1.89)
@@ -1300,16 +1540,24 @@
   // Tokens werden absichtlich verworfen, auch wenn ein alter Server sie sendet.
   // Fällt bei jedem Problem auf den normalen Poll zurück (der Server generiert
   // serverseitig zu Ende und legt die Antwort in der DB ab).
-  function openStreamForReply(ses, userMsgId) {
+  function openStreamForReply(ses, userMsgId, generationRequest) {
     var sessionId = String(ses.id);
     var url = API_BASE + '/console_stream.php'
       + '?character_id=' + encodeURIComponent(state.characterId)
-      + '&session_id=' + encodeURIComponent(sessionId)
-      + '&after_id=' + (userMsgId || 0);
+      + '&session_id=' + encodeURIComponent(sessionId);
+    if (generationRequest && generationRequest.id) {
+      url += '&generation_request=' + encodeURIComponent(String(generationRequest.id));
+    } else {
+      url += '&after_id=' + (userMsgId || 0);
+    }
 
     var es;
     try { es = new EventSource(url, { withCredentials: true }); }
-    catch (e) { startFastPoll(ses, userMsgId); return; }
+    catch (e) {
+      if (generationRequest && generationRequest.id) startGenerationStatusPoll(ses, generationRequest);
+      else startFastPoll(ses, userMsgId);
+      return;
+    }
 
     var streamDone = false;
 
@@ -1324,7 +1572,8 @@
       clearTimeout(watchdog);
       try { es.close(); } catch (e) {}
       // Live-Reste so lassen - der Poll-Pfad (v1.1.1.17) finalisiert sauber aus der DB.
-      startFastPoll(ses, userMsgId);
+      if (generationRequest && generationRequest.id) startGenerationStatusPoll(ses, generationRequest);
+      else startFastPoll(ses, userMsgId);
     }
 
     var watchdog;
@@ -1365,7 +1614,7 @@
       try { es.close(); } catch (e) {}
       var data = {};
       try { data = JSON.parse(ev.data) || {}; } catch (e) {}
-      finalizeStream(data, ses, userMsgId);
+      finalizeStream(data, ses, userMsgId, generationRequest || null);
     });
     es.addEventListener('error', function() {
       // Verbindung/SSE gestört -> Server generiert serverseitig zu Ende, Poll holt es.
@@ -1373,11 +1622,71 @@
     });
   }
 
-  function finalizeStream(data, ses, userMsgId) {
+  function resetGenerationUi(ses, errorMessage) {
+    if (!ses) return;
+    var sessionId = String(ses.id);
+    if (state.generationPollTimers[sessionId]) clearTimeout(state.generationPollTimers[sessionId]);
+    delete state.generationPollTimers[sessionId];
+    delete state.pendingBySession[sessionId];
+    if (!isActiveSession(sessionId)) return;
+    stopCountdown();
+    removeTypingIndicator();
+    updateActivePendingUi();
+    setStatus(errorMessage ? 'error' : 'online', errorMessage ? 'AKTION FEHLGESCHLAGEN' : 'VERBUNDEN');
+    if (errorMessage) generationActionError(errorMessage);
+  }
+
+  function startGenerationStatusPoll(ses, request) {
+    if (!ses || !request || !request.id) return;
+    var sessionId = String(ses.id);
+    if (state.generationPollTimers[sessionId]) clearTimeout(state.generationPollTimers[sessionId]);
+    var attempts = 0;
+
+    function poll() {
+      attempts++;
+      var url = API_BASE + '/console_actions.php?session_id=' + encodeURIComponent(sessionId)
+        + '&request_id=' + encodeURIComponent(String(request.id));
+      fetch(url, { credentials: 'include' })
+      .then(function (response) { return response.json(); })
+      .then(function (data) {
+        if (!data || !data.ok) throw new Error((data && data.error) || 'generation_status_failed');
+        if (data.status === 'done' && Number(data.response_message_id) > 0) {
+          resetGenerationUi(ses, '');
+          loadChatHistory(ses).then(scrollToBottom);
+          return;
+        }
+        if (data.status === 'error' || data.status === 'expired') {
+          resetGenerationUi(ses, data.error || 'generation_failed');
+          return;
+        }
+        if (data.status === 'issued' && !request.stream_retry_started) {
+          request.stream_retry_started = true;
+          openStreamForReply(ses, Number(data.trigger_message_id) || 0, request);
+          return;
+        }
+        if (attempts > MAX_POLL_ATTEMPTS) {
+          resetGenerationUi(ses, 'generation_timeout');
+          return;
+        }
+        state.generationPollTimers[sessionId] = setTimeout(poll, POLL_FAST_MS);
+      })
+      .catch(function () {
+        if (attempts > MAX_POLL_ATTEMPTS) {
+          resetGenerationUi(ses, 'generation_status_failed');
+          return;
+        }
+        state.generationPollTimers[sessionId] = setTimeout(poll, POLL_FAST_MS);
+      });
+    }
+    poll();
+  }
+
+  function finalizeStream(data, ses, userMsgId, generationRequest) {
     var sessionId = String(ses.id);
     if ((data && data.session_id && String(data.session_id) !== sessionId)
         || (data && data.reply_to_id && Number(data.reply_to_id) !== Number(userMsgId))) {
-      startFastPoll(ses, userMsgId);
+      if (generationRequest && generationRequest.id) startGenerationStatusPoll(ses, generationRequest);
+      else startFastPoll(ses, userMsgId);
       return;
     }
     var text     = safeReplyText((data && typeof data.text === 'string') ? data.text : '');
@@ -1398,6 +1707,10 @@
         message: text,
         is_ember: true,
         thinking_content: thinking,
+        generation: data && data.generation_mode ? {
+          mode: data.generation_mode,
+          source_response_id: data.source_response_id || 0
+        } : null,
         attachment: null,
         created_at: new Date().toISOString()
       }]);
@@ -1437,8 +1750,16 @@
       state.thinkingPanelEl = null;
     }
 
-    // Typing-Row -> finale Ember-Bubble (NICHT entfernen) - außer Browse-Turn (keine Sofort-Antwort).
-    if (state.typingEl) {
+    // Eine gespeicherte Antwort wird aus dem sitzungseigenen Cache neu aufgebaut.
+    // Dadurch verwenden Live-Antwort und History exakt denselben sicheren
+    // Markdown-, Codeblock- und Aktionsleistenpfad.
+    if (state.typingEl && text && emberId > 0 && browseJobId <= 0) {
+      if (state.typingEl.parentNode) state.typingEl.parentNode.removeChild(state.typingEl);
+      state.typingEl = null;
+      renderHistory(ses);
+      var finalRow = messagesInner.querySelector('[data-message-id="' + String(emberId) + '"]');
+      if (finalRow) showResponseTime(finalRow, sessionId);
+    } else if (state.typingEl) {
       if (!text && browseJobId > 0) {
         // Browse-Turn: keine leere Bubble. Live-Fenster übernimmt, Ergebnis kommt per Poll.
         if (state.typingEl.parentNode) state.typingEl.parentNode.removeChild(state.typingEl);
@@ -1472,6 +1793,9 @@
       // Ember weiter -> Status sichtbar "arbeitet" (amber) lassen, NICHT vorschnell auf grün.
       setStatus('waiting', 'EMBER ANTWORTET\u2026');
       openBrowseWindow(browseJobId, sessionId);
+      if (data && data.generation_request) {
+        startGenerationStatusPoll(ses, { id: data.generation_request });
+      }
     } else {
       setStatus('online', 'VERBUNDEN');
     }

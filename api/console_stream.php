@@ -20,6 +20,7 @@ declare(strict_types=1);
 // chat.php als Funktionsbibliothek einbinden (Dispatch wird per STU_CHAT_LIB uebersprungen).
 define('STU_CHAT_LIB', 1);
 require __DIR__ . '/chat.php';
+require_once __DIR__ . '/console_action_store.php';
 
 // ── SSE-Ausgabe vorbereiten: jegliches Buffering AUS, lange Laufzeit erlauben ──
 @ini_set('zlib.output_compression', '0');
@@ -62,9 +63,67 @@ try {
 
 // ── Turn-Referenz (EventSource => GET) ──
 $character_id = (string)($_GET['character_id'] ?? '');
-$afterId      = (int)($_GET['after_id'] ?? 0);
-$sessionId    = coreui_console_session_normalize_id($_GET['session_id'] ?? '');
-$channel      = 'console';
+$generationRequestId = strtolower(trim((string)($_GET['generation_request'] ?? '')));
+$generationRequest = null;
+$generationMode = '';
+$sourceResponseId = 0;
+$afterId = (int)($_GET['after_id'] ?? 0);
+$sessionId = coreui_console_session_normalize_id($_GET['session_id'] ?? '');
+$channel = 'console';
+
+if ($generationRequestId !== '') {
+  try {
+    if (!coreui_console_actions_schema_ready($pdo)) throw new RuntimeException('message_actions_migration_required');
+    $generationRequest = coreui_console_generation_mark_running(
+      $pdo,
+      (int)$uid,
+      $generationRequestId
+    );
+    $sessionId = coreui_console_session_normalize_id($generationRequest['session_id'] ?? '');
+    $afterId = (int)($generationRequest['trigger_message_id'] ?? 0);
+    $generationMode = (string)($generationRequest['mode'] ?? '');
+    $sourceResponseId = (int)($generationRequest['source_response_id'] ?? 0);
+    $requestStatus = (string)($generationRequest['status'] ?? '');
+    if ($requestStatus === 'done' && (int)($generationRequest['response_message_id'] ?? 0) > 0) {
+      $doneId = (int)$generationRequest['response_message_id'];
+      $doneRow = coreui_console_action_message($pdo, (int)$uid, $sessionId, $doneId, true);
+      sse_send('done', [
+        'text' => ember_sanitize_public_reply((string)($doneRow['message'] ?? ''), ''),
+        'thinking' => '',
+        'elapsed' => 0,
+        'id' => $doneId,
+        'session_id' => $sessionId,
+        'reply_to_id' => $afterId,
+        'generation_request' => $generationRequestId,
+        'generation_mode' => $generationMode,
+        'source_response_id' => $sourceResponseId,
+      ]);
+      exit;
+    }
+    if ($requestStatus === 'running' && (int)($generationRequest['browse_job_id'] ?? 0) > 0) {
+      sse_send('done', [
+        'text' => '',
+        'thinking' => '',
+        'elapsed' => 0,
+        'id' => 0,
+        'browse_job_id' => (int)$generationRequest['browse_job_id'],
+        'session_id' => $sessionId,
+        'reply_to_id' => $afterId,
+        'generation_request' => $generationRequestId,
+        'generation_mode' => $generationMode,
+        'source_response_id' => $sourceResponseId,
+      ]);
+      exit;
+    }
+    if (in_array($requestStatus, ['error', 'expired'], true)) {
+      sse_send('error', ['error'=>(string)($generationRequest['error_code'] ?? $requestStatus)]);
+      exit;
+    }
+  } catch (Throwable $eRequest) {
+    sse_send('error', ['error'=>$eRequest->getMessage()]);
+    exit;
+  }
+}
 
 // Die eigentliche Nachricht liegt bereits durch den authentifizierten POST in
 // der Ember CoreUI-Datenbank. Sie wird nicht noch einmal in die EventSource-URL
@@ -125,6 +184,40 @@ if ($imageUrl === null && $attachmentIds === [] && is_array($turnRow)) {
   }
 }
 
+$promptMessage = $message;
+$excludeReplyToId = null;
+if ($generationRequest !== null) {
+  if ($generationMode === 'regenerate') {
+    // Eine Alternative darf nicht die bereits gespeicherte Antwort desselben
+    // Turns aus dem Kontext abschreiben. Andere vorherige Turns bleiben erhalten.
+    $excludeReplyToId = $afterId;
+  } elseif ($generationMode === 'continue') {
+    try {
+      $sourceResponse = coreui_console_action_message(
+        $pdo,
+        (int)$uid,
+        $sessionId,
+        $sourceResponseId,
+        true
+      );
+      $sourceText = ember_sanitize_public_reply((string)($sourceResponse['message'] ?? ''), '');
+      $promptMessage .= "\n\n[INTERNE EMBER-COREUI-AKTION: Setze die folgende eigene Antwort direkt fort. "
+        . "Wiederhole den vorhandenen Text nicht und beginne ohne neue Begruessung.]\n"
+        . "BISHERIGE ANTWORT:\n" . $sourceText;
+    } catch (Throwable $eSource) {
+      coreui_console_generation_finish(
+        $pdo,
+        (int)$uid,
+        $generationRequestId,
+        0,
+        'source_response_missing'
+      );
+      sse_send('error', ['error'=>'source_response_missing']);
+      exit;
+    }
+  }
+}
+
 // Ein Bild ohne Begleittext ist eine gueltige Nachricht.
 if ($message === '' && $imageUrl === null) { sse_send('error', ['error' => 'empty']); exit; }
 
@@ -159,7 +252,12 @@ sse_comment('open');
 $start = microtime(true);
 
 // Per-Turn-Lock (Datei-Lock, Dedup) - identisch zum synchronen Pfad.
-$turnLock = ember_generation_lock_acquire($channel, $afterId, $char, $message);
+$turnLock = ember_generation_lock_acquire(
+  $channel . ($generationRequestId !== '' ? ':action:' . $generationRequestId : ''),
+  $afterId,
+  $char,
+  $promptMessage
+);
 if ($turnLock === false) {
   // Es laeuft bereits eine Generierung fuer diesen Turn (Doppel-Trigger) - Client pollt.
   sse_send('busy', ['note' => 'generation_in_progress']);
@@ -177,7 +275,7 @@ try {
   // EventSource reconnectet bei Verbindungsabbruch automatisch -> sonst zweite Generierung
   // = doppelte Antwort. Nur eine Antwort mit derselben Sitzung und derselben
   // Turn-Referenz darf diesen Request als bereits abgeschlossen markieren.
-  if ($afterId > 0) {
+  if ($afterId > 0 && $generationRequest === null) {
     try {
       $emberCid = ember_character_id();
       $stExist = $pdo->prepare(
@@ -234,7 +332,16 @@ try {
     $acc = ['thinking' => '', 'content' => ''];
   } else {
     // Prompt bauen - identische Ember-Stimme wie ueberall (shared builder).
-    $built = ember_build_chat_prompt($pdo, $char, $message, null, 'console', (int)$uid, $sessionId);
+    $built = ember_build_chat_prompt(
+      $pdo,
+      $char,
+      $promptMessage,
+      null,
+      'console',
+      (int)$uid,
+      $sessionId,
+      $excludeReplyToId
+    );
     $sys   = (string)($built['sys'] ?? '');
     $u     = (string)($built['u'] ?? '');
     $model = (string)($built['model'] ?? ember_model());
@@ -287,7 +394,16 @@ try {
   if ($hasMarker || $reply === '' || $streamUnsafe) {
     console_stream_progress($thinkingEnabled, 'tool');
     // v1.1.1.94: $imageUrl statt hart null -> Vision funktioniert jetzt auch in der Console.
-    $fallback = ember_generate_reply($pdo, $char, $message, $imageUrl, 'console', (int)$uid, $sessionId);
+    $fallback = ember_generate_reply(
+      $pdo,
+      $char,
+      $promptMessage,
+      $imageUrl,
+      'console',
+      (int)$uid,
+      $sessionId,
+      $excludeReplyToId
+    );
     $enqueued = ember_browse_consume_request($pdo, $channel, (int)$uid, $sessionId, $afterId);
     if ($enqueued) {
       // Job-ID fuer das Live-Browser-Fenster (Phase 3b) holen.
@@ -307,7 +423,17 @@ try {
         );
         $sjb->execute([(int)$uid, $sessionId, $afterId]);
         $browseJobId = (int)($sjb->fetchColumn() ?: 0);
-      } catch (Throwable $eJob) {}
+        if ($browseJobId > 0 && $generationRequest !== null) {
+          coreui_console_generation_attach_browse(
+            $pdo,
+            (int)$uid,
+            $generationRequestId,
+            $browseJobId
+          );
+        }
+      } catch (Throwable $eJob) {
+        if ($generationRequest !== null) throw $eJob;
+      }
     }
     if (!empty($GLOBALS['STU_EMBER_LAST_THINKING'])) {
       $thinkingAll = (string)$GLOBALS['STU_EMBER_LAST_THINKING'];
@@ -355,8 +481,16 @@ try {
         $emberMsgId = (int)($sid->fetchColumn() ?: 0);
       } catch (Throwable $eId) {}
     }
-    if (!ember_last_call_is_guardrail()) {
+    if ($generationRequest === null && !ember_last_call_is_guardrail()) {
       ember_after_insert_tasks($pdo, $char, $message, $replyFinal);
+    }
+  }
+
+  if ($generationRequest !== null) {
+    if ($emberMsgId > 0) {
+      coreui_console_generation_finish($pdo, (int)$uid, $generationRequestId, $emberMsgId);
+    } elseif ($browseJobId <= 0) {
+      coreui_console_generation_finish($pdo, (int)$uid, $generationRequestId, 0, 'empty_response');
     }
   }
 
@@ -369,8 +503,22 @@ try {
     'browse_job_id' => $browseJobId,
     'session_id'    => $sessionId,
     'reply_to_id'   => $afterId,
+    'generation_request' => $generationRequestId !== '' ? $generationRequestId : null,
+    'generation_mode' => $generationMode !== '' ? $generationMode : null,
+    'source_response_id' => $sourceResponseId > 0 ? $sourceResponseId : null,
   ]);
 } catch (Throwable $e) {
+  if ($generationRequest !== null) {
+    try {
+      coreui_console_generation_finish(
+        $pdo,
+        (int)$uid,
+        $generationRequestId,
+        0,
+        'generation_failed'
+      );
+    } catch (Throwable $ignored) {}
+  }
   if (function_exists('stu__log_error')) {
     stu__log_error([
       'type'    => 'console_stream_exception',

@@ -2,6 +2,27 @@
 
 Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versioniert.
 
+## v0.5.0-alpha - 01.09.2026
+
+- Sicheren lokalen Markdown-Renderer fuer Ueberschriften, Hervorhebungen, Listen, Zitate, Links, Tabellen, Inline-Code und eingezaeunte Codebloecke eingefuehrt.
+- Rohes HTML bleibt immer Text. Nur HTTP-, HTTPS- und Mail-Links werden klickbar. Der Renderer verwendet weder `innerHTML` noch `eval`, Remote-CDNs oder ausfuehrbare Modellausgaben.
+- Codebloecke um Sprachkennung, lokale Syntaxfarben, horizontales Scrollen und eine eigene Kopieraktion erweitert.
+- Gemeinsame Aktionsleiste unter Benutzer- und Ember-Nachrichten eingefuehrt. Benutzernachrichten koennen kopiert oder als neuer Entwurf in den Editor uebernommen werden, ohne den gespeicherten Verlauf zu veraendern.
+- Ember-Antworten koennen kopiert, positiv oder negativ bewertet, als Alternative neu erzeugt, fortgesetzt und mit technischen Antwortdetails angezeigt werden.
+- Feedback serverseitig an authentifiziertes Konto, private Sitzung und konkrete Ember-Nachricht gebunden. Positive und negative Bewertung schliessen sich je Benutzer gegenseitig aus.
+- Alternative Antworten behalten die bisherige Antwort und dieselbe `reply_to_id`. Antworten desselben Turns werden beim Neuaufbau gezielt aus dem Modellkontext ausgeschlossen, damit die Alternative nicht nur die alte Fassung kopiert.
+- Fortsetzungen als getrennte Ember-Nachrichten gespeichert und weiterhin mit dem urspruenglichen Benutzer-Turn verknuepft.
+- Migration `008_message_actions` fuer kurzlebige, kontogebundene Neugenerierungsanforderungen eingefuehrt. Eine feste Nachrichten-ID-Grenze ordnet nach SSE-Unterbrechungen nur wirklich spaeter entstandene Antworten zu, ohne temporaere Anforderungstoken im Kontoexport offenzulegen.
+- Gleichzeitige Nachrichtenaktionen derselben Sitzung werden durch eine Datenbanksperre serialisiert. Eine Sitzung kann nicht endgueltig geloescht werden, solange eine Alternative oder Fortsetzung noch laeuft.
+- Neue API `console_actions.php` mit CSRF-Schutz, Benutzer- und Sitzungspruefung sowie getrenntem Store-Modul fuer Feedback und Generierungsanforderungen eingefuehrt.
+- Live-SSE-Antworten und geladener Verlauf verwenden nun denselben Markdown-, Codeblock- und Aktionsleistenpfad.
+- Browser-Recherche innerhalb einer Nachrichtenaktion wird ueber ihre exakte Job-ID mit der Anforderung verbunden. Wiederaufnahme, Workerfehler und fehlendes Ergebnis werden dadurch eindeutig abgeschlossen.
+- Kontoexport um eigene Bewertungen und Generierungshistorie erweitert. Interne Thinking-Inhalte und temporaere Anforderungstoken bleiben ausgeschlossen.
+- Healthcheck, Compose- und Native-Preflight, Installer und Selbsttests auf Migration 008 und die neuen Endpunkte erweitert.
+- Neuer Markdown-Selftest prueft gefaehrliche Linkprotokolle, HTML-Text, Tabellen und Codebloecke. Neuer Nachrichtenaktionen-Selftest prueft Feedback, Turnbindung, Isolation und sichere Renderer-Verdrahtung.
+- Version, Cache-Buster, Setup, README, Changelog-Archiv, Branding-Test und Uebergabeprotokoll auf `0.5.0-alpha` aktualisiert.
+- Audioeingabe, nativer Modell-Audiotransport und gesprochene TTS-Ausgabe bleiben bewusst dem getrennten Audioausbau vorbehalten.
+
 ## v0.4.5-alpha - 31.08.2026
 
 - Navigationsschleife zwischen Einstellungen und Admin Core behoben. `CORE CHANNEL` verwendet kein `history.back()` mehr, sondern oeffnet die App deterministisch.

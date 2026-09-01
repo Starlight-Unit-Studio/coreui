@@ -1,0 +1,356 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+UEBERGABEPROTOKOLL 0.5.0-ALPHA
+STAND 01.09.2026
+
+======================================================================
+1. VERBINDLICHER QUELLSTAND
+======================================================================
+
+Repository:
+https://github.com/Starlight-Unit-Studio/coreui
+
+Release-Branch:
+release/0.5.0-alpha
+
+Ziel-Branch:
+main
+
+Produktversion:
+0.5.0-alpha
+
+Paketwurzel:
+EMBER_COREUI_0_5_0_ALPHA
+
+Releasepaar:
+EMBER_COREUI_0_5_0_ALPHA.zip
+EMBER_COREUI_0_5_0_ALPHA.zip.sha256
+
+Produktive Adresse:
+https://coreui.starlight-unit.de
+
+Das Produkt heisst immer Ember CoreUI. Technische Kennungen wie coreui,
+ember-coreui und COREUI_* bleiben reine Kompatibilitaetsnamen.
+
+0.4.5-alpha wurde vor Beginn dieser Version auf dem produktiven Server
+vollstaendig getestet. Installation, Preflight, Navigation, TXT-Anhaenge,
+Profilbilder, Logo und PHP-Selftests waren sauber.
+
+======================================================================
+2. RELEASEZIEL 0.5.0-ALPHA
+======================================================================
+
+0.5.0-alpha ist der erste Chatkomfort-Funktionsblock. Er fuehrt sichere
+Markdown- und Codeausgabe sowie echte Aktionen unter Nachrichten ein.
+
+Enthalten:
+
+1. Sicheres lokales Markdown.
+2. Formatierte Codebloecke mit Kopieraktion und Syntaxfarben.
+3. Aktionsleiste unter Benutzer- und Ember-Nachrichten.
+4. Kontogebundenes positives und negatives Feedback.
+5. Alternative Antworten ohne Ueberschreiben der alten Fassung.
+6. Fortsetzung einer vorhandenen Ember-Antwort.
+7. Antwortdetails mit Typ, Nachrichten-ID und Turn-ID.
+8. Wiederaufnahme einer Nachrichtenaktion nach Verbindungsunterbrechung.
+
+======================================================================
+3. MARKDOWN UND CODE
+======================================================================
+
+Betroffene Dateien:
+
+* js/coreui-markdown.js
+* js/console-app.js
+* css/console.css
+* app.html
+* scripts/markdown-selftest.js
+* scripts/frontend-regression-selftest.php
+
+Der Renderer wird lokal ausgeliefert und vor console-app.js geladen. Er baut
+alle sichtbaren Elemente mit createElement und textContent auf.
+
+Unterstuetzte Bloecke:
+
+* Absaetze und Zeilenumbrueche
+* Ueberschriften 1 bis 6
+* ungeordnete und geordnete Listen
+* Zitate
+* Trennlinien
+* Tabellen
+* eingezaeunte Codebloecke
+
+Unterstuetzte Inline-Auszeichnung:
+
+* Fett
+* Kursiv
+* Durchgestrichen
+* Inline-Code
+* Markdown-Links
+* automatische HTTP- und HTTPS-Links
+
+Sicherheitsgrenzen:
+
+* HTML-Tags werden als Text dargestellt.
+* javascript:, data:, file: und andere Protokolle werden nicht verlinkt.
+* Nur HTTP, HTTPS und mailto sind klickbar.
+* Links verwenden noopener, noreferrer und nofollow.
+* Kein innerHTML.
+* Kein eval.
+* Keine extern geladene Renderer-Bibliothek.
+* Modelltext kann weder Skripte noch Eventhandler ausfuehren.
+
+Codefarben werden lokal und ausschliesslich als Text-Spans erzeugt. Erkannte
+Sprachen umfassen unter anderem JavaScript, TypeScript, PHP, Python, Bash, SQL,
+CSS, HTML, JSON und YAML. Unbekannte Sprachen bleiben normaler Code.
+
+======================================================================
+4. AKTIONSLEISTEN
+======================================================================
+
+Betroffene Dateien:
+
+* js/console-app.js
+* css/console.css
+* api/console_actions.php
+* api/console_action_store.php
+* api/console_messages.php
+
+Benutzernachrichten besitzen:
+
+* Kopieren
+* Text als neuen Entwurf bearbeiten
+
+Die Bearbeitungsaktion aendert keine Datenbankzeile. Sie uebernimmt den Text in
+das Eingabefeld, damit der Benutzer bewusst eine neue Nachricht senden kann.
+
+Ember-Antworten besitzen:
+
+* Kopieren
+* hilfreich
+* nicht hilfreich
+* alternative Antwort erzeugen
+* Antwort fortsetzen
+* Antwortdetails anzeigen
+
+Die Leiste wird nur fuer echte Nachrichten aufgebaut. Systemmeldungen und der
+laufende Typing-Indikator erhalten keine serverseitigen Aktionen.
+
+======================================================================
+5. FEEDBACK
+======================================================================
+
+Feedback verwendet die vorhandene Tabelle stu_chat_reactions mit den Werten:
+
+* Positiv: Daumen hoch
+* Negativ: Daumen runter
+
+Vor jedem Schreibzugriff werden geprueft:
+
+* authentifizierter Benutzer
+* CSRF-Token
+* eigener Charakter
+* eigene private Sitzung
+* eigene konkrete Nachricht
+* Nachricht stammt von Ember
+
+Positive und negative Bewertung schliessen sich gegenseitig aus. Die
+Nachrichtenzeile wird innerhalb der Transaktion gesperrt, damit parallele
+Umschaltungen nicht beide Werte hinterlassen.
+
+======================================================================
+6. ALTERNATIVE ANTWORTEN UND FORTSETZUNGEN
+======================================================================
+
+Betroffene Dateien:
+
+* database/migrations/008_message_actions.sql
+* api/console_action_store.php
+* api/console_actions.php
+* api/console_stream.php
+* api/chat.php
+* js/console-app.js
+
+Migration 008 erstellt stu_console_generation_requests. Gespeichert werden:
+
+* zufaellige 128-Bit-Anforderungs-ID
+* Benutzer-ID
+* Sitzungs-ID
+* urspruenglicher Benutzer-Turn
+* Quellantwort
+* hoechste Nachrichten-ID beim Anlegen der Anforderung
+* Modus regenerate oder continue
+* Status issued, running, done, error oder expired
+* erzeugte Antwort-ID
+* bei Werkzeugnutzung die exakte private Browser-Job-ID
+* Fehlercode und Zeitpunkte
+
+Noch nicht gestartete Anforderungen verfallen nach 3 Minuten. Beim Start wird
+das Zeitfenster fuer eine langsame lokale Generierung auf 40 Minuten gesetzt.
+Sie werden nur fuer denselben angemeldeten Benutzer und dieselbe Sitzung
+gelesen. Gleichzeitige Anforderungen derselben Sitzung werden durch eine
+Sperre auf der Sitzungszeile serialisiert.
+
+Alternative Antwort:
+
+* Die Quellantwort bleibt unveraendert gespeichert.
+* Die neue Antwort erhaelt dieselbe reply_to_id.
+* Bereits gespeicherte Antworten dieser reply_to_id werden beim Promptaufbau
+  aus dem Kontext ausgeschlossen.
+* Andere vorherige Turns bleiben als Kontext erhalten.
+
+Fortsetzung:
+
+* Die Quellantwort wird serverseitig geladen und geprueft.
+* Eine interne Fortsetzungsanweisung verlangt direkte Weiterfuehrung ohne
+  Wiederholung und ohne neue Begruessung.
+* Die Fortsetzung wird als getrennte Ember-Nachricht gespeichert.
+
+SSE-Unterbrechung:
+
+* Der Client fragt den Anforderungsstatus weiter ab.
+* Ein bereits gespeichertes Ergebnis wird nur dann wieder geladen, wenn seine
+  Nachrichten-ID oberhalb der beim Anlegen gespeicherten Grenze liegt.
+* Eine laufende Browser-Recherche bleibt ueber ihre exakte Job-ID mit der
+  Anforderung verbunden. Reconnects starten keinen zweiten Browserjob.
+* Workerfehler oder ein abgeschlossener Job ohne Antwort beenden die Aktion
+  mit einem eindeutigen Fehlercode.
+* Die alte Antwort wird niemals geloescht, umbenannt oder ueberschrieben.
+* Eine Sitzung kann waehrend einer laufenden Anforderung nicht endgueltig
+  geloescht werden.
+
+======================================================================
+7. KONTOEXPORT
+======================================================================
+
+api/account_export.php exportiert zusaetzlich:
+
+* eigene positive und negative Bewertungen
+* Modus und Status eigener Generierungsanforderungen
+* Turn-, Quellantwort- und Ergebniszuordnung
+* Erstellungs-, Start- und Abschlusszeitpunkt
+
+Nicht exportiert werden:
+
+* temporaere Anforderungs-ID
+* CSRF-Token
+* Login-Token
+* Thinking-Inhalte
+* fremde Bewertungen oder Nachrichten
+
+======================================================================
+8. INSTALLATION UND MIGRATION
+======================================================================
+
+Empfohlener SSH-Einzeiler:
+
+( setup_file="$(mktemp)" && trap 'rm -f -- "$setup_file"' EXIT && curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh -o "$setup_file" && sudo bash "$setup_file" )
+
+Setup laedt ZIP und SHA aus:
+
+releases/v0.5.0-alpha/
+
+Migration 008 ist additiv. Bestehende Konten, Sitzungen, Nachrichten,
+Anhaenge, Profilbilder, Memories, private RAG-Quellen und Konfigurationen
+werden nicht umgeschrieben.
+
+Compose fuehrt Migrationen ueber scripts/migrate.sh aus. Der Native-Installer
+wendet 008_message_actions.sql nach Migration 007 an.
+
+Nginx erlaubt den neuen privaten Endpunkt api/console_actions.php in Compose
+und Native. Andere PHP-Dateien bleiben weiterhin gesperrt.
+
+======================================================================
+9. TESTMATRIX
+======================================================================
+
+Lokal geprueft:
+
+* node --check js/console-app.js
+* node --check js/coreui-markdown.js
+* node scripts/markdown-selftest.js
+* bash -n setup.sh
+* bash -n scripts/install.sh
+* bash -n scripts/install-native.sh
+* bash -n scripts/preflight.sh
+* bash -n scripts/preflight-native.sh
+* python3 scripts/branding-license-selftest.py
+* git diff --check
+* verbotene private Manuskriptdateien
+* verbotene Unicode-Langstriche in Textdateien
+
+Im installierten Compose- oder Native-System zwingend:
+
+* PHP-Syntax aller PHP-Dateien
+* Migration 008 und Tabellenspalten
+* Nachrichtenaktionen-Selftest
+* Frontend-Regressions-Selftest
+* alle bestehenden Session-, Reply-, Thinking-, Konto-, Profil-, Anhang-,
+  PDF-, Video- und Python-Worker-Selftests
+* Healthcheck und private Endpunktrouten
+
+Die lokale Quellumgebung besitzt keine PHP-Laufzeit und keine produktive
+MariaDB. PHP-, Datenbank- und Transaktionstests laufen deshalb erneut innerhalb
+des ausgelieferten PHP-Containers auf der Installation.
+
+======================================================================
+10. DATENSCHUTZ UND ISOLATION
+======================================================================
+
+Keine private Starlight Unit Bibel und kein privates Kompendium duerfen im
+Quellbaum, ZIP, Setup oder automatischen RAG-Import enthalten sein.
+
+Game, Global Chat, Homepage, Repack, KeyHelp, Apache, Host-PHP, Host-Webserver,
+bestehende STU-Datenbank und fremde Anwendungen werden nicht veraendert.
+
+Nachrichtenaktionen duerfen niemals nur anhand einer frei uebergebenen
+message_id arbeiten. user_id, session_id, Kanal und Ember-Absender werden
+serverseitig gemeinsam geprueft.
+
+======================================================================
+11. BEKANNTE GRENZEN UND NAECHSTE FUNKTIONSSTUFEN
+======================================================================
+
+Bewusst nicht in 0.5.0-alpha enthalten:
+
+* kein rohes HTML in Markdown
+* keine mathematische Formelsatz- oder Diagrammausfuehrung
+* kein echtes Bearbeiten oder Verzweigen eines gespeicherten Benutzer-Turns
+* noch keine Varianten-Karussellansicht
+* noch keine Quellen- und Werkzeugliste in den Antwortdetails
+* noch kein Modellwechsel fuer eine einzelne Neugenerierung
+* noch keine Audioeingabe oder TTS-Ausgabe
+
+Naechster 0.5.x-Block:
+
+* Werkzeugmenue am Eingabefeld
+* sichtbare Aktivierung fuer Datei, RAG-Lite, Web, Browse und Python
+* gespeicherte Quellen- und Werkzeugmetadaten pro Antwort
+* kontrollierte Anzeige dieser Metadaten unter der Sprechblase
+* spaeter echte Bearbeitungszweige und Variantenumschaltung
+
+Geplanter 0.6.x-Audioblock:
+
+* Mikrofonaufnahme
+* normalisierte Audioanhaenge
+* nativer Transport an kompatible Gemma-Modelle
+* Transkription und Audioanalyse
+* separate lokale TTS-Schicht fuer gesprochene Antworten
+
+======================================================================
+12. FORTSETZUNG IN EINEM NEUEN CHAT
+======================================================================
+
+Ein neuer Arbeitschat soll zuerst dieses Protokoll, VERSION, CHANGELOG.md,
+README.md und den aktuellen Release-Branch lesen.
+
+Vor der naechsten Versionsstufe:
+
+1. Aktuellen main und Release-Branch vergleichen.
+2. Preflight-Ausgabe des realen Servers auswerten.
+3. Markdown, Kopieren, Feedback, Alternative, Fortsetzung und Details im
+   produktiven Browser testen.
+4. Keine Zugangsdaten oder privaten Manuskripte in Git oder Release aufnehmen.
+5. Version nur nach bestandenem Paket- und SHA-Test freigeben.
+6. Nach jeder Version ein neues vollstaendiges Uebergabeprotokoll erstellen.
+
+ENDE UEBERGABEPROTOKOLL 0.5.0-ALPHA
