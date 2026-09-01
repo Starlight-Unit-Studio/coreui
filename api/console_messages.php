@@ -4,6 +4,7 @@ declare(strict_types=1);
 define('STU_CHAT_LIB', 1);
 require __DIR__ . '/chat.php';
 require_once __DIR__ . '/console_session_store.php';
+require_once __DIR__ . '/console_action_store.php';
 
 $pdo = stu_pdo();
 $uid = stu_require_user_id();
@@ -106,6 +107,15 @@ if ($messageIds !== [] && coreui_console_attachment_schema_ready($pdo)) {
 $emberCid = strtolower(ember_character_id());
 $emberName = strtolower(ember_character_name());
 $showThinking = (bool)(coreui_ai_settings_load($pdo, (int)$uid)['thinking_enabled'] ?? true);
+$feedbackMap = [];
+$generationMap = [];
+try {
+  $feedbackMap = coreui_console_feedback_map($pdo, (int)$uid, $messageIds);
+  $generationMap = coreui_console_generation_metadata_map($pdo, (int)$uid, $messageIds);
+} catch (Throwable $e) {
+  // Rollendes Update: Nachrichten bleiben lesbar, auch wenn Migration 008
+  // gerade erst durch den Installer eingespielt wird.
+}
 $maxId = 0;
 $oldestId = 0;
 
@@ -127,6 +137,8 @@ foreach ($rows as &$row) {
   $row['thinking_content'] = ($isEmber && $showThinking)
     ? ember_public_thinking_from_storage(isset($row['thinking_content']) ? (string)$row['thinking_content'] : null)
     : null;
+  $row['feedback'] = $isEmber ? ($feedbackMap[$id] ?? null) : null;
+  $row['generation'] = $isEmber ? ($generationMap[$id] ?? null) : null;
 
   $attachments = $attachmentMap[$id] ?? [];
   $fileUuid = trim((string)($row['file_uuid'] ?? ''));

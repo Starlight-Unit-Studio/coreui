@@ -84,6 +84,7 @@ UI_FILES=(
   css/console.css
   css/admin.css
   js/console-app.js
+  js/coreui-markdown.js
   js/coreui-preferences.js
   js/settings.js
   js/admin.js
@@ -107,21 +108,26 @@ UI_FILES=(
   api/console_attachment_store.php
   api/console_sessions.php
   api/console_messages.php
+  api/console_action_store.php
+  api/console_actions.php
   database/migrations/002_coreui_management.sql
   database/migrations/003_console_sessions.sql
   database/migrations/004_profiles_knowledge.sql
   database/migrations/005_thinking_attachments.sql
   database/migrations/006_account_security.sql
   database/migrations/007_remove_private_studio_lore.sql
+  database/migrations/008_message_actions.sql
   scripts/session-selftest.php
   scripts/attachment-pipeline-selftest.php
   scripts/python-worker-selftest.php
   scripts/profile-knowledge-selftest.php
   scripts/account-security-selftest.php
   scripts/frontend-regression-selftest.php
+  scripts/message-actions-selftest.php
+  scripts/markdown-selftest.js
   scripts/branding-license-selftest.py
-  docs/changelogs-txt/CHANGELOG_0_4_5_ALPHA.txt
-  docs/UEBERGABEPROTOKOLL_0_4_5_ALPHA.txt
+  docs/changelogs-txt/CHANGELOG_0_5_0_ALPHA.txt
+  docs/UEBERGABEPROTOKOLL_0_5_0_ALPHA.txt
   docker/pyworker/Dockerfile
   docker/pyworker/entrypoint.sh
   images/starlight_unit_studios_logo_original.png
@@ -293,6 +299,14 @@ if (( ${#COMPOSE_CMD[@]} > 0 )); then
     fail 'Migration 007 fehlt oder privates Studio-Lore liegt noch in der Datenbank.'
   fi
 
+  if compose exec -T php php -r \
+      'require "/var/www/coreui/api/db.php"; $p=stu_pdo(); $p->query("SELECT response_floor_id,mode,status,response_message_id,browse_job_id FROM stu_console_generation_requests LIMIT 0");' \
+      >/dev/null 2>&1; then
+    ok 'Migration 008: Feedback, Alternativen und Fortsetzungen sind bereit.'
+  else
+    fail 'Migration 008 fehlt. Fuehre scripts/stack.sh migrate aus.'
+  fi
+
   for extension_name in curl dom gd mbstring pdo_mysql zip; do
     if compose exec -T php php -m 2>/dev/null | grep -Fxq "$extension_name"; then
       ok "PHP-Erweiterung aktiv: $extension_name"
@@ -387,6 +401,15 @@ if (( ${#COMPOSE_CMD[@]} > 0 )); then
   else
     frontend_selftest="${frontend_selftest//$'\r'/}"
     fail "$frontend_selftest"
+  fi
+
+  message_actions_selftest=''
+  if message_actions_selftest="$(compose exec -T -u 33:33 php php scripts/message-actions-selftest.php 2>&1)"; then
+    message_actions_selftest="${message_actions_selftest//$'\r'/}"
+    ok "$message_actions_selftest"
+  else
+    message_actions_selftest="${message_actions_selftest//$'\r'/}"
+    fail "$message_actions_selftest"
   fi
 
   if is_enabled "${COREUI_INSTALL_BROWSE:-0}"; then

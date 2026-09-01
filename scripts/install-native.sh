@@ -82,6 +82,7 @@ wait_http() {
 [[ -f "$PROJECT_ROOT/database/migrations/005_thinking_attachments.sql" ]] || die 'SQL-Thinking- und Anhangschema fehlt.'
 [[ -f "$PROJECT_ROOT/database/migrations/006_account_security.sql" ]] || die 'SQL-Kontosicherheitsschema fehlt.'
 [[ -f "$PROJECT_ROOT/database/migrations/007_remove_private_studio_lore.sql" ]] || die 'SQL-Datenschutzmigration fehlt.'
+[[ -f "$PROJECT_ROOT/database/migrations/008_message_actions.sql" ]] || die 'SQL-Nachrichtenaktionsschema fehlt.'
 [[ "$PROJECT_ROOT" =~ ^/[A-Za-z0-9._/-]+$ ]] || die 'Der Projektpfad darf nur Buchstaben, Zahlen, Punkt, Unterstrich, Bindestrich und Slash enthalten.'
 [[ "$PROJECT_ROOT" != /root/* ]] || die 'Bitte das Paket zuerst nach /opt/ember-coreui verschieben. Nginx darf Verzeichnisse unter /root nicht ausliefern.'
 [[ "$PROJECT_ROOT" != /home/* ]] || die 'Bitte das Paket zuerst nach /opt/ember-coreui verschieben. Der gehaertete Worker kapselt Benutzerverzeichnisse.'
@@ -352,6 +353,7 @@ mariadb --defaults-extra-file="$DB_CLIENT_TMP" "$DB_NAME" < "$PROJECT_ROOT/datab
 mariadb --defaults-extra-file="$DB_CLIENT_TMP" "$DB_NAME" < "$PROJECT_ROOT/database/migrations/005_thinking_attachments.sql"
 mariadb --defaults-extra-file="$DB_CLIENT_TMP" "$DB_NAME" < "$PROJECT_ROOT/database/migrations/006_account_security.sql"
 mariadb --defaults-extra-file="$DB_CLIENT_TMP" "$DB_NAME" < "$PROJECT_ROOT/database/migrations/007_remove_private_studio_lore.sql"
+mariadb --defaults-extra-file="$DB_CLIENT_TMP" "$DB_NAME" < "$PROJECT_ROOT/database/migrations/008_message_actions.sql"
 
 log 'Initialisiere Ember und das Administratorkonto.'
 COREUI_ADMIN_EMAIL="$ADMIN_EMAIL" \

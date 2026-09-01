@@ -62,7 +62,7 @@ try {
   $export = [
     'format' => 'ember-coreui-account-export',
     'format_version' => 1,
-    'coreui_version' => '0.4.5-alpha',
+    'coreui_version' => '0.5.0-alpha',
     'generated_at' => gmdate('c'),
     'public_base_url' => defined('STU_PUBLIC_BASE_URL') ? (string)STU_PUBLIC_BASE_URL : '',
     'account' => $accountRows[0],
@@ -95,6 +95,20 @@ try {
     ),
     'conversation_sessions' => $sessions,
     'conversation_messages' => $messages,
+    'message_feedback' => coreui_export_rows(
+      $pdo,
+      "SELECT r.message_id,r.emoji,r.created_at FROM stu_chat_reactions r "
+        . "JOIN stu_chat_messages m ON m.id=r.message_id AND m.user_id=r.user_id "
+        . "WHERE r.user_id=? AND r.channel='console' AND r.emoji IN ('👍','👎') "
+        . 'ORDER BY r.message_id,r.created_at',
+      [$uid]
+    ),
+    'message_generations' => coreui_export_rows(
+      $pdo,
+      'SELECT trigger_message_id,source_response_id,mode,status,response_message_id,error_code,created_at,started_at,finished_at '
+        . 'FROM stu_console_generation_requests WHERE user_id=? ORDER BY created_at,id',
+      [$uid]
+    ),
     'message_attachments' => coreui_export_rows(
       $pdo,
       'SELECT a.message_id,a.media_uuid,a.position,a.created_at FROM stu_console_message_attachments a '

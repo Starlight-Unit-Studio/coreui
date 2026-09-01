@@ -33,6 +33,7 @@ try {
     'stu_user_knowledge_chunks',
     'stu_console_message_attachments',
     'stu_auth_sessions',
+    'stu_console_generation_requests',
   ];
   $missing = [];
   foreach ($required as $table) {
@@ -48,6 +49,7 @@ try {
       $pdo->query('SELECT thinking_enabled FROM stu_user_ai_settings LIMIT 0');
       $pdo->query('SELECT password_changed_at,last_login_at FROM stu_users LIMIT 0');
       $pdo->query('SELECT token_hash,expires_at,revoked_at FROM stu_auth_sessions LIMIT 0');
+      $pdo->query('SELECT response_floor_id,mode,status,response_message_id,browse_job_id FROM stu_console_generation_requests LIMIT 0');
       $stMigration = $pdo->prepare('SELECT COUNT(*) FROM stu_schema_migrations WHERE version=?');
       $stMigration->execute(['003_console_sessions']);
       if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_003_console_sessions';
@@ -59,6 +61,8 @@ try {
       if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_006_account_security';
       $stMigration->execute(['007_remove_private_studio_lore']);
       if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_007_remove_private_studio_lore';
+      $stMigration->execute(['008_message_actions']);
+      if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_008_message_actions';
       $stPrivateLore = $pdo->prepare(
         'SELECT COUNT(*) FROM ember_knowledge_chunks WHERE source IN (?, ?)'
       );

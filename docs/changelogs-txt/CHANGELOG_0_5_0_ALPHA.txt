@@ -1,0 +1,96 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+CHANGELOG 0.5.0-ALPHA
+STAND 01.09.2026
+
+======================================================================
+SICHERE NACHRICHTENDARSTELLUNG
+======================================================================
+
+* Lokaler Markdown-Renderer fuer Ueberschriften, Hervorhebungen, Listen,
+  Zitate, Links, Tabellen, Inline-Code und eingezaeunte Codebloecke.
+* Rohes HTML bleibt Text und wird niemals als DOM-Markup ausgefuehrt.
+* Nur HTTP-, HTTPS- und Mail-Links werden klickbar.
+* Kein innerHTML, kein eval, keine Remote-CDN und keine ausfuehrbare
+  Modellausgabe.
+* Codebloecke besitzen Sprachkennung, lokale Syntaxfarben, horizontales
+  Scrollen und eine eigene Kopieraktion.
+
+======================================================================
+AKTIONSLEISTEN
+======================================================================
+
+Benutzernachrichten:
+
+* Nachricht kopieren.
+* Text als neuen Entwurf in den Editor uebernehmen.
+* Die gespeicherte Originalnachricht bleibt unveraendert.
+
+Ember-Antworten:
+
+* Antwort kopieren.
+* Positives oder negatives Feedback speichern.
+* Alternative Antwort erzeugen.
+* Antwort fortsetzen.
+* Antworttyp, Nachrichten-ID und Turn-ID anzeigen.
+
+Positive und negative Bewertung schliessen sich pro Benutzer gegenseitig aus.
+Jede schreibende Aktion benoetigt CSRF, das authentifizierte Konto, die eigene
+private Sitzung und die konkrete Ember-Nachricht.
+
+======================================================================
+ALTERNATIVEN UND FORTSETZUNGEN
+======================================================================
+
+* Alternative Antworten ueberschreiben die alte Antwort nicht.
+* Alle Varianten behalten die reply_to_id des urspruenglichen Benutzer-Turns.
+* Bei einer Alternative werden vorhandene Antworten desselben Turns aus dem
+  Modellkontext ausgeschlossen.
+* Fortsetzungen werden als eigene Ember-Nachricht gespeichert.
+* Migration 008 speichert kurzlebige, kontogebundene Anforderungen und deren
+  Ergebnisstatus.
+* Eine feste Nachrichten-ID-Grenze verhindert, dass eine bereits vorhandene
+  Variante bei der Wiederaufnahme als neues Ergebnis verwechselt wird.
+* Gleichzeitige Aktionen derselben Sitzung werden serialisiert. Eine Sitzung
+  kann waehrend einer laufenden Aktion nicht endgueltig geloescht werden.
+* Bei unterbrochener SSE-Verbindung kann der Client den Ergebnisstatus erneut
+  abfragen.
+* Werkzeugbasierte Folgeantworten behalten die exakte private Browser-Job-ID.
+  Wiederaufnahme und Workerfehler werden dadurch eindeutig abgeschlossen.
+
+======================================================================
+DATENSCHUTZ UND BETRIEB
+======================================================================
+
+* Kontoexport enthaelt eigene Bewertungen und die Generierungshistorie.
+* Temporaere Anforderungstoken und interne Thinking-Inhalte werden nicht
+  exportiert.
+* Game, Global Chat, Homepage, Repack, KeyHelp, Apache, Host-PHP und fremde
+  Datenbanken bleiben unangetastet.
+* Bestehende Konten, Sitzungen, Nachrichten, Uploads, Profilbilder, Memories
+  und private RAG-Quellen bleiben beim Update erhalten.
+
+======================================================================
+TESTS
+======================================================================
+
+* Neuer Markdown-Selftest fuer unsichere Linkprotokolle, HTML-Text, Tabellen
+  und Codebloecke.
+* Neuer Nachrichtenaktionen-Selftest fuer Benutzerisolation, Feedback,
+  Turnbindung und sichere Renderer-Verdrahtung.
+* Frontend-Regressions-Selftest um Ladefolge, Markdown, Codebloecke und
+  Aktionsleisten erweitert.
+* Healthcheck, Compose-Preflight, Native-Preflight und Installer pruefen
+  Migration 008 und die neuen Endpunkte.
+
+======================================================================
+BEWUSST NOCH NICHT ENTHALTEN
+======================================================================
+
+* Spracheingabe, nativer Modell-Audiotransport und TTS-Ausgabe folgen im
+  getrennten Audioausbau.
+* Quellen- und Werkzeugmetadaten unter einer Antwort folgen im naechsten
+  0.5.x-Funktionsblock.
+* Bearbeiten als echter Sitzungszweig und eine Varianten-Karussellansicht sind
+  noch nicht enthalten.
+
+ENDE CHANGELOG 0.5.0-ALPHA

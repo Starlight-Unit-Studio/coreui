@@ -1,6 +1,6 @@
 /* ========================================================================== */
 /* Project STΛRLIɢHT: Ember CoreUI                                            */
-/* Stand: Ember CoreUI 0.4.5-alpha                                           */
+/* Stand: Ember CoreUI 0.5.0-alpha                                           */
 /* Helles, eigenständiges Ren- und Ayal'ren-Holo-Interface                   */
 /* ========================================================================== */
 
@@ -1786,6 +1786,290 @@ a:focus-visible {
   font-size: 8px;
   letter-spacing: 0.05em;
   line-height: 1.2;
+}
+
+.msg-markdown {
+  white-space: normal;
+}
+
+.msg-markdown > :first-child {
+  margin-top: 0;
+}
+
+.msg-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.msg-markdown p {
+  margin: 0 0 0.78em;
+}
+
+.msg-markdown h1,
+.msg-markdown h2,
+.msg-markdown h3,
+.msg-markdown h4,
+.msg-markdown h5,
+.msg-markdown h6 {
+  margin: 1.05em 0 0.45em;
+  color: #243758;
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  line-height: 1.16;
+}
+
+.msg-markdown h1 { font-size: 1.55em; }
+.msg-markdown h2 { font-size: 1.38em; }
+.msg-markdown h3 { font-size: 1.22em; }
+.msg-markdown h4,
+.msg-markdown h5,
+.msg-markdown h6 { font-size: 1.08em; }
+
+.msg-markdown strong {
+  color: #1f3151;
+  font-weight: 700;
+}
+
+.msg-markdown a {
+  color: #326fca;
+  text-decoration-color: rgba(50, 111, 202, 0.4);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.msg-markdown a:hover {
+  color: #184f9d;
+  text-decoration-color: currentColor;
+}
+
+.msg-markdown ul,
+.msg-markdown ol {
+  margin: 0.42em 0 0.82em;
+  padding-left: 1.55em;
+}
+
+.msg-markdown li {
+  margin: 0.2em 0;
+  padding-left: 0.15em;
+}
+
+.msg-markdown li::marker {
+  color: var(--cx);
+  font-family: "Share Tech Mono", monospace;
+}
+
+.msg-row.user .msg-markdown li::marker {
+  color: var(--amb);
+}
+
+.msg-markdown blockquote {
+  margin: 0.7em 0;
+  padding: 0.18em 0 0.18em 0.9em;
+  border-left: 3px solid rgba(91, 146, 255, 0.56);
+  color: #52627a;
+}
+
+.msg-markdown hr {
+  height: 1px;
+  margin: 1em 0;
+  border: 0;
+  background: linear-gradient(90deg, rgba(91, 146, 255, 0.55), transparent);
+}
+
+.md-inline-code {
+  padding: 0.12em 0.38em;
+  border: 1px solid rgba(91, 146, 255, 0.22);
+  border-radius: 4px;
+  background: rgba(39, 62, 96, 0.07);
+  color: #24466e;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.88em;
+  white-space: break-spaces;
+}
+
+.md-codeblock {
+  width: min(100%, 760px);
+  margin: 0.76em 0;
+  overflow: hidden;
+  border: 1px solid rgba(91, 146, 255, 0.32);
+  border-radius: 7px;
+  background: #101827;
+  box-shadow: 0 8px 20px rgba(15, 27, 48, 0.18);
+}
+
+.md-code-toolbar {
+  display: flex;
+  min-height: 31px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid rgba(130, 173, 255, 0.18);
+  background: #172238;
+}
+
+.md-code-language,
+.md-code-copy {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+
+.md-code-language {
+  color: #8fb5f5;
+}
+
+.md-code-copy {
+  padding: 5px 7px;
+  border: 0;
+  background: transparent;
+  color: #b6c8e6;
+  cursor: pointer;
+}
+
+.md-code-copy:hover,
+.md-code-copy:focus-visible {
+  color: #fff;
+}
+
+.md-codeblock pre {
+  max-width: 100%;
+  margin: 0;
+  padding: 14px 16px 16px;
+  overflow: auto;
+  color: #dbe7fa;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 12px;
+  line-height: 1.62;
+  tab-size: 2;
+}
+
+.md-codeblock code {
+  display: block;
+  min-width: max-content;
+  white-space: pre;
+}
+
+.md-token-comment { color: #7488a6; font-style: italic; }
+.md-token-string { color: #a8d7a2; }
+.md-token-number { color: #f0b96e; }
+.md-token-keyword { color: #85aaff; font-weight: 700; }
+.md-token-literal { color: #d99af1; }
+
+.md-table-wrap {
+  max-width: 100%;
+  margin: 0.8em 0;
+  overflow-x: auto;
+  border: 1px solid rgba(91, 146, 255, 0.24);
+}
+
+.md-table-wrap table {
+  width: 100%;
+  min-width: 360px;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.48);
+  font-size: 0.9em;
+}
+
+.md-table-wrap th,
+.md-table-wrap td {
+  padding: 8px 10px;
+  border-right: 1px solid rgba(91, 146, 255, 0.16);
+  border-bottom: 1px solid rgba(91, 146, 255, 0.16);
+  vertical-align: top;
+}
+
+.md-table-wrap th {
+  background: rgba(91, 146, 255, 0.1);
+  color: #304f7d;
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.msg-actions {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 2px;
+  margin: 5px 4px 0;
+  color: #8795aa;
+  flex-wrap: wrap;
+}
+
+.msg-row.user .msg-actions {
+  justify-content: flex-end;
+}
+
+.msg-action {
+  display: inline-grid;
+  width: 30px;
+  height: 29px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+
+.msg-action svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.msg-action:hover,
+.msg-action:focus-visible {
+  border-color: rgba(91, 146, 255, 0.2);
+  background: rgba(91, 146, 255, 0.08);
+  color: #4775b7;
+  outline: 0;
+}
+
+.msg-action:active {
+  transform: translateY(1px);
+}
+
+.msg-action.active,
+.msg-action.success {
+  border-color: rgba(91, 146, 255, 0.36);
+  background: rgba(91, 146, 255, 0.12);
+  color: #2d6bc1;
+}
+
+.msg-action.error {
+  border-color: rgba(190, 57, 57, 0.34);
+  background: rgba(190, 57, 57, 0.1);
+  color: #b93b3b;
+}
+
+.msg-action:disabled {
+  cursor: wait;
+  opacity: 0.46;
+}
+
+.msg-action-details {
+  display: flex;
+  flex: 1 0 100%;
+  gap: 6px 12px;
+  padding: 6px 7px 3px;
+  color: #8290a3;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 0.055em;
+  line-height: 1.35;
+  flex-wrap: wrap;
+}
+
+.msg-action-details[hidden] {
+  display: none;
+}
+
+.msg-action-details b {
+  color: #5f7392;
+  font-weight: 400;
 }
 
 .typing-dots {

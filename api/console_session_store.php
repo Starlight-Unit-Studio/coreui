@@ -226,6 +226,16 @@ function coreui_console_session_delete_tx(PDO $pdo, int $uid, string $sessionId)
     if ($jobId > 0) $browseScreenshotPaths[] = 'uploads/ember_browse/job_' . $jobId . '.png';
   }
 
+  // Auch eine laufende Alternative oder Fortsetzung schreibt spaeter noch in
+  // diese Sitzung. Sie darf deshalb nicht unter dem Stream geloescht werden.
+  $stGenerations = $pdo->prepare(
+    "SELECT id FROM stu_console_generation_requests
+      WHERE user_id=? AND session_id=? AND status IN ('issued','running') AND expires_at>=NOW()
+      LIMIT 1 FOR UPDATE"
+  );
+  $stGenerations->execute([$uid, $sessionId]);
+  if ($stGenerations->fetchColumn()) throw new RuntimeException('session_busy');
+
   // Nur Medien erfassen, die dem Benutzer gehoeren und in genau dieser
   // Sitzung referenziert werden. Ob sie nachher wirklich verwaist sind, wird
   // nach dem Nachrichten-DELETE nochmals innerhalb derselben Transaktion

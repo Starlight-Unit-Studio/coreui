@@ -35,6 +35,7 @@ session_test_expect(!str_contains($sessions, 'ORDER BY created_at ASC LIMIT 1'),
 session_test_expect(str_contains($store, 'function coreui_console_session_delete_tx'), 'Transaktionale SQL-Loeschung fehlt.');
 session_test_expect(str_contains($store, "throw new RuntimeException('session_must_be_archived')"), 'Aktive Sitzungen koennen dauerhaft geloescht werden.');
 session_test_expect(str_contains($store, "['queued', 'running']"), 'Laufende Browse-Jobs blockieren die Loeschung nicht.');
+session_test_expect(str_contains($store, 'stu_console_generation_requests'), 'Laufende Nachrichtenaktionen blockieren die Loeschung nicht.');
 session_test_expect(str_contains($store, 'DELETE r FROM stu_chat_reactions'), 'Reaktionen werden beim Sitzungsloeschen nicht entfernt.');
 session_test_expect(str_contains($store, 'DELETE f FROM stu_ember_browse_frames'), 'Browserframes werden beim Sitzungsloeschen nicht entfernt.');
 session_test_expect(str_contains($store, 'DELETE s FROM stu_ember_browse_steps'), 'Browserschritte werden beim Sitzungsloeschen nicht entfernt.');
