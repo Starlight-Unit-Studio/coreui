@@ -1,0 +1,117 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+CHANGELOG 0.5.2-ALPHA
+STAND 02.09.2026
+
+======================================================================
+PRODUKTIVFEHLER
+======================================================================
+
+Ein exakter Rechenauftrag wie
+
+Berechne bitte exakt: 123456789 * 987654321 und nenne mir NUR das Ergebnis.
+
+konnte den privaten Core Channel ohne sichtbare Antwort stehen lassen. Nach
+einem Neustart war nur die bereits gespeicherte Benutzernachricht sichtbar.
+
+Der bisherige Ablauf konnte fuer denselben Turn nacheinander ausloesen:
+
+* erste Streaming-Generierung durch Ollama
+* Erkennung eines Python-Werkzeugmarkers
+* synchroner kompletter Modellfallback
+* Warten auf den Python-Worker
+* zweiter Modellaufruf zur Formulierung des Ergebnisses
+
+Dieser mehrstufige Ablauf war fuer eine eindeutige Ganzzahlrechnung unnoetig
+und konnte an mehreren Timeoutgrenzen ohne speicherbare Antwort enden.
+
+======================================================================
+DETERMINISTISCHER GANZZAHL-SCHNELLPFAD
+======================================================================
+
+CoreUI erkennt nun genau einen binaeren Ganzzahlausdruck und berechnet ihn
+lokal. Unterstuetzt werden:
+
+* Addition mit +
+* Subtraktion mit -
+* Multiplikation mit *, x oder ×
+* positive und negative Operanden
+* fuehrende Nullen
+* bis zu 512 Ziffern je Operand
+
+Die Berechnung verwendet eigene dezimale String-Arithmetik. Es findet keine
+Umwandlung in einen PHP-Integer statt. Deshalb bleibt das Ergebnis auch weit
+oberhalb der 32-Bit- oder 64-Bit-Grenze exakt.
+
+Das gemeldete Beispiel liefert deterministisch:
+
+121932631112635269
+
+Ollama und der Python-Worker werden bei diesem klaren Fall nicht gestartet.
+Nach der Speicherung starten auch keine Memory-, Reflexions- oder
+Reputationsaufgaben. Ein verborgener weiterer Modellaufruf kann die
+Fertigmeldung deshalb nicht verzoegern.
+
+======================================================================
+STRENGE ROUTINGGRENZEN
+======================================================================
+
+Der Schnellpfad wird nicht verwendet bei:
+
+* Anhaengen oder Bildern
+* Dezimalzahlen
+* Division oder Potenzen
+* mehreren Rechenoperatoren
+* mehreren numerischen Vorgaben ausserhalb des Ausdrucks
+* ausdruecklich verlangtem Rechenweg oder einer Herleitung
+* einer Fortsetzungsaktion auf eine bestehende Ember-Antwort
+
+Solche Aufgaben bleiben im normalen Modell-, Python- oder Werkzeugpfad. Damit
+wertet CoreUI keinen Teil einer komplexeren Eingabe versehentlich isoliert aus.
+
+======================================================================
+SPEICHERUNG UND STREAM-ABSCHLUSS
+======================================================================
+
+Der private SSE-Pfad prueft den eindeutigen Ausdruck nach Turn-Lock und
+Idempotenz, aber vor Promptbau, Ollama und Console-AFK.
+
+Das lokale Ergebnis durchlaeuft danach weiterhin den gemeinsamen sicheren
+Abschluss:
+
+* serverseitige Antwortbereinigung
+* Speicherung als echte Ember-Nachricht
+* Zuordnung zur originalen reply_to_id
+* regulaeres done-Ereignis fuer den Browser
+* Freigabe des Turn-Locks im finally-Block
+
+Bearbeitung und Neugenerierung eines eindeutigen Rechenturns funktionieren
+ebenfalls. Eine Fortsetzung verwendet bewusst weiterhin den normalen Pfad.
+
+Der synchrone gemeinsame Antwortgenerator besitzt denselben Schnellpfad. Damit
+bleiben nicht streamende und globale Aufrufer konsistent.
+
+======================================================================
+TESTS UND MIGRATION
+======================================================================
+
+Der Reply-Pipeline-Selftest prueft:
+
+* 123456789 * 987654321
+* Multiplikation weit oberhalb der PHP-Integergrenze
+* Addition mit vollstaendigem Uebertrag
+* positive und negative Operanden
+* negative Ergebnisse
+* Ablehnung einer Kettenrechnung
+* Ablehnung von Division und Dezimalzahlen
+* Ablehnung eines verlangten Rechenwegs
+* Verdrahtung des lokalen Abschlusses im SSE-Pfad
+* Sperre gegen nachgelagerte Reflect-Modellaufrufe
+
+Die Multiplikationslogik wurde zusaetzlich unabhaengig mit 500 zufaelligen
+Faellen bis 512 Ziffern gegen beliebig grosse Referenzinteger geprueft.
+
+Es gibt keine neue Datenbankmigration. Migration 009 bleibt der aktuelle
+Schemaendstand. Konten, Sitzungen, Nachrichten, Reaktionen, Revisionen,
+Anhaenge, Uploads, private RAG-Quellen und Konfigurationen bleiben erhalten.
+
+ENDE CHANGELOG 0.5.2-ALPHA

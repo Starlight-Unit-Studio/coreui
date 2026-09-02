@@ -311,16 +311,9 @@ try {
     }
   }
 
-  // Console-AFK: ab hier wird WIRKLICH generiert (Idempotenz-Treffer sind oben schon raus).
-  // -> Ember in der GLOBAL-Nickliste als abwesend (💤) zeigen, solange sie hier antwortet.
-  // TTL knapp ueber dem Ollama-Cap (900s): bleibt die ganze Generierung ueber AFK und heilt
-  // bei hartem Abbruch (kein finally) von selbst. Der finally-Block raeumt im Normalfall sofort auf.
-  ember_console_afk_set($pdo, time() + 930);
-  // Gewohnte AFK-Systemmeldung im Global-Chat (wie beim Browse-Worker). Selbst-dedupliziert:
-  // bei Mehrfach-Turns in der Console wird sie nur einmal pro Cooldown gepostet -> kein Spam.
-  ember_console_afk_announce($pdo);
-
-  ember_prepare_background_runtime();
+  $exactCalculation = (!$isVisionTurn && $attachmentIds === [] && $generationMode !== 'continue')
+    ? ember_exact_integer_calculation($promptMessage)
+    : null;
   console_stream_progress($thinkingEnabled, 'request');
 
   // v1.1.1.94: Vision-Turns nehmen NICHT den Streaming-Pfad. console_stream_ollama()
@@ -328,11 +321,29 @@ try {
   // faellt der Turn unten in den Sync-Pfad, der den fertigen Vision-Zweig hat.
   // Der Prompt-Aufbau wird dann ebenfalls uebersprungen: er waere ungenutzt und
   // wuerde nur eine RAG-Abfrage kosten.
-  if ($isVisionTurn) {
+  if ($exactCalculation !== null) {
+    ember_exact_calculation_mark_complete();
+    $acc = [
+      'thinking' => '',
+      'content' => $exactCalculation,
+      'ok' => true,
+      'done' => true,
+      'truncated' => false,
+    ];
+  } elseif ($isVisionTurn) {
+    // Console-AFK nur setzen, wenn wirklich ein Modell- oder Werkzeuglauf startet.
+    ember_console_afk_set($pdo, time() + 930);
+    ember_console_afk_announce($pdo);
+    ember_prepare_background_runtime();
     sse_comment('vision-sync');
     console_stream_progress($thinkingEnabled, 'context');
     $acc = ['thinking' => '', 'content' => ''];
   } else {
+    // Console-AFK: Ember in der globalen Nickliste abwesend zeigen, solange das
+    // Modell arbeitet. Der finally-Block nimmt den Status im Normalfall zurueck.
+    ember_console_afk_set($pdo, time() + 930);
+    ember_console_afk_announce($pdo);
+    ember_prepare_background_runtime();
     // Prompt bauen - identische Ember-Stimme wie ueberall (shared builder).
     $built = ember_build_chat_prompt(
       $pdo,

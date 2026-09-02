@@ -35,6 +35,32 @@ if (ember_num_predict() !== 6500 || ember_num_predict_for_model('ember-coreui:la
   reply_test_fail('Das Benutzerbudget wird nicht unveraendert an Ollama weitergegeben.');
 }
 
+$exactCases = [
+  ['Berechne bitte exakt: 123456789 * 987654321 und nenne mir NUR das Ergebnis.', '121932631112635269'],
+  ['999999999999999999999999 + 1', '1000000000000000000000000'],
+  ['Berechne -12345678901234567890 * -9.', '111111110111111111010'],
+  ['Berechne 5 - 12.', '-7'],
+  ['12 X 12', '144'],
+  ['-5 + -8', '-13'],
+];
+foreach ($exactCases as [$expression, $expected]) {
+  $actual = ember_exact_integer_calculation($expression);
+  if ($actual !== $expected) {
+    reply_test_fail('Exakte Ganzzahlrechnung fehlgeschlagen: ' . $expression . ' -> ' . (string)$actual);
+  }
+}
+foreach ([
+  'Berechne 100 + 200 + 300.',
+  'Berechne 10 / 4.',
+  'Berechne 1.5 * 8.',
+  'Berechne 12 * 12 und erklaere den Rechenweg.',
+  'Was ist Episode 123 - 456?',
+] as $unsafeFastPath) {
+  if (ember_exact_integer_calculation($unsafeFastPath) !== null) {
+    reply_test_fail('Mehrdeutige Rechnung gelangt in den exakten Schnellpfad: ' . $unsafeFastPath);
+  }
+}
+
 // Simuliert eine erhaltene 0.2.x-Konfiguration, ohne vor dem Laden der echten
 // config.local.php Konstanten zu definieren. Dadurch bleibt der Test frei von
 // "already defined"-Warnungen auf aktualisierten Installationen.
@@ -74,6 +100,15 @@ if (!str_contains($streamSource, "'think'    => ember_thinking_enabled()")
     || !str_contains($streamSource, "console_stream_progress(\$thinkingEnabled")) {
   reply_test_fail('Thinking wird im SSE-Pfad nicht serverseitig aktiviert oder deaktiviert.');
 }
+if (!str_contains($streamSource, 'ember_exact_integer_calculation($promptMessage)')
+    || !str_contains($streamSource, "'truncated' => false")) {
+  reply_test_fail('Der SSE-Pfad schliesst exakte Ganzzahlrechnungen nicht lokal ab.');
+}
+
+$chatSource = (string)file_get_contents(dirname(__DIR__) . '/api/chat.php');
+if (!str_contains($chatSource, "!empty(\$lastCall['exact_calc_fastpath'])")) {
+  reply_test_fail('Ein lokales Rechenergebnis kann weiterhin einen Reflect-Modellaufruf starten.');
+}
 
 $clientSource = (string)file_get_contents(dirname(__DIR__) . '/js/console-app.js');
 if (str_contains($clientSource, "'&msg='")) {
@@ -96,7 +131,6 @@ if (str_contains($clientSource, "EMBER_PREFIX + userText")
   reply_test_fail('Der private Dateipfad sendet weiterhin ein kuenstliches @Ember-Praefix.');
 }
 
-$chatSource = (string)file_get_contents(dirname(__DIR__) . '/api/chat.php');
 foreach (['? 20000 : 12000', '? 1200 : 120', 'chat_clean_console_message', 'chat_console_transport_text'] as $needle) {
   if (!str_contains($chatSource, $needle)) {
     reply_test_fail('Private Ember CoreUI-Arbeitsgrenze fehlt: ' . $needle);
@@ -111,4 +145,4 @@ if (!str_contains($migration, 'ALTER TABLE stu_chat_messages MODIFY COLUMN messa
   reply_test_fail('Die Nachrichtenspalte ist nicht fuer lange Antworten migriert.');
 }
 
-fwrite(STDOUT, "Reply-Pipeline-Selftest OK: Budget, Thinking-Wahl, zehn Anhaenge, Fortsetzung und MEDIUMTEXT aktiv.\n");
+fwrite(STDOUT, "Reply-Pipeline-Selftest OK: exakte Ganzzahlrechnung, Budget, Thinking-Wahl, zehn Anhaenge, Fortsetzung und MEDIUMTEXT aktiv.\n");

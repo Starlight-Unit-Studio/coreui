@@ -2,6 +2,21 @@
 
 Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versioniert.
 
+## v0.5.2-alpha - 02.09.2026
+
+- Produktiv gemeldeten Stillstand bei exakten Rechenauftraegen wie `123456789 * 987654321` behoben. Der bisherige Pfad konnte erst eine Streaming-Generierung, danach den synchronen Modellfallback, den Python-Worker und einen weiteren Modellaufruf starten.
+- Deterministischen lokalen Schnellpfad fuer genau einen binaeren Ganzzahlausdruck eingefuehrt. Addition, Subtraktion und Multiplikation mit `*`, `x` oder `×` werden ohne Ollama und ohne Python abgeschlossen.
+- Eigene dezimale String-Arithmetik fuer vorzeichenbehaftete Operanden bis 512 Ziffern implementiert. Das Ergebnis bleibt unabhaengig von der PHP-Integerbreite exakt.
+- Schnellpfad bewusst auf eindeutige Aufgaben begrenzt. Anhaenge, Bilder, Dezimalzahlen, Divisionen, Potenzen, Kettenrechnungen, mehrere numerische Vorgaben und verlangte Rechenwege bleiben im normalen Modell- und Werkzeugpfad.
+- Privaten SSE-Pfad vor dem Promptbau um die lokale Berechnung erweitert. Das Ergebnis wird weiterhin als regulaere Ember-Nachricht mit derselben `reply_to_id` gespeichert und ueber das normale `done`-Ereignis abgeschlossen.
+- Fuer eine lokal abgeschlossene Rechnung wird kein Console-AFK gesetzt. Modell- und Werkzeuglaeufe behalten ihr bisheriges AFK-Verhalten.
+- Nachgelagerte Memory-, Reflexions- und Reputationsauswertung fuer den lokalen Rechenschritt unterbunden. Das Ergebnis bleibt als Chatnachricht gespeichert, startet aber keinen verborgenen weiteren Modellaufruf und wird nicht als Langzeitgedaechtnis behandelt.
+- Gemeinsamen synchronen Antwortgenerator ebenfalls abgesichert, damit globale oder nicht streamende Aufrufer denselben exakten Abschluss erhalten.
+- Metadaten des lokalen Abschlusses explizit gesetzt, damit kein alter Guardrail-, Thinking- oder Timeoutzustand in den neuen Turn hineinragt.
+- Reply-Pipeline-Selftest um den gemeldeten Multiplikationsfall, grosse Zahlen, Vorzeichen, Uebertraege, negative Ergebnisse und strikte Ablehnungsfaelle erweitert.
+- Keine neue Datenbankmigration. Migration 009, Konten, Sitzungen, Nachrichten, Reaktionen, Revisionen, Anhaenge und lokale Konfiguration bleiben unveraendert erhalten.
+- Version, Cache-Buster, Setup, README, Changelog-Archiv, Branding-Test, Preflight und Uebergabeprotokoll auf `0.5.2-alpha` aktualisiert.
+
 ## v0.5.1-alpha - 01.09.2026
 
 - Praktischen Produktivtest von `0.5.0-alpha` ausgewertet: Markdown, Codebloecke, Kopieren, Neugenerierung, Antwortdetails und alle bestehenden Werkzeuge funktionierten; persistentes Feedback und der gewuenschte Bearbeitungsfluss benoetigten Korrekturen.

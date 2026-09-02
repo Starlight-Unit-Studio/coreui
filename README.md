@@ -3,7 +3,7 @@
 
 Ember CoreUI is an independent WebUI for a local E.M.B.E.R. core. Until its final inclusion in the STU Repack, it has its own versioning and its own release cycle.
 
-Current version: `0.5.1-alpha`
+Current version: `0.5.2-alpha`
 
 ## Quick installation
 
@@ -37,7 +37,17 @@ Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNIT
 
 ## Result of this release
 
-`0.5.1-alpha` is the persistence and conversation-flow correction for the first message-comfort release.
+`0.5.2-alpha` is a focused completion hotfix for exact integer calculations in the private Core Channel.
+
+- A prompt containing exactly one signed integer addition, subtraction, or multiplication can now be completed locally without waiting for Ollama or the Python worker.
+- The calculation uses decimal string arithmetic instead of PHP integer conversion. Operands of up to 512 digits remain exact on both 32-bit and 64-bit hosts.
+- The private SSE path still stores the result as a normal Ember message, keeps the original `reply_to_id`, and sends the regular completion event to the browser.
+- The local path does not mark Ember as AFK and cannot leave a Python job or model request blocking the session.
+- Exact calculation results do not start memory reflection or reputation analysis after storage, so no hidden follow-up model call can delay completion.
+- Attachments, images, decimals, division, powers, chained expressions, multiple numeric constraints, and requests for an explanation remain in the normal model and tool path.
+- The reply-pipeline self-test covers the reported `123456789 * 987654321` case, signed arithmetic, large values, strict rejection boundaries, and SSE integration.
+
+All persistence and conversation-flow corrections from `0.5.1-alpha` remain included:
 
 - Ember and user messages now use a local Markdown renderer for headings, emphasis, lists, blockquotes, links, tables, inline code, and fenced code blocks.
 - Raw HTML is always rendered as text. Clickable links are restricted to HTTP, HTTPS, and mail addresses. The renderer does not use `innerHTML`, `eval`, a remote CDN, or executable model output.
@@ -255,14 +265,14 @@ The same verified flow used by the quick installer can be run manually:
 
 ```bash
 cd /home/users/game/tmp
-BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.5.1-alpha'
+BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.5.2-alpha'
 
-curl -fL "$BASE/EMBER_COREUI_0_5_1_ALPHA.zip" -o EMBER_COREUI_0_5_1_ALPHA.zip
-curl -fL "$BASE/EMBER_COREUI_0_5_1_ALPHA.zip.sha256" -o EMBER_COREUI_0_5_1_ALPHA.zip.sha256
-sha256sum -c EMBER_COREUI_0_5_1_ALPHA.zip.sha256
-unzip -q EMBER_COREUI_0_5_1_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_5_2_ALPHA.zip" -o EMBER_COREUI_0_5_2_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_5_2_ALPHA.zip.sha256" -o EMBER_COREUI_0_5_2_ALPHA.zip.sha256
+sha256sum -c EMBER_COREUI_0_5_2_ALPHA.zip.sha256
+unzip -q EMBER_COREUI_0_5_2_ALPHA.zip
 
-sudo mv EMBER_COREUI_0_5_1_ALPHA /opt/ember-coreui
+sudo mv EMBER_COREUI_0_5_2_ALPHA /opt/ember-coreui
 cd /opt/ember-coreui
 sudo chmod 0750 setup.sh scripts/*.sh
 sudo ./scripts/install.sh
@@ -270,14 +280,14 @@ sudo ./scripts/install.sh
 
 The installer asks for the administrator email address, a password of at least 12 characters, and an optional display name through `COREUI_ADMIN_NAME`.
 
-## Update to 0.5.1-alpha
+## Update to 0.5.2-alpha
 
 The existing database, accounts, sessions, uploads, and protected credentials are preserved. The package is copied only over static project files and templates.
 
 ```bash
 cd /home/users/game/tmp
-sha256sum -c EMBER_COREUI_0_5_1_ALPHA.zip.sha256
-unzip -q -o EMBER_COREUI_0_5_1_ALPHA.zip
+sha256sum -c EMBER_COREUI_0_5_2_ALPHA.zip.sha256
+unzip -q -o EMBER_COREUI_0_5_2_ALPHA.zip
 
 sudo apt-get update
 sudo apt-get install -y rsync
@@ -288,7 +298,7 @@ sudo rsync -a \
   --exclude='uploads/' \
   --exclude='assets/chat_media/' \
   --exclude='assets/profile_photos/' \
-  EMBER_COREUI_0_5_1_ALPHA/ /opt/ember-coreui/
+  EMBER_COREUI_0_5_2_ALPHA/ /opt/ember-coreui/
 
 cd /opt/ember-coreui
 sudo ./scripts/stack.sh up -d --build --force-recreate php web browse pyworker
@@ -669,4 +679,4 @@ A complete German legal notice and a final privacy policy are deliberately not y
 
 ## Alpha status
 
-`0.5.1-alpha` repairs persistent feedback on legacy databases, groups alternative answers with navigation, performs true in-place user-message editing with revision history, and accepts queued follow-up text while Ember is answering. Safe local Markdown, code blocks, continuations, response details, navigation, profile images, TXT decoding, installer verification, attachment reconstruction, private RAG-Lite retrieval, and isolated Python execution remain included. Speech input, native model audio transport, and spoken TTS output remain scheduled for the separate audio stage. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.
+`0.5.2-alpha` completes exact single-expression integer calculations locally so a model or Python timeout cannot leave the private Core Channel waiting without an answer. Persistent feedback, alternative-answer navigation, true in-place editing, queued follow-up text, safe local Markdown, code blocks, continuations, response details, profile images, TXT decoding, installer verification, attachment reconstruction, private RAG-Lite retrieval, and isolated Python execution remain included. Speech input, native model audio transport, and spoken TTS output remain scheduled for the separate audio stage. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.

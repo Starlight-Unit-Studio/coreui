@@ -1,0 +1,437 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+UEBERGABEPROTOKOLL 0.5.2-ALPHA
+STAND 02.09.2026
+
+======================================================================
+1. VERBINDLICHER QUELLSTAND
+======================================================================
+
+Repository:
+https://github.com/Starlight-Unit-Studio/coreui
+
+Arbeitsbranch:
+release/0.5.2-alpha
+
+Ziel-Branch:
+main
+
+Produktversion:
+0.5.2-alpha
+
+Paketwurzel:
+EMBER_COREUI_0_5_2_ALPHA
+
+Releasepaar:
+EMBER_COREUI_0_5_2_ALPHA.zip
+EMBER_COREUI_0_5_2_ALPHA.zip.sha256
+
+Produktive Adresse:
+https://coreui.starlight-unit.de
+
+Das Produkt heisst immer Ember CoreUI. Technische Kennungen wie coreui,
+ember-coreui und COREUI_* bleiben reine Kompatibilitaetsnamen.
+
+0.5.1-alpha wurde auf main veroeffentlicht, ueber den offiziellen SSH-Einzeiler
+installiert und praktisch bestaetigt. Persistentes Feedback, Varianten,
+Bearbeitung derselben Benutzerblase, wartende Folgetexte und die bestehenden
+Chatfunktionen arbeiten produktiv. 0.5.2-alpha baut ausschliesslich auf diesem
+bestaetigten Stand auf.
+
+======================================================================
+2. PRODUKTIV BEOBACHTETER FEHLER
+======================================================================
+
+Der Betreiber meldete am 02.09.2026 einen reproduzierbaren Stillstand bei:
+
+Berechne bitte exakt: 123456789 * 987654321 und nenne mir NUR das Ergebnis.
+
+Sichtbares Verhalten:
+
+* Die Benutzernachricht erschien im privaten Core Channel.
+* Ember lieferte keine sichtbare Antwort mehr.
+* Die Sitzung blieb bis zum Schliessen und erneuten Oeffnen von CoreUI stehen.
+* Nach dem Neustart war nur der bereits gespeicherte Benutzersatz sichtbar.
+* Andere Funktionen von 0.5.1-alpha liefen laut Betreiber problemlos.
+
+Das korrekte Ergebnis lautet:
+
+121932631112635269
+
+======================================================================
+3. TECHNISCHE URSACHE
+======================================================================
+
+Die Multiplikation selbst ist fuer Gemma oder Python trivial. Der Fehler lag im
+mehrstufigen Antwortpfad.
+
+api/console_stream.php startete zuerst den geschuetzten Streaming-Aufruf. Eine
+exakte Rechenaufgabe kann das Modell veranlassen, statt einer fertigen Antwort
+einen [PY]-Werkzeugmarker auszugeben. Ein Marker darf nicht ungeprueft an den
+Browser gesendet werden und loeste deshalb den gemeinsamen synchronen Fallback
+ember_generate_reply() aus.
+
+Der Turn konnte dadurch folgende Stufen durchlaufen:
+
+1. Ollama-Streaming fuer die erste Entscheidung.
+2. Verwerfen des Markers als sichtbare Antwort.
+3. Vollstaendiger synchroner Ollama-Aufruf im Fallback.
+4. Warten auf einen isolierten Python-Worker-Job.
+5. Zweiter synchroner Ollama-Aufruf zur Formulierung des Python-Ergebnisses.
+
+Jede Stufe besitzt eigene Laufzeit- und Fehlergrenzen. Endete eine davon ohne
+brauchbaren Antworttext, blieb die bereits gespeicherte Benutzernachricht ohne
+zugeordnete Ember-Antwort. Der Turn-Lock heilte erst durch Ende des Requests
+oder Ablauf seiner Schutzgrenze.
+
+Fuer eine einzelne Ganzzahlrechnung war diese Pipeline weder notwendig noch
+robust genug.
+
+======================================================================
+4. RELEASEZIEL 0.5.2-ALPHA
+======================================================================
+
+0.5.2-alpha ist ein eng begrenztes Stabilitaetsrelease.
+
+Enthalten:
+
+1. Exakte lokale Berechnung eines einzelnen Ganzzahlausdrucks.
+2. Kein Ollama- oder Python-Aufruf fuer diesen klaren Fall.
+3. Regulaere Speicherung und SSE-Fertigmeldung des Ergebnisses.
+4. Harte Grenzen gegen versehentliche Teilauswertung komplexer Aufgaben.
+5. Gemeinsames Verhalten fuer Stream- und Synchronpfad.
+6. Neue Regressionstests im bestehenden Reply-Pipeline-Selftest.
+7. Vollstaendiger Versions-, Installer-, Dokumentations- und Paketabgleich.
+
+Nicht Ziel dieses Releases:
+
+* allgemeines Computer-Algebra-System
+* Dezimal- oder Bruchrechnung im Schnellpfad
+* Formelparser
+* Ersatz des isolierten Python-Werkzeugs
+* Aenderung an Audio-, Werkzeugmenue- oder RAG-Planung
+
+======================================================================
+5. EXAKTE DEZIMALE STRING-ARITHMETIK
+======================================================================
+
+Betroffene Hauptdatei:
+
+api/chat.php
+
+Neue interne Funktionen:
+
+* ember_bigint_parse
+* ember_bigint_compare_abs
+* ember_bigint_add_abs
+* ember_bigint_sub_abs
+* ember_bigint_multiply_abs
+* ember_bigint_add_signed
+* ember_exact_integer_calculation
+* ember_exact_calculation_mark_complete
+
+Die Operanden werden als Dezimalstrings verarbeitet. Es gibt keine Umwandlung
+in int oder float. Dadurch ist das Ergebnis unabhaengig von PHP-Version,
+CPU-Architektur und Integerbreite.
+
+Addition arbeitet ziffernweise von rechts nach links mit Uebertrag.
+Subtraktion vergleicht zuerst die Absolutwerte und arbeitet mit Ausleihe.
+Multiplikation verwendet das klassische schriftliche Verfahren in einem
+Ziffernfeld. Vorzeichen werden getrennt ausgewertet.
+
+Unterstuetzte Eingaben:
+
+* genau zwei ganze Operanden
+* optionales Plus- oder Minusvorzeichen
+* Operator +, -, *, x oder ×
+* bis zu 512 Ziffern je Operand
+* reine Ausdruecke oder klare Rechenformulierungen
+
+Beispiele:
+
+999999999999999999999999 + 1
+ergibt
+1000000000000000000000000
+
+-12345678901234567890 * -9
+ergibt
+111111110111111111010
+
+5 - 12
+ergibt
+-7
+
+======================================================================
+6. STRENGE ROUTINGGRENZEN
+======================================================================
+
+Der Parser akzeptiert absichtlich nicht jede mathematisch aussehende Eingabe.
+Er lehnt den Schnellpfad ab bei:
+
+* Dezimalpunkt oder Dezimalkomma an einem Operanden
+* Division mit /, : oder ÷
+* Potenzen
+* mehr als einem Ausdruck
+* Kettenrechnungen wie 100 + 200 + 300
+* weiteren Ziffern ausserhalb des erkannten Ausdrucks
+* Anhaengen oder Bildern
+* verlangtem Rechenweg, einer Erklaerung oder Herleitung
+* Fortsetzung einer bestehenden Antwort
+* mehrdeutiger Begleitformulierung ohne Rechenabsicht
+
+Diese Aufgaben bleiben im bisherigen Modell- und Werkzeugpfad. Damit wird zum
+Beispiel kein Datum, keine Versionsnummer und kein einzelner Teil einer langen
+Formel versehentlich als vollstaendige Aufgabe behandelt.
+
+Bearbeitung und Neugenerierung einer eindeutigen Rechennachricht duerfen den
+Schnellpfad verwenden. Sie erzeugen weiterhin eine regulaere Antwort fuer den
+konkreten Turn. Eine Fortsetzung verwendet ihn nicht, weil sie den Text einer
+vorhandenen Ember-Antwort als Kontext benoetigt.
+
+======================================================================
+7. PRIVATER SSE-PFAD
+======================================================================
+
+Betroffene Datei:
+
+api/console_stream.php
+
+Die lokale Pruefung geschieht:
+
+* nach Authentifizierung und Laden der gespeicherten Benutzernachricht
+* nach Anhangs- und Bildklassifikation
+* nach Turn-Lock und Idempotenzpruefung
+* vor Console-AFK
+* vor Promptbau und RAG-Abfrage
+* vor Ollama und Python
+
+Bei einem Treffer wird ein abgeschlossener interner Akkumulator erzeugt:
+
+* content enthaelt nur das exakte Ergebnis
+* thinking bleibt leer
+* ok und done sind wahr
+* truncated ist falsch
+
+Danach verwendet CoreUI unveraendert den gemeinsamen Abschluss:
+
+1. Antwortbereinigung.
+2. Speicherung ueber ember_insert().
+3. Zuordnung zur originalen reply_to_id.
+4. Nachgelagerte normale Aufgaben ohne Guardrail-Verwechslung.
+5. done-Ereignis mit Nachrichten-ID und Sitzungs-ID.
+6. Freigabe des Turn-Locks im finally-Block.
+
+ember_after_insert_tasks() erkennt den lokalen Abschluss an
+exact_calc_fastpath. Memory-Reflexion und Reputationsanalyse werden fuer diese
+reine Rechnung nicht gestartet. Das verhindert einen sonst moeglichen weiteren
+Modellaufruf zwischen Speicherung und done-Ereignis. Die Chatnachricht selbst
+bleibt vollstaendig erhalten.
+
+Fuer den lokalen Rechenschritt wird kein Console-AFK gesetzt. Vision-, Modell-
+und Werkzeuglaeufe setzen AFK weiterhin wie bisher und werden im finally-Block
+bereinigt.
+
+======================================================================
+8. GEMEINSAMER SYNCHRONER PFAD
+======================================================================
+
+ember_generate_reply() loest zuerst wie bisher moegliche Anhaenge auf. Nur wenn
+kein Bild und kein Anhangskontext vorhanden ist, prueft die Funktion den lokalen
+Ganzzahlausdruck.
+
+Damit erhalten auch folgende Aufrufer denselben sicheren Abschluss:
+
+* nicht streamende Chatantworten
+* globale Antworten auf eindeutige Rechenauftraege
+* interner synchroner Fallback
+
+Die Metadaten STU_EMBER_LAST_CALL und STU_EMBER_LAST_THINKING werden fuer den
+lokalen Abschluss explizit neu gesetzt. Ein vorheriger Timeout-, Thinking- oder
+Guardrailzustand kann dadurch nicht in den neuen Turn hineinragen.
+
+======================================================================
+9. TESTS
+======================================================================
+
+Erweiterte Datei:
+
+scripts/reply-pipeline-selftest.php
+
+Direkte Ergebnispruefungen:
+
+* 123456789 * 987654321 = 121932631112635269
+* grosser Additionsuebertrag oberhalb der PHP-Integergrenze
+* grosse vorzeichenbehaftete Multiplikation
+* negatives Subtraktionsergebnis
+* Addition zweier negativer Zahlen
+
+Ablehnungspruefungen:
+
+* Kettenrechnung
+* Division
+* Dezimalzahl
+* ausdruecklich verlangter Rechenweg
+
+Statische Integrationspruefung:
+
+* console_stream.php ruft ember_exact_integer_calculation() auf
+* der lokale Akkumulator ist als nicht abgeschnitten markiert
+* nach Speicherung darf kein Reflect-Modellaufruf starten
+
+Die schriftliche Multiplikation wurde zusaetzlich ausserhalb der PHP-Laufzeit
+mit 500 zufaelligen Referenzfaellen fuer Operandengroessen von 1, 2, 10, 100
+und 512 Ziffern verglichen. Alle Faelle stimmten exakt.
+
+Die lokale Arbeitsumgebung besitzt weiterhin keine PHP-Laufzeit, keine
+produktive MariaDB und kein Docker. PHP-Syntax, der PHP-Selftest und der echte
+Datenbankpfad muessen deshalb wie vorgesehen im installierten Compose- oder
+Native-System durch den Preflight geprueft werden.
+
+======================================================================
+10. DATENBANK UND DATENSCHUTZ
+======================================================================
+
+Es gibt keine Migration 010.
+
+Aktueller Schemaendstand bleibt:
+
+database/migrations/009_message_editing.sql
+
+Unveraendert erhalten bleiben:
+
+* Konten und Rollen
+* private Sitzungen
+* Benutzer- und Ember-Nachrichten
+* Bewertungszustand
+* Antwortvarianten
+* Nachrichtenrevisionen
+* wartende bereits serverseitig gesendete Turns
+* Anhaenge und Profilbilder
+* Memories und private RAG-Lite-Quellen
+* api/config.local.php
+* Compose- und Native-Laufzeitdaten
+
+Der neue Schnellpfad sendet keine Recheneingabe an einen zusaetzlichen Dienst.
+Er arbeitet vollstaendig im bestehenden PHP-Prozess. Kontoexport, CSRF-Schutz,
+Benutzerbindung und Sitzungsbindung bleiben unveraendert.
+
+Keine private Starlight Unit Bibel und kein privates Kompendium duerfen im
+Quellbaum, ZIP, Setup oder automatischen RAG-Import enthalten sein.
+
+======================================================================
+11. INSTALLATION UND UPDATE
+======================================================================
+
+Empfohlener SSH-Einzeiler:
+
+( setup_file="$(mktemp)" && trap 'rm -f -- "$setup_file"' EXIT && curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh -o "$setup_file" && sudo bash "$setup_file" )
+
+Setup laedt ZIP und SHA aus:
+
+releases/v0.5.2-alpha/
+
+Keine neue Migration wird angewendet. Die bestehenden Migrationen 001 bis 009
+bleiben im Paket und werden wie bisher idempotent geprueft.
+
+Beim Update ersetzt rsync nur die statischen Projektdateien und Templates.
+Ausgeschlossen bleiben:
+
+* api/config.local.php
+* var/
+* logs/
+* uploads/
+* assets/chat_media/
+* assets/profile_photos/
+
+Fuer die Korrektur muessen PHP und Web neu erstellt beziehungsweise neu
+gestartet werden. Der offizielle Installer erledigt dies automatisch.
+
+======================================================================
+12. TESTMATRIX
+======================================================================
+
+Lokal zwingend:
+
+* node --check js/console-app.js
+* node --check js/coreui-markdown.js
+* node scripts/markdown-selftest.js
+* bash -n setup.sh und scripts/*.sh
+* python3 scripts/branding-license-selftest.py
+* git diff --check
+* Versions- und Cache-Buster-Abgleich
+* ZIP-Inhaltsvergleich mit dem freigegebenen Quellbaum
+* SHA-256-Pruefung
+* Suche nach privaten Manuskriptdateien
+
+Im installierten Compose- oder Native-System zwingend:
+
+* PHP-Syntax aller PHP-Dateien
+* Reply-Pipeline-Selftest mit exakten Rechenfaellen
+* Healthcheck
+* die gemeldete Multiplikation im privaten Core Channel
+* Speicherung der Ember-Antwort nach Reload
+* direkt danach eine normale Textfrage ohne Sitzungsblockade
+* Bearbeitung und Neugenerierung derselben Rechennachricht
+* Kettenrechnung und verlangter Rechenweg im normalen Modellpfad
+* alle bestehenden Session-, Reply-, Thinking-, Konto-, Profil-, Anhang-,
+  Nachrichtenaktionen-, PDF-, Video-, RAG- und Python-Worker-Selftests
+
+======================================================================
+13. BEKANNTE GRENZEN UND NAECHSTE FUNKTIONSSTUFEN
+======================================================================
+
+Bewusst nicht in 0.5.2-alpha enthalten:
+
+* kein allgemeiner mathematischer Parser
+* keine lokale Dezimal-, Bruch-, Potenz- oder Formelrechnung
+* kein mathematischer Formelsatz
+* keine sichtbare Rueckschaltung auf alte Benutzertext-Revisionen
+* wartende, noch nicht gesendete Folgetexte ueberleben keinen Vollreload
+* keine Anhaenge in der Folgetext-Warteschlange
+* noch keine Quellen- und Werkzeugliste in den Antwortdetails
+* noch kein Modellwechsel fuer eine einzelne Neugenerierung
+* noch keine Audioeingabe oder TTS-Ausgabe
+
+Naechster 0.5.x-Block nach produktiver Bestaetigung:
+
+* Werkzeugmenue am Eingabefeld
+* sichtbare Aktivierung fuer Datei, RAG-Lite, Web, Browse und Python
+* gespeicherte Quellen- und Werkzeugmetadaten pro Antwort
+* kontrollierte Anzeige dieser Metadaten unter der Sprechblase
+
+Geplanter 0.6.x-Audioblock:
+
+* Mikrofonaufnahme
+* normalisierte Audioanhaenge
+* nativer Transport an kompatible Gemma-Modelle
+* Transkription und Audioanalyse
+* separate lokale TTS-Schicht fuer gesprochene Antworten
+
+======================================================================
+14. FORTSETZUNG IN EINEM NEUEN CHAT
+======================================================================
+
+Ein neuer Arbeitschat soll zuerst dieses Protokoll, VERSION, CHANGELOG.md,
+README.md und den aktuellen Release-Branch lesen.
+
+Vor einer Veroeffentlichung:
+
+1. Aktuellen main und release/0.5.2-alpha vergleichen.
+2. Keine fremden oder privaten Dateien in Git oder ZIP aufnehmen.
+3. Keine Migration 010 erfinden oder anwenden.
+4. Archiv aus einer sauberen Quellkopie bauen.
+5. ZIP-Wurzel, Pflichtdateien, Dateimodi, Integritaet und SHA pruefen.
+6. Oeffentlichen Push, Pull Request und Merge erst nach ausdruecklicher
+   Benutzerfreigabe ausfuehren.
+
+Nach einer Veroeffentlichung:
+
+1. Update ueber den offiziellen SSH-Einzeiler installieren.
+2. Preflight vollstaendig ausfuehren.
+3. Den urspruenglichen Rechenauftrag erneut absenden.
+4. Ergebnis 121932631112635269 und sichtbare Ember-Blase pruefen.
+5. CoreUI einmal neu laden und gespeicherte Antwort pruefen.
+6. Direkt danach normalen Chat, Bewertung, Variante und Bearbeitung testen.
+7. Produktivbestaetigung dokumentieren.
+8. Nach jeder Version ein neues vollstaendiges Uebergabeprotokoll erstellen.
+
+ENDE UEBERGABEPROTOKOLL 0.5.2-ALPHA
