@@ -4,11 +4,11 @@ IFS=$'\n\t'
 umask 027
 
 REPOSITORY='Starlight-Unit-Studio/coreui'
-VERSION='0.5.0-alpha'
+VERSION='0.5.1-alpha'
 TAG="v${VERSION}"
-ARCHIVE='EMBER_COREUI_0_5_0_ALPHA.zip'
+ARCHIVE='EMBER_COREUI_0_5_1_ALPHA.zip'
 CHECKSUM="${ARCHIVE}.sha256"
-PACKAGE_ROOT='EMBER_COREUI_0_5_0_ALPHA'
+PACKAGE_ROOT='EMBER_COREUI_0_5_1_ALPHA'
 TARGET_DIR='/opt/ember-coreui'
 # Release-Paare liegen absichtlich gemeinsam im Repository. Dadurch bleibt die
 # Blitzinstallation nutzbar, ohne dass ZIP und SHA-Datei aus zwei verschiedenen

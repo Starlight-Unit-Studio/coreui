@@ -16,6 +16,7 @@ function actions_test_expect(bool $condition, string $message): void {
 
 $root = dirname(__DIR__);
 $migration = (string)file_get_contents($root . '/database/migrations/008_message_actions.sql');
+$editMigration = (string)file_get_contents($root . '/database/migrations/009_message_editing.sql');
 $endpoint = (string)file_get_contents($root . '/api/console_actions.php');
 $stream = (string)file_get_contents($root . '/api/console_stream.php');
 $client = (string)file_get_contents($root . '/js/console-app.js');
@@ -25,17 +26,23 @@ actions_test_expect(str_contains($migration, 'stu_console_generation_requests'),
 actions_test_expect(str_contains($migration, "ENUM('regenerate','continue')"), 'Neugenerierung und Fortsetzung sind nicht getrennt.');
 actions_test_expect(str_contains($migration, 'response_floor_id'), 'Exakte Antwortgrenze fuer Wiederaufnahme fehlt.');
 actions_test_expect(str_contains($migration, 'browse_job_id'), 'Exakte Browserjob-Zuordnung fehlt.');
+actions_test_expect(str_contains($editMigration, 'stu_console_message_revisions'), 'Migration 009 besitzt keine Revisionshistorie.');
+actions_test_expect(str_contains($editMigration, "'edit'"), 'Migration 009 erweitert den Generierungsmodus nicht um Bearbeitung.');
 actions_test_expect(str_contains($endpoint, 'stu_require_csrf()'), 'Schreibende Nachrichtenaktionen besitzen keinen CSRF-Schutz.');
 actions_test_expect(str_contains($stream, '$generationRequestId'), 'Stream kann keine bestaetigte Nachrichtenaktion ausfuehren.');
 actions_test_expect(str_contains($stream, '$excludeReplyToId = $afterId'), 'Alternative Antwort schliesst die alte Antwort nicht aus dem Kontext aus.');
 actions_test_expect(str_contains($stream, 'coreui_console_generation_attach_browse'), 'Browserjob wird nicht exakt mit der Aktion verbunden.');
 actions_test_expect(str_contains($client, "startGenerationAction(record, 'regenerate'"), 'Neugenerierungsaktion fehlt im Client.');
 actions_test_expect(str_contains($client, "startGenerationAction(record, 'continue'"), 'Fortsetzungsaktion fehlt im Client.');
+actions_test_expect(str_contains($client, "action: 'edit_message'"), 'Echte Nachrichtenbearbeitung fehlt im Client.');
+actions_test_expect(str_contains($client, 'queuedTurnsBySession'), 'Nachrichtenwarteschlange waehrend einer Antwort fehlt.');
+actions_test_expect(str_contains($client, 'msg-variant-nav'), 'Persistente Variantennavigation fehlt im Client.');
 actions_test_expect(str_contains($client, "window.CoreUIMarkdown.render(bubble, text)"), 'Sichere Markdown-Darstellung ist nicht am Nachrichtenpfad aktiv.');
 actions_test_expect(!str_contains($markdown, '.innerHTML'), 'Markdown-Renderer verwendet innerHTML.');
 
 $pdo = stu_pdo();
 actions_test_expect(coreui_console_actions_schema_ready($pdo), 'Migration 008 ist nicht aktiv.');
+actions_test_expect(coreui_console_edits_schema_ready($pdo), 'Migration 009 ist nicht aktiv.');
 
 $suffix = bin2hex(random_bytes(6));
 $sessionId = 'actions_' . $suffix;
@@ -87,13 +94,42 @@ try {
   actions_test_expect($feedback === 'down', 'Gegenteiliges Feedback wurde nicht atomar ersetzt.');
   $map = coreui_console_feedback_map($pdo, $uid, [$responseId]);
   actions_test_expect(($map[$responseId] ?? null) === 'down', 'Feedback wird nicht kontogebunden gelesen.');
+  $stFeedbackToken = $pdo->prepare('SELECT emoji FROM stu_chat_reactions WHERE message_id=? AND user_id=? LIMIT 1');
+  $stFeedbackToken->execute([$responseId, $uid]);
+  actions_test_expect((string)$stFeedbackToken->fetchColumn() === 'coreui_down', 'Feedback verwendet nicht den altkompatiblen ASCII-Token.');
 
-  $request = coreui_console_generation_prepare($pdo, $uid, $sessionId, $responseId, 'regenerate');
+  $edit = coreui_console_edit_prepare(
+    $pdo,
+    $uid,
+    $sessionId,
+    $turnId,
+    'Bitte antworte mit der korrigierten Vorgabe.'
+  );
+  actions_test_expect((int)($edit['message_id'] ?? 0) === $turnId, 'Bearbeitung behaelt nicht dieselbe Nachrichten-ID.');
+  actions_test_expect((int)($edit['revision_no'] ?? 0) === 1, 'Erste Revision wurde nicht protokolliert.');
+  actions_test_expect((int)($edit['superseded_message_count'] ?? 0) >= 1, 'Abhaengige Antwort wurde nicht ausgeblendet.');
+  actions_test_expect((string)($edit['request']['mode'] ?? '') === 'edit', 'Bearbeitung startet keine eigene Neugenerierung.');
+  $stEdited = $pdo->prepare('SELECT message FROM stu_chat_messages WHERE id=?');
+  $stEdited->execute([$turnId]);
+  actions_test_expect((string)$stEdited->fetchColumn() === 'Bitte antworte mit der korrigierten Vorgabe.', 'Bearbeitete Blase wurde nicht in-place aktualisiert.');
+  $stHidden = $pdo->prepare('SELECT deleted_at FROM stu_chat_messages WHERE id=?');
+  $stHidden->execute([$responseId]);
+  actions_test_expect((string)$stHidden->fetchColumn() !== '', 'Alte Antwort blieb nach der Bearbeitung im aktiven Zweig.');
+
+  $pdo->prepare(
+    "INSERT INTO stu_chat_messages
+      (channel,alliance_id,session_id,user_id,character_id,character_name,message,reply_to_id,created_at)
+     VALUES ('console',NULL,?,?,?,?,?,?,NOW())"
+  )->execute([$sessionId, $uid, ember_character_id(), ember_character_name(), 'Antwort nach Bearbeitung.', $turnId]);
+  $editedResponseId = (int)$pdo->lastInsertId();
+  coreui_console_generation_finish($pdo, $uid, (string)$edit['request']['id'], $editedResponseId);
+
+  $request = coreui_console_generation_prepare($pdo, $uid, $sessionId, $editedResponseId, 'regenerate');
   actions_test_expect(($request['trigger_message_id'] ?? 0) === $turnId, 'Neugenerierung ist nicht an den exakten Turn gebunden.');
-  actions_test_expect(($request['source_response_id'] ?? 0) === $responseId, 'Quellantwort der Neugenerierung fehlt.');
+  actions_test_expect(($request['source_response_id'] ?? 0) === $editedResponseId, 'Quellantwort der Neugenerierung fehlt.');
   $stRequest = $pdo->prepare('SELECT response_floor_id FROM stu_console_generation_requests WHERE id=?');
   $stRequest->execute([(string)$request['id']]);
-  actions_test_expect((int)$stRequest->fetchColumn() >= $responseId, 'Wiederaufnahme besitzt keine exakte Antwortgrenze.');
+  actions_test_expect((int)$stRequest->fetchColumn() >= $editedResponseId, 'Wiederaufnahme besitzt keine exakte Antwortgrenze.');
 
   coreui_console_session_archive($pdo, $uid, $sessionId);
   $busyDeleteRejected = false;
@@ -105,7 +141,7 @@ try {
   actions_test_expect($busyDeleteRejected, 'Laufende Nachrichtenaktion blockiert die Sitzungsloeschung nicht.');
 
   $pdo->rollBack();
-  fwrite(STDOUT, "Nachrichtenaktionen-Selftest OK: Isolation, Feedback, Turnbindung, Wiederaufnahme und Loeschschutz geprueft.\n");
+  fwrite(STDOUT, "Nachrichtenaktionen-Selftest OK: Isolation, persistentes Feedback, echte Bearbeitung, Varianten, Wiederaufnahme und Loeschschutz geprueft.\n");
 } catch (Throwable $e) {
   if ($pdo->inTransaction()) $pdo->rollBack();
   fwrite(STDERR, 'Nachrichtenaktionen-Selftest FEHLER: ' . $e->getMessage() . "\n");

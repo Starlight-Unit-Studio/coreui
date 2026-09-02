@@ -83,6 +83,7 @@ UI_FILES=(
   database/migrations/006_account_security.sql
   database/migrations/007_remove_private_studio_lore.sql
   database/migrations/008_message_actions.sql
+  database/migrations/009_message_editing.sql
   scripts/session-selftest.php
   scripts/attachment-pipeline-selftest.php
   scripts/python-worker-selftest.php
@@ -92,8 +93,8 @@ UI_FILES=(
   scripts/message-actions-selftest.php
   scripts/markdown-selftest.js
   scripts/branding-license-selftest.py
-  docs/changelogs-txt/CHANGELOG_0_5_0_ALPHA.txt
-  docs/UEBERGABEPROTOKOLL_0_5_0_ALPHA.txt
+  docs/changelogs-txt/CHANGELOG_0_5_1_ALPHA.txt
+  docs/UEBERGABEPROTOKOLL_0_5_1_ALPHA.txt
   images/starlight_unit_studios_logo_original.png
 )
 for ui_file in "${UI_FILES[@]}"; do
@@ -311,6 +312,12 @@ if command -v php >/dev/null 2>&1; then
       ok 'Migration 008: Feedback, Alternativen und Fortsetzungen sind bereit.'
     else
       fail 'Migration 008 fehlt.'
+    fi
+
+    if php -r "require '$PROJECT_ROOT/api/db.php'; \$p=stu_pdo(); \$p->query('SELECT revision_no,superseded_message_count FROM stu_console_message_revisions LIMIT 0'); \$m=\$p->query(\"SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='stu_console_generation_requests' AND COLUMN_NAME='mode'\")->fetchColumn(); exit(str_contains((string)\$m,\"'edit'\") ? 0 : 1);" >/dev/null 2>&1; then
+      ok 'Migration 009: echte Nachrichtenbearbeitung und Kontext-Neustart sind bereit.'
+    else
+      fail 'Migration 009 fehlt.'
     fi
 
     if systemctl is-active --quiet ember-coreui-python.service; then

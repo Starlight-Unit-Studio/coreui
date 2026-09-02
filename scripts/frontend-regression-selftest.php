@@ -70,8 +70,32 @@ try {
       && str_contains($css, '.md-codeblock'),
     'Nachrichtenaktionen oder Codeblockdarstellung sind nicht vollstaendig verdrahtet.'
   );
+  foreach ([
+    "action: 'edit_message'",
+    'state.pendingBySession[ses.id]',
+    'queuedTurnsBySession',
+    'drainQueuedTurn(sessionId)',
+    'variantSelectionBySession',
+    'msg-variant-nav',
+  ] as $needle) {
+    frontend_test_assert(
+      str_contains($console, $needle),
+      'Bearbeitung, Warteschlange oder Antwortvarianten fehlen: ' . $needle
+    );
+  }
+  foreach ([
+    'id="composerEditState"',
+    'id="composerEditLabel"',
+    'id="composerEditCancel"',
+  ] as $needle) {
+    frontend_test_assert(str_contains($appHtml, $needle), 'Bearbeitungsanzeige fehlt: ' . $needle);
+  }
+  frontend_test_assert(
+    str_contains($css, '.composer-edit-state') && str_contains($css, '.msg-variant-nav'),
+    'Darstellung fuer Bearbeitung oder Antwortvarianten fehlt.'
+  );
 
-  fwrite(STDOUT, "Frontend-Regressions-Selftest OK: Navigation, Avatare, Markdown und Nachrichtenaktionen sind fehlersicher verdrahtet.\n");
+  fwrite(STDOUT, "Frontend-Regressions-Selftest OK: Navigation, Avatare, Markdown, Bearbeitung, Warteschlange und Varianten sind fehlersicher verdrahtet.\n");
 } catch (Throwable $e) {
   fwrite(STDERR, 'Frontend-Regressions-Selftest FEHLER: ' . $e->getMessage() . "\n");
   exit(2);

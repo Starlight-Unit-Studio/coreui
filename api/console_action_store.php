@@ -12,6 +12,21 @@ function coreui_console_actions_schema_ready(PDO $pdo): bool {
   }
 }
 
+function coreui_console_edits_schema_ready(PDO $pdo): bool {
+  try {
+    $pdo->query('SELECT id,revision_no,superseded_message_count FROM stu_console_message_revisions LIMIT 0');
+    $st = $pdo->query(
+      "SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='stu_console_generation_requests'
+          AND COLUMN_NAME='mode'"
+    );
+    $modeType = (string)($st->fetchColumn() ?: '');
+    return str_contains($modeType, "'edit'");
+  } catch (Throwable $e) {
+    return false;
+  }
+}
+
 function coreui_console_action_message(
   PDO $pdo,
   int $uid,
@@ -25,7 +40,7 @@ function coreui_console_action_message(
   }
   coreui_console_session_require($pdo, $uid, $sessionId);
   $st = $pdo->prepare(
-    "SELECT id,session_id,reply_to_id,user_id,character_id,character_name,message,created_at
+    "SELECT id,session_id,reply_to_id,user_id,character_id,character_name,message,file_uuid,image_url,created_at
        FROM stu_chat_messages
       WHERE id=? AND channel='console' AND alliance_id IS NULL
         AND user_id=? AND session_id=? AND deleted_at IS NULL
@@ -50,9 +65,15 @@ function coreui_console_feedback_toggle(
   string $value,
   string $characterId
 ): ?string {
-  $emoji = $value === 'up' ? '👍' : ($value === 'down' ? '👎' : '');
-  if ($emoji === '') throw new InvalidArgumentException('invalid_feedback');
-  $opposite = $emoji === '👍' ? '👎' : '👍';
+  // ASCII-Tokens funktionieren auch auf aelteren STU-Datenbanken, deren bereits
+  // vorhandene Reaktionstabelle noch nicht mit utf8mb4 angelegt wurde. Genau
+  // dort schlug das Speichern der eigentlichen Emoji-Zeichen mit einem SQL-
+  // Fehler fehl, obwohl Migration 008 und alle anderen Nachrichtenaktionen
+  // funktionierten. Historische Emoji-Werte werden weiterhin gelesen und beim
+  // naechsten Umschalten sauber ersetzt.
+  $token = $value === 'up' ? 'coreui_up' : ($value === 'down' ? 'coreui_down' : '');
+  if ($token === '') throw new InvalidArgumentException('invalid_feedback');
+  $sameLegacy = $value === 'up' ? '👍' : '👎';
 
   $ownsTransaction = !$pdo->inTransaction();
   if ($ownsTransaction) $pdo->beginTransaction();
@@ -61,23 +82,36 @@ function coreui_console_feedback_toggle(
     $stLock = $pdo->prepare('SELECT id FROM stu_chat_messages WHERE id=? FOR UPDATE');
     $stLock->execute([$messageId]);
     if (!$stLock->fetchColumn()) throw new RuntimeException('message_not_found');
-    $pdo->prepare(
-      'DELETE FROM stu_chat_reactions WHERE message_id=? AND user_id=? AND emoji=?'
-    )->execute([$messageId, $uid, $opposite]);
     $stExisting = $pdo->prepare(
-      'SELECT id FROM stu_chat_reactions WHERE message_id=? AND user_id=? AND emoji=? LIMIT 1 FOR UPDATE'
+      'SELECT id,emoji FROM stu_chat_reactions '
+      . 'WHERE message_id=? AND user_id=? ORDER BY id ASC FOR UPDATE'
     );
-    $stExisting->execute([$messageId, $uid, $emoji]);
-    $existing = (int)($stExisting->fetchColumn() ?: 0);
+    $stExisting->execute([$messageId, $uid]);
+    $existing = 0;
+    $feedbackIds = [];
+    foreach (($stExisting->fetchAll(PDO::FETCH_ASSOC) ?: []) as $reaction) {
+      $reactionId = (int)($reaction['id'] ?? 0);
+      $reactionValue = (string)($reaction['emoji'] ?? '');
+      if (!in_array($reactionValue, ['coreui_up', 'coreui_down', '👍', '👎'], true)) continue;
+      if ($reactionId > 0) $feedbackIds[] = $reactionId;
+      if ($reactionValue === $token || $reactionValue === $sameLegacy) $existing = $reactionId;
+    }
+
+    // Pro Benutzer und Ember-Antwort existiert hoechstens eine der beiden
+    // CoreUI-Bewertungen. Auch Altwerte aus 0.5.0 werden mit entfernt.
+    if ($feedbackIds !== []) {
+      $deletePlaceholders = implode(',', array_fill(0, count($feedbackIds), '?'));
+      $pdo->prepare("DELETE FROM stu_chat_reactions WHERE id IN ($deletePlaceholders)")
+        ->execute($feedbackIds);
+    }
     if ($existing > 0) {
-      $pdo->prepare('DELETE FROM stu_chat_reactions WHERE id=?')->execute([$existing]);
       $selected = null;
     } else {
       $pdo->prepare(
         "INSERT INTO stu_chat_reactions
           (message_id,channel,alliance_id,user_id,character_id,emoji,created_at)
          VALUES (?,'console',NULL,?,?,?,NOW())"
-      )->execute([$messageId, $uid, $characterId, $emoji]);
+      )->execute([$messageId, $uid, $characterId, $token]);
       $selected = $value;
     }
     if ($ownsTransaction) $pdo->commit();
@@ -94,16 +128,187 @@ function coreui_console_feedback_map(PDO $pdo, int $uid, array $messageIds): arr
   $placeholders = implode(',', array_fill(0, count($ids), '?'));
   $st = $pdo->prepare(
     "SELECT message_id,emoji FROM stu_chat_reactions
-      WHERE user_id=? AND message_id IN ($placeholders) AND emoji IN ('👍','👎')"
+      WHERE user_id=? AND message_id IN ($placeholders)
+      ORDER BY id ASC"
   );
   $st->execute(array_merge([$uid], $ids));
   $out = [];
   foreach (($st->fetchAll(PDO::FETCH_ASSOC) ?: []) as $row) {
     $messageId = (int)($row['message_id'] ?? 0);
     $emoji = (string)($row['emoji'] ?? '');
-    if ($messageId > 0) $out[$messageId] = $emoji === '👍' ? 'up' : ($emoji === '👎' ? 'down' : null);
+    if ($messageId > 0 && in_array($emoji, ['coreui_up', 'coreui_down', '👍', '👎'], true)) {
+      $out[$messageId] = in_array($emoji, ['coreui_up', '👍'], true)
+        ? 'up'
+        : (in_array($emoji, ['coreui_down', '👎'], true) ? 'down' : null);
+    }
   }
   return $out;
+}
+
+function coreui_console_assert_idle_for_edit(
+  PDO $pdo,
+  int $uid,
+  string $sessionId
+): void {
+  coreui_console_generation_expire($pdo, $uid);
+  $stBusy = $pdo->prepare(
+    "SELECT id FROM stu_console_generation_requests
+      WHERE user_id=? AND session_id=? AND status IN ('issued','running') AND expires_at>=NOW()
+      ORDER BY created_at DESC LIMIT 1"
+  );
+  $stBusy->execute([$uid, $sessionId]);
+  if ($stBusy->fetchColumn()) throw new RuntimeException('generation_busy');
+
+  $stBrowse = $pdo->prepare(
+    "SELECT id FROM stu_ember_browse_jobs
+      WHERE channel='console' AND recipient_uid=? AND session_id=? AND status IN ('queued','running')
+      LIMIT 1"
+  );
+  $stBrowse->execute([$uid, $sessionId]);
+  if ($stBrowse->fetchColumn()) throw new RuntimeException('session_busy');
+}
+
+function coreui_console_edit_prepare(
+  PDO $pdo,
+  int $uid,
+  string $sessionId,
+  int $messageId,
+  string $revisedMessage
+): array {
+  if (!coreui_console_edits_schema_ready($pdo)) throw new RuntimeException('message_editing_migration_required');
+  $sessionId = coreui_console_session_normalize_id($sessionId);
+  $revisedMessage = chat_clean_console_message($revisedMessage);
+  $ownsTransaction = !$pdo->inTransaction();
+  if ($ownsTransaction) $pdo->beginTransaction();
+  try {
+    $stSessionLock = $pdo->prepare(
+      'SELECT id FROM stu_console_sessions WHERE id=? AND user_id=? AND archived_at IS NULL FOR UPDATE'
+    );
+    $stSessionLock->execute([$sessionId, $uid]);
+    if (!$stSessionLock->fetchColumn()) throw new RuntimeException('session_not_found');
+
+    coreui_console_assert_idle_for_edit($pdo, $uid, $sessionId);
+    $turn = coreui_console_action_message($pdo, $uid, $sessionId, $messageId, false);
+    $previousMessage = chat_clean_console_message((string)($turn['message'] ?? ''));
+    $attachmentIds = coreui_console_attachment_ids_for_message(
+      $pdo,
+      $messageId,
+      $uid,
+      isset($turn['file_uuid']) ? (string)$turn['file_uuid'] : null
+    );
+    $maxLen = $attachmentIds === [] ? 12000 : 20000;
+    $messageLen = function_exists('mb_strlen')
+      ? mb_strlen($revisedMessage, 'UTF-8')
+      : strlen($revisedMessage);
+    if (($messageLen === 0 && $attachmentIds === []) || $messageLen > $maxLen) {
+      throw new InvalidArgumentException('invalid_message');
+    }
+    if ($attachmentIds === [] && $messageLen < 2) throw new InvalidArgumentException('too_short');
+    if (hash_equals($previousMessage, $revisedMessage)) throw new InvalidArgumentException('message_unchanged');
+
+    $stSource = $pdo->prepare(
+      "SELECT id FROM stu_chat_messages
+        WHERE channel='console' AND alliance_id IS NULL AND user_id=? AND session_id=?
+          AND reply_to_id=? AND deleted_at IS NULL
+          AND (LOWER(character_id)=? OR LOWER(character_name)=?)
+        ORDER BY id DESC LIMIT 1 FOR UPDATE"
+    );
+    $stSource->execute([
+      $uid,
+      $sessionId,
+      $messageId,
+      strtolower(ember_character_id()),
+      strtolower(ember_character_name()),
+    ]);
+    $sourceResponseId = (int)($stSource->fetchColumn() ?: 0);
+
+    $stFloor = $pdo->prepare(
+      "SELECT COALESCE(MAX(id),0) FROM stu_chat_messages
+        WHERE channel='console' AND alliance_id IS NULL AND user_id=? AND session_id=?"
+    );
+    $stFloor->execute([$uid, $sessionId]);
+    $responseFloorId = (int)($stFloor->fetchColumn() ?: 0);
+
+    $stSupersede = $pdo->prepare(
+      "UPDATE stu_chat_messages SET deleted_at=NOW()
+        WHERE channel='console' AND alliance_id IS NULL AND user_id=? AND session_id=?
+          AND id>? AND deleted_at IS NULL"
+    );
+    $stSupersede->execute([$uid, $sessionId, $messageId]);
+    $supersededCount = $stSupersede->rowCount();
+
+    $pdo->prepare(
+      "DELETE r FROM stu_chat_reactions r
+        JOIN stu_chat_messages m ON m.id=r.message_id
+        WHERE m.channel='console' AND m.user_id=? AND m.session_id=? AND m.deleted_at IS NOT NULL"
+    )->execute([$uid, $sessionId]);
+
+    $pdo->prepare('UPDATE stu_chat_messages SET message=? WHERE id=? AND user_id=? LIMIT 1')
+      ->execute([$revisedMessage, $messageId, $uid]);
+
+    // Die zuvor gesperrte Sitzungszeile serialisiert Bearbeitungen bereits.
+    // Ein Locking-Clause auf einer Aggregatabfrage ist je nach MariaDB-Version
+    // uneinheitlich und wird deshalb hier bewusst nicht benoetigt.
+    $stRevision = $pdo->prepare(
+      'SELECT COALESCE(MAX(revision_no),0) FROM stu_console_message_revisions '
+      . 'WHERE message_id=?'
+    );
+    $stRevision->execute([$messageId]);
+    $revisionNo = (int)$stRevision->fetchColumn() + 1;
+    $pdo->prepare(
+      'INSERT INTO stu_console_message_revisions '
+      . '(user_id,session_id,message_id,revision_no,previous_message,revised_message,superseded_message_count,created_at) '
+      . 'VALUES (?,?,?,?,?,?,?,NOW())'
+    )->execute([
+      $uid,
+      $sessionId,
+      $messageId,
+      $revisionNo,
+      $previousMessage,
+      $revisedMessage,
+      $supersededCount,
+    ]);
+
+    $requestId = bin2hex(random_bytes(16));
+    $pdo->prepare(
+      "INSERT INTO stu_console_generation_requests
+        (id,user_id,session_id,trigger_message_id,source_response_id,response_floor_id,mode,status,created_at,expires_at)
+       VALUES (?,?,?,?,?,?,'edit','issued',NOW(),DATE_ADD(NOW(),INTERVAL 3 MINUTE))"
+    )->execute([
+      $requestId,
+      $uid,
+      $sessionId,
+      $messageId,
+      $sourceResponseId > 0 ? $sourceResponseId : $messageId,
+      $responseFloorId,
+    ]);
+
+    $pdo->prepare(
+      'UPDATE stu_console_sessions '
+      . 'SET last_message_id=?,last_read_message_id=?,updated_at=NOW() '
+      . 'WHERE id=? AND user_id=?'
+    )->execute([$messageId, $messageId, $sessionId, $uid]);
+
+    if ($ownsTransaction) $pdo->commit();
+    return [
+      'message_id' => $messageId,
+      'message' => $revisedMessage,
+      'revision_no' => $revisionNo,
+      'superseded_message_count' => $supersededCount,
+      'request' => [
+        'id' => $requestId,
+        'session_id' => $sessionId,
+        'trigger_message_id' => $messageId,
+        'source_response_id' => $sourceResponseId > 0 ? $sourceResponseId : $messageId,
+        'mode' => 'edit',
+        'status' => 'issued',
+        'character_id' => (string)($turn['character_id'] ?? ''),
+      ],
+    ];
+  } catch (Throwable $e) {
+    if ($ownsTransaction && $pdo->inTransaction()) $pdo->rollBack();
+    throw $e;
+  }
 }
 
 function coreui_console_generation_expire(PDO $pdo, int $uid): void {

@@ -118,6 +118,9 @@
     historyHasMoreBySession: {},
     historyOldestBySession: {},
     generationPollTimers: {},
+    queuedTurnsBySession: {},
+    variantSelectionBySession: {},
+    editingMessage: null,
     showArchived: false
   };
 
@@ -142,6 +145,9 @@
   var attachUploadSub = document.getElementById('attachUploadSub');
   var attachBar     = document.getElementById('attachBar');
   var attachBarFill = document.getElementById('attachBarFill');
+  var composerEditState = document.getElementById('composerEditState');
+  var composerEditLabel = document.getElementById('composerEditLabel');
+  var composerEditCancel = document.getElementById('composerEditCancel');
   var MAX_MESSAGE_ATTACHMENTS = 10;
   var pendingFiles  = [];
   var uploadQueue   = [];
@@ -191,7 +197,12 @@
   function updateActivePendingUi() {
     var ses = activeSession();
     state.waitingEmber = !!(ses && state.pendingBySession[ses.id]);
-    btnSend.disabled = state.waitingEmber;
+    // Der Editor bleibt waehrend der Generierung benutzbar. Ein weiterer Text
+    // wird vorgemerkt und nach der laufenden Antwort automatisch gesendet.
+    btnSend.disabled = false;
+    btnSend.setAttribute('aria-label', state.waitingEmber
+      ? 'Nachricht nach der laufenden Antwort senden'
+      : (state.editingMessage ? 'Bearbeitete Nachricht speichern' : 'Nachricht senden'));
   }
 
   // ── DB: Sessions laden ───────────────────────────────────
@@ -285,6 +296,9 @@
     delete state.messageCacheBySession[sessionId];
     delete state.historyHasMoreBySession[sessionId];
     delete state.historyOldestBySession[sessionId];
+    delete state.queuedTurnsBySession[sessionId];
+    delete state.variantSelectionBySession[sessionId];
+    if (state.editingMessage && String(state.editingMessage.session_id) === sessionId) clearMessageEdit(false);
   }
 
   // ── Session-Liste rendern ────────────────────────────────
@@ -452,6 +466,9 @@
     state.activeSessionId = String(sessionId || '');
     var ses = activeSession();
     if (!ses) return;
+    if (state.editingMessage && String(state.editingMessage.session_id) !== String(ses.id)) {
+      clearMessageEdit(false);
+    }
 
     rememberActiveSession(ses.id);
     headerSessionName.textContent = ses.title;
@@ -465,7 +482,7 @@
     // Ein kurzzeitiger API-Fehler darf einen vorhandenen Verlauf nicht optisch
     // verschwinden lassen.
     if (Array.isArray(state.messageCacheBySession[ses.id])) renderHistory(ses);
-    loadChatHistory(ses);
+    loadChatHistory(ses).then(function () { drainQueuedTurn(ses.id); });
   }
 
   function mergeSessionMessages(sessionId, rows) {
@@ -489,6 +506,79 @@
     }
   }
 
+  function isContinuationRecord(record) {
+    return !!(record && record.generation && record.generation.mode === 'continue');
+  }
+
+  function variantSelectionForSession(sessionId) {
+    if (!state.variantSelectionBySession[sessionId]) state.variantSelectionBySession[sessionId] = {};
+    return state.variantSelectionBySession[sessionId];
+  }
+
+  function renderConversationRows(ses) {
+    var rows = state.messageCacheBySession[ses.id] || [];
+    var groups = {};
+    rows.forEach(function (record) {
+      var turnId = Number(record && record.reply_to_id) || 0;
+      if (turnId <= 0 || !isEmberMsg(record) || isContinuationRecord(record)) return;
+      if (!groups[String(turnId)]) groups[String(turnId)] = [];
+      groups[String(turnId)].push(record);
+    });
+    Object.keys(groups).forEach(function (turnId) {
+      groups[turnId].sort(function (a, b) { return Number(a.id) - Number(b.id); });
+    });
+
+    var selection = variantSelectionForSession(ses.id);
+    var selectedByTurn = {};
+    Object.keys(groups).forEach(function (turnId) {
+      var variants = groups[turnId];
+      var selectedId = Number(selection[turnId]) || 0;
+      var selectedIndex = variants.findIndex(function (record) { return Number(record.id) === selectedId; });
+      if (selectedIndex < 0) selectedIndex = variants.length - 1;
+      var selected = variants[selectedIndex];
+      selection[turnId] = Number(selected.id) || 0;
+      selectedByTurn[turnId] = selected;
+    });
+
+    var renderedPrimary = {};
+    rows.forEach(function (record) {
+      var turnId = Number(record && record.reply_to_id) || 0;
+      if (turnId > 0 && isEmberMsg(record) && !isContinuationRecord(record)) {
+        var key = String(turnId);
+        if (renderedPrimary[key]) return;
+        renderedPrimary[key] = true;
+        var selected = selectedByTurn[key] || record;
+        selected._variantGroup = groups[key] || [selected];
+        selected._variantIndex = selected._variantGroup.findIndex(function (variant) {
+          return Number(variant.id) === Number(selected.id);
+        });
+        renderMessageRecord(selected);
+        return;
+      }
+      if (turnId > 0 && isEmberMsg(record) && isContinuationRecord(record)) {
+        var sourceId = Number(record.generation && record.generation.source_response_id) || 0;
+        var selectedSource = selectedByTurn[String(turnId)];
+        if (sourceId > 0 && selectedSource && sourceId !== Number(selectedSource.id)) return;
+      }
+      renderMessageRecord(record);
+    });
+  }
+
+  function renderQueuedTurns(ses) {
+    var queued = state.queuedTurnsBySession[String(ses.id)] || [];
+    queued.forEach(function (turn) {
+      appendMessageEl(
+        'user',
+        String(turn.text || ''),
+        state.userDisplayName || state.charName,
+        null,
+        null,
+        turn.created_at,
+        { queued: true, queue_id: turn.id, session_id: String(ses.id) }
+      );
+    });
+  }
+
   function renderHistory(ses) {
     if (!isActiveSession(ses.id)) return;
     messagesInner.innerHTML = '';
@@ -506,7 +596,7 @@
       });
       messagesInner.appendChild(older);
     }
-    (state.messageCacheBySession[ses.id] || []).forEach(renderMessageRecord);
+    renderConversationRows(ses);
     if (!state.messageCacheBySession[ses.id] || !state.messageCacheBySession[ses.id].length) {
       appendMessageEl('system', 'ARCHNET VERBINDUNG HERGESTELLT. EMBER INTERFACE AKTIV.');
     }
@@ -515,6 +605,7 @@
       startCountdown();
       setStatus('waiting', 'EMBER ANTWORTET\u2026');
     }
+    renderQueuedTurns(ses);
   }
 
   // Exakte, serverseitig gefilterte History einer einzigen Sitzung.
@@ -694,6 +785,13 @@
       content.appendChild(buildAttachmentEl(item));
     });
 
+    if (record && record.queued === true) {
+      var queuedLabel = document.createElement('div');
+      queuedLabel.className = 'msg-queued-label';
+      queuedLabel.textContent = 'WARTET AUF DIE LAUFENDE ANTWORT';
+      content.appendChild(queuedLabel);
+    }
+
     var actions = buildMessageActions(role, text, record || null);
     if (actions) content.appendChild(actions);
 
@@ -711,6 +809,59 @@
     return row;
   }
 
+  function clearMessageEdit(restoreFocus) {
+    state.editingMessage = null;
+    if (composerEditState) composerEditState.hidden = true;
+    if (composerEditLabel) composerEditLabel.textContent = 'NACHRICHT BEARBEITEN';
+    if (restoreFocus && inputEl) inputEl.focus();
+  }
+
+  function beginMessageEdit(record, text) {
+    var ses = activeSession();
+    if (!record || !ses || Number(record.id) <= 0) return;
+    if (state.pendingBySession[ses.id]) {
+      generationActionError('generation_busy');
+      return;
+    }
+    state.editingMessage = {
+      session_id: String(ses.id),
+      message_id: Number(record.id),
+      original_text: String(text || '')
+    };
+    if (composerEditState) composerEditState.hidden = false;
+    if (composerEditLabel) composerEditLabel.textContent = 'NACHRICHT #' + String(record.id) + ' BEARBEITEN';
+    updateActivePendingUi();
+    if (!inputEl) return;
+    inputEl.value = String(text || '');
+    inputEl.focus();
+    inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
+  }
+
+  function removeQueuedTurn(sessionId, queueId) {
+    var key = String(sessionId || '');
+    state.queuedTurnsBySession[key] = (state.queuedTurnsBySession[key] || []).filter(function (turn) {
+      return String(turn.id) !== String(queueId);
+    });
+    var ses = sessionById(key);
+    if (ses && isActiveSession(key)) renderHistory(ses);
+  }
+
+  function selectResponseVariant(record, delta) {
+    var ses = activeSession();
+    var variants = record && Array.isArray(record._variantGroup) ? record._variantGroup : [];
+    if (!ses || variants.length < 2) return;
+    var current = variants.findIndex(function (variant) {
+      return Number(variant.id) === Number(record.id);
+    });
+    if (current < 0) current = variants.length - 1;
+    var next = Math.max(0, Math.min(variants.length - 1, current + delta));
+    if (next === current) return;
+    variantSelectionForSession(ses.id)[String(Number(record.reply_to_id) || 0)] = Number(variants[next].id) || 0;
+    renderHistory(ses);
+    var row = messagesInner.querySelector('[data-message-id="' + String(Number(variants[next].id) || 0) + '"]');
+    if (row) row.scrollIntoView({ block: 'nearest' });
+  }
+
   function actionIconPath(name) {
     var paths = {
       copy: 'M8 8h11v13H8z M5 3h11v3H6v11H3V3z',
@@ -719,7 +870,10 @@
       down: 'M12 20 4 11h5V4h6v7h5z',
       retry: 'M18.4 5.6A9 9 0 1 0 21 12h-2.4a6.6 6.6 0 1 1-1.9-4.6L13 11h8V3z',
       more: 'M11 3h2v2h-2z M11 8h2v13h-2z',
-      continue: 'M7 4l11 8L7 20z'
+      continue: 'M7 4l11 8L7 20z',
+      previous: 'M15.5 5 8.5 12l7 7',
+      next: 'M8.5 5l7 7-7 7',
+      cancel: 'M5 5l14 14M19 5 5 19'
     };
     return paths[name] || paths.more;
   }
@@ -799,9 +953,10 @@
         otherButton.classList.toggle('active', otherActive);
         otherButton.setAttribute('aria-pressed', otherActive ? 'true' : 'false');
       }
-    }).catch(function () {
+    }).catch(function (error) {
       button.classList.add('error');
       setTimeout(function () { button.classList.remove('error'); }, 1200);
+      generationActionError(error && error.message ? error.message : 'console_action_failed');
     }).finally(function () {
       button.disabled = false;
       if (otherButton) otherButton.disabled = false;
@@ -813,6 +968,10 @@
       generation_busy: 'Eine Antwort wird bereits erzeugt.',
       session_busy: 'Die Sitzung fuehrt gerade ein Werkzeug aus.',
       message_actions_migration_required: 'Migration 008 fehlt. Bitte Preflight ausfuehren.',
+      message_editing_migration_required: 'Migration 009 fehlt. Bitte Preflight ausfuehren.',
+      message_unchanged: 'Der Text wurde nicht veraendert.',
+      invalid_message: 'Die bearbeitete Nachricht ist leer oder zu lang.',
+      too_short: 'Die bearbeitete Nachricht ist zu kurz.',
       source_turn_missing: 'Der zugehoerige Benutzer-Turn fehlt.',
       source_response_missing: 'Die Quellantwort ist nicht mehr verfuegbar.',
       generation_request_expired: 'Die Nachrichtenaktion ist abgelaufen. Bitte erneut starten.',
@@ -863,7 +1022,8 @@
     details.hidden = true;
     var mode = record && record.generation && record.generation.mode;
     var modeLabel = mode === 'regenerate' ? 'ALTERNATIVE ANTWORT'
-      : (mode === 'continue' ? 'FORTSETZUNG' : 'NORMALE ANTWORT');
+      : (mode === 'edit' ? 'NACH BEARBEITUNG NEU ERZEUGT'
+      : (mode === 'continue' ? 'FORTSETZUNG' : 'NORMALE ANTWORT'));
     var values = [
       ['TYP', modeLabel],
       ['NACHRICHT', '#' + String(Number(record && record.id) || 0)],
@@ -892,14 +1052,17 @@
     actions.appendChild(copy);
 
     if (role === 'user') {
-      var edit = createActionButton('edit', 'Text als neue Nachricht bearbeiten');
-      edit.addEventListener('click', function () {
-        if (!inputEl) return;
-        inputEl.value = String(text || '');
-        inputEl.focus();
-        inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
-      });
-      actions.appendChild(edit);
+      if (record && record.queued === true) {
+        var cancelQueued = createActionButton('cancel', 'Vorgemerkte Nachricht entfernen');
+        cancelQueued.addEventListener('click', function () {
+          removeQueuedTurn(record.session_id, record.queue_id);
+        });
+        actions.appendChild(cancelQueued);
+      } else if (record && Number(record.id) > 0) {
+        var edit = createActionButton('edit', 'Diese Nachricht bearbeiten');
+        edit.addEventListener('click', function () { beginMessageEdit(record, text); });
+        actions.appendChild(edit);
+      }
       return actions;
     }
 
@@ -922,9 +1085,30 @@
     regenerate.addEventListener('click', function () { startGenerationAction(record, 'regenerate', regenerate); });
     actions.appendChild(regenerate);
 
-    var continueButton = createActionButton('continue', 'Antwort fortsetzen');
+    var continueButton = createActionButton('continue', 'Unvollstaendige Antwort fortsetzen');
     continueButton.addEventListener('click', function () { startGenerationAction(record, 'continue', continueButton); });
     actions.appendChild(continueButton);
+
+    var variants = record && Array.isArray(record._variantGroup) ? record._variantGroup : [];
+    if (variants.length > 1) {
+      var variantIndex = Number(record._variantIndex);
+      if (!Number.isFinite(variantIndex) || variantIndex < 0) variantIndex = variants.length - 1;
+      var variantNav = document.createElement('span');
+      variantNav.className = 'msg-variant-nav';
+      var previousVariant = createActionButton('previous', 'Vorherige Antwortvariante');
+      var nextVariant = createActionButton('next', 'Naechste Antwortvariante');
+      previousVariant.disabled = variantIndex <= 0;
+      nextVariant.disabled = variantIndex >= variants.length - 1;
+      previousVariant.addEventListener('click', function () { selectResponseVariant(record, -1); });
+      nextVariant.addEventListener('click', function () { selectResponseVariant(record, 1); });
+      var variantCount = document.createElement('span');
+      variantCount.className = 'msg-variant-count';
+      variantCount.textContent = String(variantIndex + 1) + ' / ' + String(variants.length);
+      variantNav.appendChild(previousVariant);
+      variantNav.appendChild(variantCount);
+      variantNav.appendChild(nextVariant);
+      actions.appendChild(variantNav);
+    }
 
     var details = buildMessageDetails(record);
     var info = createActionButton('more', 'Antwortdetails anzeigen');
@@ -1391,7 +1575,103 @@
   });
 
   // ── Nachricht senden ─────────────────────────────────────
-  function sendMessage(text) {
+  function queueTurnAfterCurrentReply(ses, text) {
+    var sessionId = String(ses.id);
+    if (!state.queuedTurnsBySession[sessionId]) state.queuedTurnsBySession[sessionId] = [];
+    var turn = {
+      id: 'queued_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9),
+      text: String(text || '').trim(),
+      created_at: new Date().toISOString()
+    };
+    state.queuedTurnsBySession[sessionId].push(turn);
+    if (inputEl) inputEl.value = '';
+    renderHistory(ses);
+    setStatus('waiting', 'NACHRICHT VORGEMERKT');
+    scrollToBottom();
+  }
+
+  function restoreQueuedTurn(sessionId, turn) {
+    if (!turn) return;
+    var key = String(sessionId || '');
+    if (!state.queuedTurnsBySession[key]) state.queuedTurnsBySession[key] = [];
+    state.queuedTurnsBySession[key].unshift(turn);
+    var ses = sessionById(key);
+    if (ses && isActiveSession(key)) renderHistory(ses);
+  }
+
+  function drainQueuedTurn(sessionId) {
+    var key = String(sessionId || '');
+    var ses = sessionById(key);
+    var queue = state.queuedTurnsBySession[key] || [];
+    if (!ses || !isActiveSession(key) || state.pendingBySession[key] || queue.length === 0) return;
+    var elapsed = Date.now() - Number(state.sendTimestampBySession[key] || 0);
+    var delay = Math.max(0, 4200 - elapsed);
+    setTimeout(function () {
+      if (!isActiveSession(key) || state.pendingBySession[key]) return;
+      var nextQueue = state.queuedTurnsBySession[key] || [];
+      var turn = nextQueue.shift();
+      if (!turn) return;
+      renderHistory(ses);
+      sendMessage(turn.text, { from_queue: true, queued_turn: turn });
+    }, delay);
+  }
+
+  function submitMessageEdit(text) {
+    var edit = state.editingMessage;
+    var ses = activeSession();
+    if (!edit || !ses || String(edit.session_id) !== String(ses.id)) return;
+    var revisedText = String(text || '').trim();
+    if (!revisedText) return;
+    if (state.pendingBySession[ses.id]) {
+      generationActionError('generation_busy');
+      return;
+    }
+    btnSend.disabled = true;
+    postConsoleAction({
+      action: 'edit_message',
+      session_id: String(ses.id),
+      message_id: Number(edit.message_id),
+      message: revisedText
+    }).then(function (data) {
+      var request = data.request || {};
+      if (!request.id) throw new Error('generation_request_missing');
+      var editedId = Number(data.message_id) || Number(edit.message_id);
+      var rows = state.messageCacheBySession[ses.id] || [];
+      state.messageCacheBySession[ses.id] = rows.filter(function (record) {
+        return Number(record.id) <= editedId;
+      }).map(function (record) {
+        if (Number(record.id) === editedId) record.message = String(data.message || revisedText);
+        return record;
+      });
+      ses.client_cursor = editedId;
+      ses.last_message_id = editedId;
+      ses.last_read_message_id = editedId;
+      state.variantSelectionBySession[ses.id] = {};
+      if (inputEl) inputEl.value = '';
+      clearMessageEdit(false);
+      state.pendingBySession[ses.id] = editedId;
+      state.sendTimestampBySession[ses.id] = Date.now();
+      updateActivePendingUi();
+      renderHistory(ses);
+      setStatus('waiting', 'EMBER VERARBEITET DIE AENDERUNG…');
+      showTypingIndicator();
+      startCountdown();
+      scrollToBottom();
+      openStreamForReply(ses, editedId, request);
+    }).catch(function (error) {
+      var code = error && error.message ? error.message : 'console_action_failed';
+      generationActionError(code);
+    }).finally(function () {
+      btnSend.disabled = false;
+    });
+  }
+
+  function sendMessage(text, options) {
+    options = options || {};
+    if (state.editingMessage && !options.from_queue) {
+      submitMessageEdit(text);
+      return;
+    }
     // v1.1.1.89: Ein Anhang ohne Begleittext ist eine gueltige Nachricht.
     if ((!text || !text.trim()) && pendingFiles.length === 0) return;
     if (uploadXhr || uploadCurrentFile || uploadQueue.length > 0) {
@@ -1406,16 +1686,20 @@
     var ses = activeSession();
     if (!ses) return;
     if (state.pendingBySession[ses.id]) {
-      appendMessageEl('system', '\u231b Ember antwortet gerade\u2026');
-      scrollToBottom();
+      if (pendingFiles.length > 0) {
+        appendMessageEl('system', '\u231b Anhaenge koennen erst nach der laufenden Antwort gesendet werden.');
+        scrollToBottom();
+        return;
+      }
+      queueTurnAfterCurrentReply(ses, text);
       return;
     }
     var sessionId = String(ses.id);
 
     var userText = (text || '').trim();
-    var atts = pendingFiles.slice(0, MAX_MESSAGE_ATTACHMENTS);
+    var atts = options.from_queue ? [] : pendingFiles.slice(0, MAX_MESSAGE_ATTACHMENTS);
     var sentCreatedAt = new Date().toISOString();
-    inputEl.value = '';
+    if (!options.from_queue) inputEl.value = '';
     btnSend.disabled = true;
 
     // Der private Kanal adressiert Ember serverseitig. Ein kuenstliches
@@ -1423,7 +1707,7 @@
     // Modellprompt uebrig bleiben.
     var msgToSend = userText;
     appendMessageEl('user', userText, state.userDisplayName || state.charName, null, atts, sentCreatedAt);
-    clearAttachments();
+    if (!options.from_queue) clearAttachments();
     scrollToBottom();
 
     setStatus('waiting', 'EMBER ANTWORTET\u2026');
@@ -1468,6 +1752,7 @@
         };
         delete state.pendingBySession[sessionId];
         restoreAttachments(atts);
+        if (options.from_queue) restoreQueuedTurn(sessionId, options.queued_turn);
         if (isActiveSession(sessionId)) {
           stopCountdown();
           removeTypingIndicator();
@@ -1484,6 +1769,7 @@
 
       var sentMsgId = d.id || 0;
       state.pendingBySession[sessionId] = Number(sentMsgId) || true;
+      updateActivePendingUi();
       if (sentMsgId > Number(ses.last_message_id || 0)) ses.last_message_id = sentMsgId;
       if (sentMsgId > Number(ses.last_read_message_id || 0)) ses.last_read_message_id = sentMsgId;
       ses.client_cursor = Math.max(Number(ses.client_cursor) || 0, sentMsgId);
@@ -1524,6 +1810,7 @@
     .catch(function() {
       delete state.pendingBySession[sessionId];
       restoreAttachments(atts);
+      if (options.from_queue) restoreQueuedTurn(sessionId, options.queued_turn);
       if (isActiveSession(sessionId)) {
         stopCountdown();
         removeTypingIndicator();
@@ -1542,8 +1829,11 @@
   // serverseitig zu Ende und legt die Antwort in der DB ab).
   function openStreamForReply(ses, userMsgId, generationRequest) {
     var sessionId = String(ses.id);
+    var streamCharacterId = generationRequest && generationRequest.character_id
+      ? String(generationRequest.character_id)
+      : state.characterId;
     var url = API_BASE + '/console_stream.php'
-      + '?character_id=' + encodeURIComponent(state.characterId)
+      + '?character_id=' + encodeURIComponent(streamCharacterId)
       + '&session_id=' + encodeURIComponent(sessionId);
     if (generationRequest && generationRequest.id) {
       url += '&generation_request=' + encodeURIComponent(String(generationRequest.id));
@@ -1634,6 +1924,7 @@
     updateActivePendingUi();
     setStatus(errorMessage ? 'error' : 'online', errorMessage ? 'AKTION FEHLGESCHLAGEN' : 'VERBUNDEN');
     if (errorMessage) generationActionError(errorMessage);
+    drainQueuedTurn(sessionId);
   }
 
   function startGenerationStatusPoll(ses, request) {
@@ -1715,6 +2006,9 @@
         created_at: new Date().toISOString()
       }]);
       ses.client_cursor = Math.max(Number(ses.client_cursor) || 0, emberId);
+      if (data && (data.generation_mode === 'regenerate' || data.generation_mode === 'edit')) {
+        variantSelectionForSession(sessionId)[String(Number(userMsgId) || 0)] = emberId;
+      }
     }
     if (emberId > Number(ses.last_message_id || 0)) ses.last_message_id = emberId;
 
@@ -1798,6 +2092,7 @@
       }
     } else {
       setStatus('online', 'VERBUNDEN');
+      drainQueuedTurn(sessionId);
     }
 
     scrollToBottom();
@@ -1939,6 +2234,7 @@
             updateActivePendingUi();
             setStatus('error', 'RECHERCHEFEHLER');
           }
+          drainQueuedTurn(sessionId);
         }
       } catch (e) {}
       finishB('ABGESCHLOSSEN');
@@ -2042,6 +2338,7 @@
         appendMessageEl('system', '\u231b Ember hat nicht geantwortet.');
         scrollToBottom();
       }
+      drainQueuedTurn(sessionId);
       scheduleBackgroundPoll();
       return;
     }
@@ -2069,6 +2366,7 @@
           scrollToBottom();
         }
         dbLoadSessions().then(renderSessionList).catch(function() {});
+        drainQueuedTurn(sessionId);
         scheduleBackgroundPoll();
       } else {
         state.pollTimers[sessionId] = setTimeout(function() { doPoll(ses, userMsgId); }, POLL_FAST_MS);
@@ -2115,6 +2413,7 @@
           updateActivePendingUi();
           setStatus('online', 'VERBUNDEN');
         }
+        drainQueuedTurn(sessionId);
       }
       if (d.messages.length && isActiveSession(sessionId)) scrollToBottom();
       scheduleBackgroundPoll();
@@ -2246,11 +2545,25 @@
 
   btnLogout.addEventListener('click', doLogout);
 
+  if (composerEditCancel) {
+    composerEditCancel.addEventListener('click', function () {
+      if (inputEl) inputEl.value = '';
+      clearMessageEdit(true);
+      updateActivePendingUi();
+    });
+  }
+
   window.addEventListener('pageshow', function () { refreshRuntimeProfile(); });
 
   btnSend.addEventListener('click', function() { sendMessage(inputEl.value); });
   inputEl.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputEl.value); }
+    if (e.key === 'Escape' && state.editingMessage) {
+      e.preventDefault();
+      clearMessageEdit(true);
+      inputEl.value = '';
+      updateActivePendingUi();
+    }
   });
 
   // ── Init ─────────────────────────────────────────────────

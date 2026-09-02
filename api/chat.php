@@ -3702,7 +3702,8 @@ function ember_build_context(
       : '';
     $st = $pdo->prepare(
       "SELECT user_id, character_id, character_name, message FROM stu_chat_messages
-        WHERE channel='console' AND user_id=? AND session_id=? AND alliance_id IS NULL"
+        WHERE channel='console' AND user_id=? AND session_id=? AND alliance_id IS NULL
+          AND deleted_at IS NULL"
       . $excludeSql
       . " ORDER BY id DESC LIMIT $limit"
     );

@@ -1,0 +1,402 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+UEBERGABEPROTOKOLL 0.5.1-ALPHA
+STAND 01.09.2026
+
+======================================================================
+1. VERBINDLICHER QUELLSTAND
+======================================================================
+
+Repository:
+https://github.com/Starlight-Unit-Studio/coreui
+
+Arbeitsbranch:
+release/0.5.1-alpha
+
+Ziel-Branch:
+main
+
+Produktversion:
+0.5.1-alpha
+
+Paketwurzel:
+EMBER_COREUI_0_5_1_ALPHA
+
+Releasepaar:
+EMBER_COREUI_0_5_1_ALPHA.zip
+EMBER_COREUI_0_5_1_ALPHA.zip.sha256
+
+Produktive Adresse:
+https://coreui.starlight-unit.de
+
+Das Produkt heisst immer Ember CoreUI. Technische Kennungen wie coreui,
+ember-coreui und COREUI_* bleiben reine Kompatibilitaetsnamen.
+
+0.5.0-alpha wurde am 01.09.2026 auf main veroeffentlicht. Der Git-Baum des
+veroeffentlichten Releases entsprach dem lokal getesteten Paket. Der danach
+durchgefuehrte Produktivtest ist die verbindliche Grundlage fuer 0.5.1-alpha.
+
+======================================================================
+2. PRODUKTIVTEST VON 0.5.0-ALPHA
+======================================================================
+
+Vom Betreiber praktisch bestaetigt:
+
+* Markdown und Codeausgabe funktionieren.
+* Code- und Nachrichtenkopie funktionieren.
+* Positive und negative Schaltflaechen sind bedienbar.
+* Alternative Antworten werden erzeugt.
+* Antwortdetails werden angezeigt.
+* Normale Chats, Websuche, Browser-Recherche, Python und RAG-Lite zeigen keine
+  Beeintraechtigung durch die neue Aktionsleiste.
+
+Im Produktivtest gefunden:
+
+* Feedback schaltete kurz auf die rote Fehlerdarstellung und danach wieder auf
+  grau. Die Bewertung wurde nicht gespeichert.
+* Bewertungszustand und Antwortvarianten waren nach einem Reload nicht
+  verlaesslich als erhalten erkennbar.
+* Der Bearbeiten-Knopf kopierte nur Text als neue Nachricht in den Editor.
+* Gewuenscht ist echte Bearbeitung derselben Blase mit Neustart ab diesem Turn.
+* Waehrend Ember antwortete, konnte ein vergessener Folgetext nicht bereits
+  abgesendet und vorgemerkt werden.
+* Die Fortsetzungsaktion war ohne Erklaerung nicht verstaendlich.
+
+======================================================================
+3. RELEASEZIEL 0.5.1-ALPHA
+======================================================================
+
+0.5.1-alpha ist ein Korrektur- und Bedienrelease innerhalb des begonnenen
+Chatkomfort-Blocks. Es ersetzt keine der Funktionen aus 0.5.0-alpha.
+
+Enthalten:
+
+1. Altserverfeste und nach Reload sichtbare Bewertungen.
+2. Gruppierte, dauerhaft gespeicherte Antwortvarianten mit Navigation.
+3. Echte Bearbeitung derselben Benutzernachricht.
+4. Neustart des aktiven Gespraechszweigs ab dem bearbeiteten Turn.
+5. Revisionshistorie und private Exportierbarkeit alter Fassungen.
+6. Folgetexte waehrend einer laufenden Ember-Antwort.
+7. Verstaendlichere Kennzeichnung der Fortsetzungsaktion.
+8. Migration 009, Installer-, Health- und Preflight-Erweiterung.
+
+======================================================================
+4. PERSISTENTES FEEDBACK
+======================================================================
+
+Betroffene Dateien:
+
+* database/migrations/009_message_editing.sql
+* api/console_action_store.php
+* api/console_actions.php
+* api/console_messages.php
+* api/account_export.php
+* js/console-app.js
+* scripts/message-actions-selftest.php
+
+Ursachenhaertung:
+
+Eine bestehende stu_chat_reactions-Tabelle kann aus dem frueheren STU-System
+stammen. CREATE TABLE IF NOT EXISTS aus Migration 001 erweitert eine solche
+Tabelle nicht. Dadurch koennen der Kanalwert console oder utf8mb4 fuer echte
+Emoji-Zeichen fehlen. Andere Aktionen aus Migration 008 funktionieren dann,
+waehrend ausschliesslich das Feedback scheitert.
+
+Migration 009 setzt deshalb fuer stu_chat_reactions:
+
+* channel auf ENUM global, alliance und console
+* emoji auf VARCHAR(16) mit utf8mb4_unicode_ci
+
+Neue CoreUI-Bewertungen werden dennoch als robuste ASCII-Tokens gespeichert:
+
+* positiv: coreui_up
+* negativ: coreui_down
+
+Historische Werte mit echtem Daumen-hoch- oder Daumen-runter-Zeichen bleiben
+lesbar. Beim Umschalten werden alte und neue CoreUI-Werte gemeinsam bereinigt.
+Andere Reaktionen desselben Benutzers bleiben unangetastet.
+
+Der Client zeigt bei einem Serverfehler weiterhin kurz den roten Fehlerzustand,
+gibt jetzt aber zusaetzlich eine konkrete Systemmeldung aus. Erfolgreiches
+Feedback bleibt aktiv und wird bei jedem History-Laden aus der Datenbank
+rekonstruiert.
+
+======================================================================
+5. ANTWORTVARIANTEN
+======================================================================
+
+Antworten mit derselben reply_to_id werden im Client als Varianten eines
+Benutzer-Turns gruppiert.
+
+Verhalten:
+
+* Standardmaessig ist die neueste Variante sichtbar.
+* Pfeile wechseln zur vorherigen oder naechsten Variante.
+* Ein Zaehler zeigt die Position, zum Beispiel 2 / 3.
+* Jede Variante behaelt ihre eigene Nachrichten-ID, Bewertung, Details und
+  Generierungsmetadaten.
+* Nach einem Browserreload werden alle Varianten erneut aus
+  stu_chat_messages aufgebaut.
+* Die alte Antwort wird durch Neugenerierung nicht geloescht.
+* Eine Fortsetzung wird nur zusammen mit genau der Quellvariante angezeigt,
+  aus der sie erzeugt wurde.
+
+Die aktuell ausgewaehlte Position ist reine Oberflaechenwahl. Die Varianten
+selbst und ihre Bewertungen sind serverseitig dauerhaft. Nach einem kompletten
+Reload startet die Anzeige bewusst wieder bei der neuesten Variante.
+
+======================================================================
+6. ECHTE BEARBEITUNG EINER BENUTZERNACHRICHT
+======================================================================
+
+Betroffene Dateien:
+
+* app.html
+* css/console.css
+* js/console-app.js
+* api/console_actions.php
+* api/console_action_store.php
+* api/console_stream.php
+* api/chat.php
+* database/migrations/009_message_editing.sql
+
+Der alte 0.5.0-Pfad "Text als neue Nachricht bearbeiten" ist entfernt.
+
+Neuer Ablauf:
+
+1. Der Benutzer klickt Bearbeiten an einer eigenen gespeicherten Nachricht.
+2. Der Editor zeigt eine sichtbare Bearbeitungsleiste mit Nachrichten-ID und
+   Abbrechen-Schaltflaeche.
+3. Beim Absenden prueft der Server Konto, Sitzung, Charakter, Nachrichtenart,
+   Textlaenge, Anhaenge und laufende Aktionen.
+4. Dieselbe stu_chat_messages-Zeile und damit dieselbe sichtbare Blase behaelt
+   ihre Nachrichten-ID und erhaelt den revidierten Text.
+5. Alle Nachrichten vor diesem Turn bleiben aktiver Kontext.
+6. Spaetere Nachrichten werden mit deleted_at aus dem aktiven Zweig genommen,
+   weil sie auf der alten Fassung beruhen.
+7. Ember startet mit dem Generierungsmodus edit ab derselben Benutzer-Turn-ID
+   neu.
+
+Die alte Fassung wird vor dem Update in stu_console_message_revisions
+protokolliert. Gespeichert werden:
+
+* Benutzer und Sitzung
+* unveraenderte Nachrichten-ID
+* fortlaufende Revisionsnummer
+* vorheriger Text
+* neuer Text
+* Zahl der ausgeblendeten nachfolgenden Nachrichten
+* Zeitpunkt
+
+Ausgeblendete Nachrichten werden nicht physisch geloescht. Sie bleiben im
+privaten Kontoexport und damit fuer Datenschutz- und Wiederherstellungszwecke
+nachvollziehbar. Eine Oberflaeche zum Zurueckschalten alter Bearbeitungszweige
+ist in 0.5.1-alpha noch nicht enthalten.
+
+======================================================================
+7. MODELLKONTEXT UND GENERIERUNGSSICHERHEIT
+======================================================================
+
+Der private Modellkontext schliesst deleted_at-Zeilen jetzt ausdruecklich aus.
+Ohne diese Aenderung koennten alte Antworten eines bearbeiteten Zweigs trotz
+unsichtbarer Oberflaeche erneut in den Prompt gelangen.
+
+Auch die SSE-Turnsuche und die Idempotenzsuche akzeptieren nur aktive,
+nicht ausgeblendete Nachrichten.
+
+Migration 009 erweitert stu_console_generation_requests:
+
+* mode zusaetzlich um edit; bei Bearbeitung ohne vorhandene Ember-Antwort dient
+  die gepruefte Turn-ID als sichere interne Quellreferenz
+
+Die feste response_floor_id bleibt erhalten. Nach Verbindungsabbruch kann nur
+eine wirklich spaeter erzeugte Antwort als Ergebnis der Bearbeitung gelten.
+
+Eine Bearbeitung wird abgewiesen, solange dieselbe Sitzung bereits eine
+Alternative, Fortsetzung, Bearbeitung oder Browser-Recherche ausfuehrt.
+
+======================================================================
+8. FOLGETEXT WAEHREND EMBER ANTWORTET
+======================================================================
+
+Der Nachrichteneditor und die Senden-Schaltflaeche bleiben waehrend einer
+laufenden Generierung verwendbar.
+
+Verhalten:
+
+* Ein abgesendeter reiner Text wird als wartende Benutzerblase angezeigt.
+* Die laufende Antwort wird nicht abgebrochen oder in ihrem Kontext veraendert.
+* Nach Abschluss wird der Text automatisch als naechster normaler Turn
+  gesendet.
+* Mehrere Texte werden in ihrer Eingabereihenfolge verarbeitet.
+* Eine wartende Nachricht besitzt eine Entfernen-Schaltflaeche.
+* Der automatische Versand wartet mindestens den bestehenden privaten
+  Sende-Cooldown ab.
+* Ein fehlgeschlagener Versand legt den Text wieder in die Warteschlange.
+
+Die Warteschlange bleibt absichtlich im aktiven Browserprozess und speichert
+noch keine privaten, nicht gesendeten Texte im Server oder localStorage. Ein
+vollstaendiges Neuladen der Seite verwirft daher noch nicht gesendete
+Warteschlangentexte. Bereits serverseitig gesendete Nachrichten bleiben
+selbstverstaendlich erhalten.
+
+Anhaenge koennen waehrend einer laufenden Antwort noch nicht vorgemerkt werden.
+Diese Grenze verhindert eine Vermischung der sitzungsweiten Uploadauswahl mit
+einem spaeter automatisch gesendeten Turn.
+
+======================================================================
+9. FORTSETZUNG EINER ANTWORT
+======================================================================
+
+Die Funktion aus 0.5.0-alpha bleibt technisch unveraendert. Sie ist fuer eine
+tatsaechlich unvollstaendige oder abgebrochene Ember-Antwort gedacht.
+
+Der Tooltip lautet nun "Unvollstaendige Antwort fortsetzen". Vollstaendige
+Antworten benoetigen diese Aktion nicht. Der Server laedt weiterhin die genaue
+Quellantwort, fordert eine direkte Fortsetzung ohne Wiederholung an und
+speichert das Ergebnis getrennt mit derselben Turn-Zuordnung.
+
+======================================================================
+10. KONTOEXPORT UND DATENSCHUTZ
+======================================================================
+
+api/account_export.php enthaelt weiterhin:
+
+* alle eigenen privaten Sitzungen und Nachrichten
+* deleted_at fuer ausgeblendete Zweige
+* eigene Bewertungen
+* eigene Generierungshistorie
+
+Neu enthalten:
+
+* Nachrichten-ID und Revisionsnummer
+* vorherige und revidierte Textfassung
+* Zahl der durch die Bearbeitung ausgeblendeten Nachrichten
+* Revisionszeitpunkt
+
+Nicht exportiert werden:
+
+* temporaere Generierungsanforderungs-ID
+* CSRF-Token
+* Login-Token
+* Thinking-Inhalte
+* fremde Nachrichten oder Bewertungen
+
+Keine private Starlight Unit Bibel und kein privates Kompendium duerfen im
+Quellbaum, ZIP, Setup oder automatischen RAG-Import enthalten sein.
+
+======================================================================
+11. INSTALLATION UND MIGRATION
+======================================================================
+
+Empfohlener SSH-Einzeiler:
+
+( setup_file="$(mktemp)" && trap 'rm -f -- "$setup_file"' EXIT && curl -fsSL https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/setup.sh -o "$setup_file" && sudo bash "$setup_file" )
+
+Setup laedt ZIP und SHA aus:
+
+releases/v0.5.1-alpha/
+
+Migrationen laufen in Reihenfolge. Neu ist:
+
+database/migrations/009_message_editing.sql
+
+Compose verwendet scripts/migrate.sh. Der Native-Installer wendet Migration
+009 direkt nach 008 an.
+
+Bestehende Konten, Sitzungen, Nachrichten, Anhaenge, Profilbilder, Memories,
+private RAG-Quellen und Konfigurationen bleiben erhalten. Die Installation
+schreibt keine bestehenden Nachrichten um. Erst eine spaetere ausdrueckliche
+Bearbeitungsaktion erzeugt eine Revision und blendet ihren nachfolgenden Zweig
+aus.
+
+======================================================================
+12. TESTMATRIX
+======================================================================
+
+Lokal zwingend:
+
+* node --check js/console-app.js
+* node --check js/coreui-markdown.js
+* node scripts/markdown-selftest.js
+* bash -n setup.sh und scripts/*.sh
+* python3 scripts/branding-license-selftest.py
+* git diff --check
+* Versions- und Cache-Buster-Abgleich
+* ZIP-Inhaltsvergleich mit dem freigegebenen Quellbaum
+* SHA-256-Pruefung
+* Suche nach privaten Manuskriptdateien
+
+Im installierten Compose- oder Native-System zwingend:
+
+* PHP-Syntax aller PHP-Dateien
+* Migration 009 und Revisionsschema
+* Nachrichtenaktionen-Selftest
+* persistente Bewertung nach Reload
+* mindestens zwei Varianten mit Pfeilwechsel nach Reload
+* Bearbeitung derselben Blase und neue Antwort ab diesem Turn
+* Folgetext waehrend einer laufenden Antwort
+* alle bestehenden Session-, Reply-, Thinking-, Konto-, Profil-, Anhang-,
+  PDF-, Video-, RAG- und Python-Worker-Selftests
+* Healthcheck und private Endpunktrouten
+
+Die lokale Quellumgebung besitzt keine PHP-Laufzeit und keine produktive
+MariaDB. PHP-, Datenbank- und Transaktionstests laufen deshalb erneut innerhalb
+des ausgelieferten PHP-Containers auf der Installation.
+
+======================================================================
+13. BEKANNTE GRENZEN UND NAECHSTE FUNKTIONSSTUFEN
+======================================================================
+
+Bewusst nicht in 0.5.1-alpha enthalten:
+
+* kein rohes HTML in Markdown
+* keine mathematische Formelsatz- oder Diagrammausfuehrung
+* keine sichtbare Rueckschaltung auf alte Benutzertext-Revisionen
+* wartende, noch nicht gesendete Folgetexte ueberleben keinen Vollreload
+* keine Anhaenge in der Folgetext-Warteschlange
+* noch keine Quellen- und Werkzeugliste in den Antwortdetails
+* noch kein Modellwechsel fuer eine einzelne Neugenerierung
+* noch keine Audioeingabe oder TTS-Ausgabe
+
+Naechster 0.5.x-Block nach produktiver Bestaetigung:
+
+* Werkzeugmenue am Eingabefeld
+* sichtbare Aktivierung fuer Datei, RAG-Lite, Web, Browse und Python
+* gespeicherte Quellen- und Werkzeugmetadaten pro Antwort
+* kontrollierte Anzeige dieser Metadaten unter der Sprechblase
+
+Geplanter 0.6.x-Audioblock:
+
+* Mikrofonaufnahme
+* normalisierte Audioanhaenge
+* nativer Transport an kompatible Gemma-Modelle
+* Transkription und Audioanalyse
+* separate lokale TTS-Schicht fuer gesprochene Antworten
+
+======================================================================
+14. FORTSETZUNG IN EINEM NEUEN CHAT
+======================================================================
+
+Ein neuer Arbeitschat soll zuerst dieses Protokoll, VERSION, CHANGELOG.md,
+README.md und den aktuellen Release-Branch lesen.
+
+Vor einer Veroeffentlichung:
+
+1. Aktuellen main und release/0.5.1-alpha vergleichen.
+2. Keine fremden oder privaten Dateien in Git oder ZIP aufnehmen.
+3. Migration 009, Installer, Health und beide Preflights gemeinsam pruefen.
+4. Archiv aus einer sauberen Quellkopie bauen.
+5. ZIP-Wurzel, Pflichtdateien, Dateimodi, Integritaet und SHA pruefen.
+6. Oeffentlichen Push, Pull Request und Merge erst nach ausdruecklicher
+   Benutzerfreigabe ausfuehren.
+
+Nach einer Veroeffentlichung:
+
+1. Update ueber den offiziellen SSH-Einzeiler installieren.
+2. Preflight vollstaendig ausfuehren.
+3. Feedback, Reload, Variantennavigation, Bearbeitung und Folgetext praktisch
+   testen.
+4. Produktivbestaetigung dokumentieren.
+5. Nach jeder Version ein neues vollstaendiges Uebergabeprotokoll erstellen.
+
+ENDE UEBERGABEPROTOKOLL 0.5.1-ALPHA
