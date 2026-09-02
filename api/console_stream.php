@@ -271,6 +271,7 @@ $replyFinal  = '';
 $thinkingAll = '';
 $thinkingPublic = '';
 $browseJobId = 0;
+$consoleAfkOwned = false;
 
 try {
   // Idempotenz: Hat ein frueherer Request fuer GENAU diesen Turn schon geantwortet?
@@ -333,6 +334,7 @@ try {
   } elseif ($isVisionTurn) {
     // Console-AFK nur setzen, wenn wirklich ein Modell- oder Werkzeuglauf startet.
     ember_console_afk_set($pdo, time() + 930);
+    $consoleAfkOwned = true;
     ember_console_afk_announce($pdo);
     ember_prepare_background_runtime();
     sse_comment('vision-sync');
@@ -342,6 +344,7 @@ try {
     // Console-AFK: Ember in der globalen Nickliste abwesend zeigen, solange das
     // Modell arbeitet. Der finally-Block nimmt den Status im Normalfall zurueck.
     ember_console_afk_set($pdo, time() + 930);
+    $consoleAfkOwned = true;
     ember_console_afk_announce($pdo);
     ember_prepare_background_runtime();
     // Prompt bauen - identische Ember-Stimme wie ueberall (shared builder).
@@ -544,7 +547,9 @@ try {
   ember_generation_lock_release($turnLock ?? null);
   // Console-AFK sofort zuruecknehmen -> Ember erscheint im Global wieder online.
   // (Bei [BROWSE:] haelt der Worker ueber sein eigenes Browse-Flag unabhaengig weiter AFK.)
-  if (isset($pdo) && $pdo instanceof PDO) { ember_console_afk_clear($pdo); }
+  // Ein lokaler Rechenschritt setzt den Status nicht und darf daher auch keinen
+  // AFK-Marker eines parallel laufenden Modell- oder Werkzeugturns loeschen.
+  if ($consoleAfkOwned && isset($pdo) && $pdo instanceof PDO) { ember_console_afk_clear($pdo); }
 }
 exit;
 

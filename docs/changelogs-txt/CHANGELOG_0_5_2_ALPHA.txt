@@ -69,6 +69,28 @@ Solche Aufgaben bleiben im normalen Modell-, Python- oder Werkzeugpfad. Damit
 wertet CoreUI keinen Teil einer komplexeren Eingabe versehentlich isoliert aus.
 
 ======================================================================
+KORREKTUR DES ERSTEN 0.5.2-PAKETS
+======================================================================
+
+Das zuerst auf main veroeffentlichte 0.5.2-alpha-Paket scheiterte im
+Reply-Pipeline-Selftest. Der Parser behandelte einen Punkt direkt hinter dem
+zweiten Operanden pauschal wie einen Dezimaltrenner. Dadurch fiel der eigene
+Testfall mit einer normal beendeten Satzzeile in den Modellpfad zurueck.
+
+Die korrigierte Fassung:
+
+* akzeptiert Punkt und Komma nach dem Ausdruck als Satzzeichen
+* lehnt echte Dezimalzahlen weiterhin ab
+* akzeptiert im Schnellpfad ausschliesslich ASCII-Ziffern
+* validiert beide geparsten Operanden vor jeder Berechnung
+* lehnt Unicode-Ziffern statt einer falschen Nullantwort sicher ab
+* verwechselt 0x10 nicht mit 0 x 10
+* behandelt Kapitel- und Episodenbereiche nicht als Subtraktion
+* erkennt deutsche und englische Wuensche nach Rechenweg oder Erklaerung
+* loescht keinen AFK-Status, den der lokale Turn nicht selbst gesetzt hat
+* prueft den synchronen Schnellpfad vor dem globalen Ollama-Lock
+
+======================================================================
 SPEICHERUNG UND STREAM-ABSCHLUSS
 ======================================================================
 
@@ -104,6 +126,12 @@ Der Reply-Pipeline-Selftest prueft:
 * Ablehnung einer Kettenrechnung
 * Ablehnung von Division und Dezimalzahlen
 * Ablehnung eines verlangten Rechenwegs
+* Satzpunkt und Satzkomma nach dem zweiten Operanden
+* Ablehnung von Unicode-Ziffern und Hexadezimalwerten
+* Ablehnung mehrdeutiger Kapitel- und Episodenbereiche
+* Ablehnung englischer Erklaerungswuensche
+* AFK-Eigentum des privaten Streams
+* lockfreier synchroner Schnellpfad
 * Verdrahtung des lokalen Abschlusses im SSE-Pfad
 * Sperre gegen nachgelagerte Reflect-Modellaufrufe
 

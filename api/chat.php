@@ -3613,15 +3613,16 @@ function ember_msg_is_calculation(string $m): bool {
 // Der bewusst enge Parser akzeptiert genau einen binaeren Ausdruck. Alles mit
 // Dezimalzahlen, Division, Potenzen, mehreren Rechenschritten oder gewuenschtem
 // Rechenweg bleibt im normalen Modell- und Werkzeugpfad.
-function ember_bigint_parse(string $number): array {
+function ember_bigint_parse(string $number): ?array {
   $number = preg_replace('~\s+~u', '', trim($number));
-  if (!is_string($number) || !preg_match('~^[+-]?\d+$~', $number)) {
-    return [false, '0'];
+  if (!is_string($number) || !preg_match('~^[+-]?[0-9]+$~D', $number)) {
+    return null;
   }
   $negative = str_starts_with($number, '-');
   $digits = ltrim($number, '+-');
   $digits = ltrim($digits, '0');
-  if ($digits === '') return [false, '0'];
+  if ($digits === '') $digits = '0';
+  if ($digits === '0') $negative = false;
   return [$negative, $digits];
 }
 
@@ -3706,12 +3707,20 @@ function ember_bigint_add_signed(array $left, array $right): string {
 function ember_exact_integer_calculation(string $message): ?string {
   $plain = trim(ember_tool_strip_addressing($message));
   if ($plain === '' || strlen($plain) > 4096) return null;
-  if (preg_match('~\b(?:rechenweg|erklaer|erklär|begründe|warum|schritt(?:e|weise)?|herleitung)\b~iu', $plain)) {
+  if (preg_match(
+    '~\b(?:rechenweg|erklaer|erklär|begründe|warum|schritt(?:e|weise)?|herleitung|explain|reasoning|why|steps?|derivation|show\s+(?:(?:the|your)\s+)?work)\b~iu',
+    $plain
+  )) {
     return null;
   }
+  // Hexadezimale Literale wie 0x10 duerfen nicht als Multiplikation gelten.
+  if (preg_match('~(?<![0-9A-Za-z])0[xX][0-9A-Fa-f]+(?![0-9A-Za-z])~', $plain)) return null;
 
-  $number = '[+-]?\s*\d{1,512}';
-  $expression = '~(?<![\d.,])(' . $number . ')\s*([+*x×-])\s*(' . $number . ')(?![\d.,])~iu';
+  $number = '[+-]?\s*[0-9]{1,512}';
+  // Punkt und Komma hinter dem zweiten Operanden koennen normale Satzzeichen
+  // sein. Echte Dezimalzahlen werden anschliessend durch weitere Ziffern im
+  // Resttext sicher abgelehnt.
+  $expression = '~(?<![0-9.,])(' . $number . ')\s*([+*x×-])\s*(' . $number . ')(?![0-9])~iu';
   $count = preg_match_all($expression, $plain, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
   if ($count !== 1) return null;
 
@@ -3719,10 +3728,10 @@ function ember_exact_integer_calculation(string $message): ?string {
   $full = (string)$match[0][0];
   $offset = (int)$match[0][1];
   $outside = substr($plain, 0, $offset) . substr($plain, $offset + strlen($full));
-  if (preg_match('~\d~u', $outside)) return null;
+  if (preg_match('~\p{N}~u', $outside)) return null;
 
   $hasCalculationIntent = (bool)preg_match(
-    '~\b(?:berechne|rechne|rechnung|ausrechnen|calculate|calc|ergibt|ergebnis|exakt)\b~iu',
+    '~\b(?:berechne|berechnen|rechne|rechnen|ausrechnen|addiere|subtrahiere|multipliziere|calculate|calc|compute)\b~iu',
     $plain
   );
   $outsideNoise = preg_replace('~[\s=?!.,;:\"\'()\[\]{}]+~u', '', $outside);
@@ -3730,6 +3739,7 @@ function ember_exact_integer_calculation(string $message): ?string {
 
   $left = ember_bigint_parse((string)$match[1][0]);
   $right = ember_bigint_parse((string)$match[3][0]);
+  if ($left === null || $right === null) return null;
   $operator = (string)$match[2][0];
   if ($operator === 'x' || $operator === 'X' || $operator === '×') $operator = '*';
 
@@ -7968,18 +7978,26 @@ if ($action === 'ember_reply') {
       exit;
     }
 
-    // Global Ollama lock: max 1 simultaneous generation
-    // Ollama belegt: KEINE Busy-/Platzhalter-Antwort mehr (v1.1.1.07).
-    // Generierung wird still abgebrochen; der Status-Dot im Header signalisiert den Zustand.
-    $globalLock = ember_global_lock_acquire();
-    if ($globalLock === false) {
-      // Ollama belegt - kein Chat-Text mehr, Status-Dot im Header zeigt es an.
-      ember_debug_log('ember_reply_busy', [
-        'trace_id' => $traceId,
-        'after_id' => $afterId,
-      ]);
-      ember_generation_lock_release($emberLock);
-      exit;
+    // Eindeutige Ganzzahlrechnungen brauchen Ollama nicht und duerfen daher
+    // auch dann abschliessen, wenn eine andere Generierung den Modell-Lock haelt.
+    $exactCalculation = $triggerImageUrl === null
+      ? ember_exact_integer_calculation($message)
+      : null;
+    $globalLock = null;
+    if ($exactCalculation === null) {
+      // Global Ollama lock: max 1 simultaneous generation
+      // Ollama belegt: KEINE Busy-/Platzhalter-Antwort mehr (v1.1.1.07).
+      // Generierung wird still abgebrochen; der Status-Dot im Header signalisiert den Zustand.
+      $globalLock = ember_global_lock_acquire();
+      if ($globalLock === false) {
+        // Ollama belegt - kein Chat-Text mehr, Status-Dot im Header zeigt es an.
+        ember_debug_log('ember_reply_busy', [
+          'trace_id' => $traceId,
+          'after_id' => $afterId,
+        ]);
+        ember_generation_lock_release($emberLock);
+        exit;
+      }
     }
 
     ember_debug_log('ember_reply_generate_start', [
@@ -7988,9 +8006,15 @@ if ($action === 'ember_reply') {
       'character_id' => (string)($char['id'] ?? ''),
     ]);
 
-    $reply = ember_generate_reply($pdo, $char, $message, $triggerImageUrl ?? null);
-    ember_generation_lock_release($globalLock);
-    ember_browse_consume_request($pdo, $channel, isset($uid) ? (int)$uid : null);
+    if ($exactCalculation !== null) {
+      ember_exact_calculation_mark_complete();
+      $reply = $exactCalculation;
+    } else {
+      $reply = ember_generate_reply($pdo, $char, $message, $triggerImageUrl ?? null);
+      ember_generation_lock_release($globalLock);
+      $globalLock = null;
+      ember_browse_consume_request($pdo, $channel, isset($uid) ? (int)$uid : null);
+    }
     $lastCall = ember_last_call_meta();
     $promptMeta = $GLOBALS['STU_EMBER_PROMPT_META'] ?? [];
     ember_debug_log('ember_reply_generate_done', [
@@ -8053,8 +8077,10 @@ if ($action === 'ember_reply') {
         'elapsed_ms' => (int)round((microtime(true) - $replyStartedAt) * 1000),
       ]);
     }
+    ember_generation_lock_release($globalLock ?? null);
     ember_generation_lock_release($emberLock ?? null);
   } catch (Throwable $e) {
+    ember_generation_lock_release($globalLock ?? null);
     ember_generation_lock_release($emberLock ?? null);
     if (function_exists('stu__log_error')) {
       stu__log_error([
