@@ -93,8 +93,8 @@ UI_FILES=(
   scripts/message-actions-selftest.php
   scripts/markdown-selftest.js
   scripts/branding-license-selftest.py
-  docs/changelogs-txt/CHANGELOG_0_5_1_ALPHA.txt
-  docs/UEBERGABEPROTOKOLL_0_5_1_ALPHA.txt
+  docs/changelogs-txt/CHANGELOG_0_5_2_ALPHA.txt
+  docs/UEBERGABEPROTOKOLL_0_5_2_ALPHA.txt
   images/starlight_unit_studios_logo_original.png
 )
 for ui_file in "${UI_FILES[@]}"; do

@@ -3609,6 +3609,161 @@ function ember_msg_is_calculation(string $m): bool {
   return preg_match_all('~\d~u', $m) >= 4;
 }
 
+// Exakte Ganzzahlrechnungen brauchen weder ein Sprachmodell noch den Python-Worker.
+// Der bewusst enge Parser akzeptiert genau einen binaeren Ausdruck. Alles mit
+// Dezimalzahlen, Division, Potenzen, mehreren Rechenschritten oder gewuenschtem
+// Rechenweg bleibt im normalen Modell- und Werkzeugpfad.
+function ember_bigint_parse(string $number): array {
+  $number = preg_replace('~\s+~u', '', trim($number));
+  if (!is_string($number) || !preg_match('~^[+-]?\d+$~', $number)) {
+    return [false, '0'];
+  }
+  $negative = str_starts_with($number, '-');
+  $digits = ltrim($number, '+-');
+  $digits = ltrim($digits, '0');
+  if ($digits === '') return [false, '0'];
+  return [$negative, $digits];
+}
+
+function ember_bigint_compare_abs(string $left, string $right): int {
+  $leftLen = strlen($left);
+  $rightLen = strlen($right);
+  if ($leftLen !== $rightLen) return $leftLen <=> $rightLen;
+  return strcmp($left, $right) <=> 0;
+}
+
+function ember_bigint_add_abs(string $left, string $right): string {
+  $i = strlen($left) - 1;
+  $j = strlen($right) - 1;
+  $carry = 0;
+  $out = '';
+  while ($i >= 0 || $j >= 0 || $carry > 0) {
+    $sum = $carry;
+    if ($i >= 0) $sum += ord($left[$i--]) - 48;
+    if ($j >= 0) $sum += ord($right[$j--]) - 48;
+    $out .= chr(48 + ($sum % 10));
+    $carry = intdiv($sum, 10);
+  }
+  return strrev($out);
+}
+
+// Voraussetzung: |left| >= |right|.
+function ember_bigint_sub_abs(string $left, string $right): string {
+  $i = strlen($left) - 1;
+  $j = strlen($right) - 1;
+  $borrow = 0;
+  $out = '';
+  while ($i >= 0) {
+    $digit = (ord($left[$i--]) - 48) - $borrow;
+    $sub = $j >= 0 ? ord($right[$j--]) - 48 : 0;
+    if ($digit < $sub) {
+      $digit += 10;
+      $borrow = 1;
+    } else {
+      $borrow = 0;
+    }
+    $out .= chr(48 + ($digit - $sub));
+  }
+  $result = ltrim(strrev($out), '0');
+  return $result !== '' ? $result : '0';
+}
+
+function ember_bigint_multiply_abs(string $left, string $right): string {
+  if ($left === '0' || $right === '0') return '0';
+  $leftLen = strlen($left);
+  $rightLen = strlen($right);
+  $digits = array_fill(0, $leftLen + $rightLen, 0);
+  for ($i = $leftLen - 1; $i >= 0; $i--) {
+    $leftDigit = ord($left[$i]) - 48;
+    for ($j = $rightLen - 1; $j >= 0; $j--) {
+      $pos = $i + $j + 1;
+      $sum = $digits[$pos] + ($leftDigit * (ord($right[$j]) - 48));
+      $digits[$pos] = $sum % 10;
+      $digits[$pos - 1] += intdiv($sum, 10);
+    }
+  }
+  $result = ltrim(implode('', $digits), '0');
+  return $result !== '' ? $result : '0';
+}
+
+function ember_bigint_add_signed(array $left, array $right): string {
+  [$leftNegative, $leftDigits] = $left;
+  [$rightNegative, $rightDigits] = $right;
+  if ($leftNegative === $rightNegative) {
+    $digits = ember_bigint_add_abs($leftDigits, $rightDigits);
+    return $leftNegative && $digits !== '0' ? '-' . $digits : $digits;
+  }
+  $compare = ember_bigint_compare_abs($leftDigits, $rightDigits);
+  if ($compare === 0) return '0';
+  if ($compare > 0) {
+    $digits = ember_bigint_sub_abs($leftDigits, $rightDigits);
+    return $leftNegative ? '-' . $digits : $digits;
+  }
+  $digits = ember_bigint_sub_abs($rightDigits, $leftDigits);
+  return $rightNegative ? '-' . $digits : $digits;
+}
+
+function ember_exact_integer_calculation(string $message): ?string {
+  $plain = trim(ember_tool_strip_addressing($message));
+  if ($plain === '' || strlen($plain) > 4096) return null;
+  if (preg_match('~\b(?:rechenweg|erklaer|erklär|begründe|warum|schritt(?:e|weise)?|herleitung)\b~iu', $plain)) {
+    return null;
+  }
+
+  $number = '[+-]?\s*\d{1,512}';
+  $expression = '~(?<![\d.,])(' . $number . ')\s*([+*x×-])\s*(' . $number . ')(?![\d.,])~iu';
+  $count = preg_match_all($expression, $plain, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+  if ($count !== 1) return null;
+
+  $match = $matches[0];
+  $full = (string)$match[0][0];
+  $offset = (int)$match[0][1];
+  $outside = substr($plain, 0, $offset) . substr($plain, $offset + strlen($full));
+  if (preg_match('~\d~u', $outside)) return null;
+
+  $hasCalculationIntent = (bool)preg_match(
+    '~\b(?:berechne|rechne|rechnung|ausrechnen|calculate|calc|ergibt|ergebnis|exakt)\b~iu',
+    $plain
+  );
+  $outsideNoise = preg_replace('~[\s=?!.,;:\"\'()\[\]{}]+~u', '', $outside);
+  if (!$hasCalculationIntent && $outsideNoise !== '') return null;
+
+  $left = ember_bigint_parse((string)$match[1][0]);
+  $right = ember_bigint_parse((string)$match[3][0]);
+  $operator = (string)$match[2][0];
+  if ($operator === 'x' || $operator === 'X' || $operator === '×') $operator = '*';
+
+  if ($operator === '*') {
+    $digits = ember_bigint_multiply_abs((string)$left[1], (string)$right[1]);
+    $negative = (bool)$left[0] !== (bool)$right[0];
+    return $negative && $digits !== '0' ? '-' . $digits : $digits;
+  }
+  if ($operator === '-') $right[0] = !(bool)$right[0];
+  return ember_bigint_add_signed($left, $right);
+}
+
+function ember_exact_calculation_mark_complete(): void {
+  $GLOBALS['STU_EMBER_LAST_THINKING'] = '';
+  $GLOBALS['STU_EMBER_LAST_CALL'] = [
+    'ok' => true,
+    'model' => 'deterministic:integer-calculation',
+    'exact_calc_fastpath' => true,
+    'url' => 'local',
+    'code' => 200,
+    'err' => '',
+    'done_seen' => true,
+    'done' => true,
+    'done_reason' => 'stop',
+    'eval_count' => 0,
+    'prompt_eval_count' => 0,
+    'num_predict' => 0,
+  ];
+  $GLOBALS['STU_EMBER_PROMPT_META'] = [
+    'is_calc' => 1,
+    'exact_calc_fastpath' => 1,
+  ];
+}
+
 require_once __DIR__ . '/ember_attachments.php';
 
 function ember_should_use_lore_for_message(string $msg): bool {
@@ -3944,6 +4099,14 @@ function ember_generate_reply(
     return 'Ich konnte das PDF gerade weder als Text noch als Seitenbilder auswerten. '
       . 'Die Datei ist angekommen, aber mein Dokumentpfad konnte keinen lesbaren Inhalt erzeugen. '
       . 'Deshalb erfinde ich dir daraus nichts.';
+  }
+
+  if ($imageUrl === null && trim($attachBlock) === '') {
+    $exactCalculation = ember_exact_integer_calculation($userMsg);
+    if ($exactCalculation !== null) {
+      ember_exact_calculation_mark_complete();
+      return $exactCalculation;
+    }
   }
 
   $heavyModel = ember_model_is_heavy(ember_model());
@@ -4366,6 +4529,11 @@ function ember_after_insert_tasks(PDO $pdo, array $senderChar, string $userMsg, 
   $cid = (string)($senderChar['id'] ?? '');
   if (ember_is_fail_message($emberReply)) return;
   if (ember_last_call_is_guardrail()) return;
+  $lastCall = $GLOBALS['STU_EMBER_LAST_CALL'] ?? [];
+  // Ein deterministisches Rechenergebnis ist weder Langzeitgedaechtnis noch
+  // Beziehungsereignis. Vor allem darf nach seinem Speichern kein Reflect-
+  // Modellaufruf die sofortige SSE-Fertigmeldung verzoegern.
+  if (is_array($lastCall) && !empty($lastCall['exact_calc_fastpath'])) return;
   try {
     ember_store_runtime_memory($pdo, $senderChar, $userMsg, $emberReply);
   } catch (Throwable $e) {
