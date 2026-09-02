@@ -3,7 +3,7 @@
 
 Ember CoreUI is an independent WebUI for a local E.M.B.E.R. core. Until its final inclusion in the STU Repack, it has its own versioning and its own release cycle.
 
-Current version: `0.5.0-alpha`
+Current version: `0.5.1-alpha`
 
 ## Quick installation
 
@@ -37,17 +37,19 @@ Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNIT
 
 ## Result of this release
 
-`0.5.0-alpha` is the first message-comfort release after the verified `0.4.5-alpha` stability baseline.
+`0.5.1-alpha` is the persistence and conversation-flow correction for the first message-comfort release.
 
 - Ember and user messages now use a local Markdown renderer for headings, emphasis, lists, blockquotes, links, tables, inline code, and fenced code blocks.
 - Raw HTML is always rendered as text. Clickable links are restricted to HTTP, HTTPS, and mail addresses. The renderer does not use `innerHTML`, `eval`, a remote CDN, or executable model output.
 - Fenced code blocks show a language label, local syntax coloring, horizontal scrolling, and their own copy control.
-- Every user message receives copy and edit-as-new-message actions. The stored original is never changed by the edit control.
+- Every stored user message receives copy and true edit actions. Editing keeps the same message bubble and message ID, preserves all earlier context, supersedes the active conversation after that turn, and starts Ember again from the revised text.
 - Every Ember answer receives copy, positive feedback, negative feedback, alternative generation, continuation, and answer-detail controls.
-- Feedback is stored server-side and restricted to the authenticated user, exact private session, and exact Ember message.
-- Alternative answers keep the original response and use the same `reply_to_id`. The previous response is excluded from the regeneration context so the alternative does not merely repeat it.
+- Feedback is stored server-side and restricted to the authenticated user, exact private session, and exact Ember message. Migration 009 repairs legacy reaction-table encodings and the missing private `console` channel; CoreUI feedback uses database-safe ASCII tokens while remaining compatible with existing thumb values.
+- Alternative answers keep the original response and use the same `reply_to_id`. Variants are grouped under one turn with previous/next navigation and are reconstructed from the database after reloading the page.
 - Continuations are stored as separate Ember messages and remain linked to the original user turn.
-- Migration `008_message_actions` stores short-lived, account-bound generation requests. A fixed message-ID floor lets a reconnect recover only the answer created after that request, without repeating or losing the existing answer.
+- Text entered while Ember is answering can be submitted immediately. It appears as a waiting user turn and is sent automatically after the current response without interrupting it.
+- Message revisions are stored account- and session-bound. Superseded downstream messages remain recoverable in the private account export but are excluded from the active model context.
+- Migration `008_message_actions` stores short-lived, account-bound generation requests. Migration `009_message_editing` adds true in-place revisions and the `edit` generation mode. A fixed message-ID floor lets a reconnect recover only the answer created after that request, without repeating or losing the existing answer.
 - Concurrent answer actions in one session are serialized. Permanent session deletion is blocked while an alternative or continuation is still active.
 - Live SSE answers and loaded history now use the same Markdown and action rendering path.
 - Tool-based answer actions retain their exact private browser-job ID, so reconnects resume the same job and worker failures do not leave the session blocked.
@@ -253,14 +255,14 @@ The same verified flow used by the quick installer can be run manually:
 
 ```bash
 cd /home/users/game/tmp
-BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.5.0-alpha'
+BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.5.1-alpha'
 
-curl -fL "$BASE/EMBER_COREUI_0_5_0_ALPHA.zip" -o EMBER_COREUI_0_5_0_ALPHA.zip
-curl -fL "$BASE/EMBER_COREUI_0_5_0_ALPHA.zip.sha256" -o EMBER_COREUI_0_5_0_ALPHA.zip.sha256
-sha256sum -c EMBER_COREUI_0_5_0_ALPHA.zip.sha256
-unzip -q EMBER_COREUI_0_5_0_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_5_1_ALPHA.zip" -o EMBER_COREUI_0_5_1_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_5_1_ALPHA.zip.sha256" -o EMBER_COREUI_0_5_1_ALPHA.zip.sha256
+sha256sum -c EMBER_COREUI_0_5_1_ALPHA.zip.sha256
+unzip -q EMBER_COREUI_0_5_1_ALPHA.zip
 
-sudo mv EMBER_COREUI_0_5_0_ALPHA /opt/ember-coreui
+sudo mv EMBER_COREUI_0_5_1_ALPHA /opt/ember-coreui
 cd /opt/ember-coreui
 sudo chmod 0750 setup.sh scripts/*.sh
 sudo ./scripts/install.sh
@@ -268,14 +270,14 @@ sudo ./scripts/install.sh
 
 The installer asks for the administrator email address, a password of at least 12 characters, and an optional display name through `COREUI_ADMIN_NAME`.
 
-## Update to 0.5.0-alpha
+## Update to 0.5.1-alpha
 
 The existing database, accounts, sessions, uploads, and protected credentials are preserved. The package is copied only over static project files and templates.
 
 ```bash
 cd /home/users/game/tmp
-sha256sum -c EMBER_COREUI_0_5_0_ALPHA.zip.sha256
-unzip -q -o EMBER_COREUI_0_5_0_ALPHA.zip
+sha256sum -c EMBER_COREUI_0_5_1_ALPHA.zip.sha256
+unzip -q -o EMBER_COREUI_0_5_1_ALPHA.zip
 
 sudo apt-get update
 sudo apt-get install -y rsync
@@ -286,7 +288,7 @@ sudo rsync -a \
   --exclude='uploads/' \
   --exclude='assets/chat_media/' \
   --exclude='assets/profile_photos/' \
-  EMBER_COREUI_0_5_0_ALPHA/ /opt/ember-coreui/
+  EMBER_COREUI_0_5_1_ALPHA/ /opt/ember-coreui/
 
 cd /opt/ember-coreui
 sudo ./scripts/stack.sh up -d --build --force-recreate php web browse pyworker
@@ -294,7 +296,7 @@ sudo ./scripts/stack.sh scrub-thinking
 sudo ./scripts/preflight.sh
 ```
 
-`stack.sh up` refreshes the non-secret runtime configuration and applies migrations `007_remove_private_studio_lore` and `008_message_actions`. Migration 007 removes only the two historical accidental global source IDs. Migration 008 adds account-bound feedback and generation-request metadata without rewriting existing messages. User knowledge, memories, messages, accounts, and other operator sources remain intact. The update also removes only the two exact historic manuscript filenames from an existing project directory. No private manuscript binary is present in the archive or imported by either installer.
+`stack.sh up` refreshes the non-secret runtime configuration and applies migrations `007_remove_private_studio_lore`, `008_message_actions`, and `009_message_editing`. Migration 007 removes only the two historical accidental global source IDs. Migration 008 adds account-bound feedback and generation-request metadata. Migration 009 repairs legacy reaction storage, adds message revisions, and enables the edit generation mode. Existing messages are not rewritten during installation. User knowledge, memories, accounts, uploads, and other operator sources remain intact. No private manuscript binary is present in the archive or imported by either installer.
 
 The first Python sandbox image build can take several minutes. Regenerating the Ember model or importing bundled Studio lore is not required. The existing `api/config.local.php` and the public address `https://coreui.starlight-unit.de` remain preserved.
 
@@ -667,4 +669,4 @@ A complete German legal notice and a final privacy policy are deliberately not y
 
 ## Alpha status
 
-`0.5.0-alpha` adds safe local Markdown, code blocks, message copying, persistent feedback, alternative answers, continuations, and response details. The verified navigation, profile images, TXT decoding, installer, checksum, attachment reconstruction, private RAG-Lite retrieval, Python queue execution, and private-manuscript removal from the preceding releases remain included. Speech input, native model audio transport, and spoken TTS output remain scheduled for the separate audio stage. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.
+`0.5.1-alpha` repairs persistent feedback on legacy databases, groups alternative answers with navigation, performs true in-place user-message editing with revision history, and accepts queued follow-up text while Ember is answering. Safe local Markdown, code blocks, continuations, response details, navigation, profile images, TXT decoding, installer verification, attachment reconstruction, private RAG-Lite retrieval, and isolated Python execution remain included. Speech input, native model audio transport, and spoken TTS output remain scheduled for the separate audio stage. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.

@@ -1,0 +1,93 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+CHANGELOG 0.5.1-ALPHA
+STAND 01.09.2026
+
+======================================================================
+PRODUKTIVTEST 0.5.0
+======================================================================
+
+Erfolgreich bestaetigt:
+
+* Markdown- und Codedarstellung.
+* Kopieren von Nachrichten und Codebloecken.
+* Alternative Antworterzeugung.
+* Antwortdetails.
+* Web, Browser, Python, RAG-Lite und normale Chats ohne Regression.
+
+Korrigiert werden mussten:
+
+* Feedback wurde bei einer bestehenden Reaktionstabelle nicht gespeichert.
+* Varianten und Bewertungszustand waren nach einem Reload nicht verlaesslich
+  erkennbar.
+* Bearbeiten kopierte den Text nur als neue Nachricht.
+* Waehrend einer laufenden Antwort konnte kein Folgetext abgesendet werden.
+
+======================================================================
+PERSISTENTES FEEDBACK
+======================================================================
+
+* Migration 009 repariert bestehende Reaktionstabellen fuer den privaten
+  Kanalwert console und utf8mb4.
+* Neue positive und negative CoreUI-Bewertungen werden als ASCII-Tokens
+  coreui_up und coreui_down gespeichert.
+* Historische Daumenwerte bleiben lesbar und werden beim Umschalten ersetzt.
+* Positiv und negativ schliessen sich je Benutzer und Ember-Antwort aus.
+* Fehler werden im Chat benannt und nicht nur kurz rot dargestellt.
+
+======================================================================
+ECHTE NACHRICHTENBEARBEITUNG
+======================================================================
+
+* Der Bearbeiten-Knopf aktualisiert dieselbe Benutzerblase und dieselbe
+  Nachrichten-ID.
+* Der Verlauf vor der bearbeiteten Nachricht bleibt aktiver Modellkontext.
+* Alle spaeteren Nachrichten werden aus dem aktiven Zweig ausgeblendet, weil
+  sie auf der alten Formulierung beruhen.
+* Ember beginnt die Verarbeitung ab der bearbeiteten Nachricht neu.
+* Alte und neue Textfassung werden kontogebunden in
+  stu_console_message_revisions protokolliert.
+* Ausgeblendete Nachrichten bleiben im privaten Kontoexport nachvollziehbar.
+* CSRF, Benutzer-, Sitzungs-, Charakter- und Turnpruefung bleiben aktiv.
+
+======================================================================
+ANTWORTVARIANTEN
+======================================================================
+
+* Antworten derselben reply_to_id werden als Varianten eines Turns gruppiert.
+* Pfeile und ein Zaehler wechseln zwischen allen gespeicherten Varianten.
+* Nach einem Reload werden die Varianten erneut aus der Datenbank aufgebaut.
+* Die neueste Variante ist standardmaessig aktiv.
+* Fortsetzungen erscheinen nur an der Antwortvariante, aus der sie erzeugt
+  wurden.
+* Bewertungen bleiben an die konkrete Variante gebunden.
+
+======================================================================
+FOLGETEXT WAEHREND EINER ANTWORT
+======================================================================
+
+* Das Eingabefeld und Senden bleiben waehrend Embers Verarbeitung nutzbar.
+* Ein abgesendeter Folgetext wird sichtbar als wartend markiert.
+* Die laufende Antwort wird nicht abgebrochen.
+* Nach ihrem Abschluss wird der vorgemerkte Text automatisch als naechster
+  Benutzer-Turn gesendet.
+* Mehrere Folgetexte werden geordnet nacheinander verarbeitet.
+* Vorgemerkte Texte koennen vor dem Senden entfernt werden.
+* Anhaenge werden waehrend einer laufenden Antwort noch nicht vorgemerkt.
+
+======================================================================
+MIGRATION, TESTS UND DATENSCHUTZ
+======================================================================
+
+* Neue Migration: 009_message_editing.
+* Generierungsmodus edit fuer den Neustart ab einer bearbeiteten Nachricht.
+* Modellkontext, Verlauf und SSE-Idempotenz ignorieren ausgeblendete Zeilen.
+* Nachrichtenaktionen-Selftest prueft ASCII-Feedback, Revisionshistorie,
+  In-place-Bearbeitung, Zweigbereinigung und neue Generierung.
+* Healthcheck, Compose-Preflight, Native-Preflight und beide Installer pruefen
+  Migration 009.
+* Thinking-Inhalte, CSRF-Token und temporaere Anforderungstoken bleiben vom
+  Kontoexport ausgeschlossen.
+* Game, Global Chat, Homepage, Repack, KeyHelp, Host-Webserver und fremde
+  Datenbanken bleiben unangetastet.
+
+ENDE CHANGELOG 0.5.1-ALPHA

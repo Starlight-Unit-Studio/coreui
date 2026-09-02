@@ -62,7 +62,7 @@ try {
   $export = [
     'format' => 'ember-coreui-account-export',
     'format_version' => 1,
-    'coreui_version' => '0.5.0-alpha',
+    'coreui_version' => '0.5.1-alpha',
     'generated_at' => gmdate('c'),
     'public_base_url' => defined('STU_PUBLIC_BASE_URL') ? (string)STU_PUBLIC_BASE_URL : '',
     'account' => $accountRows[0],
@@ -99,7 +99,7 @@ try {
       $pdo,
       "SELECT r.message_id,r.emoji,r.created_at FROM stu_chat_reactions r "
         . "JOIN stu_chat_messages m ON m.id=r.message_id AND m.user_id=r.user_id "
-        . "WHERE r.user_id=? AND r.channel='console' AND r.emoji IN ('👍','👎') "
+        . "WHERE r.user_id=? AND r.channel='console' "
         . 'ORDER BY r.message_id,r.created_at',
       [$uid]
     ),
@@ -107,6 +107,12 @@ try {
       $pdo,
       'SELECT trigger_message_id,source_response_id,mode,status,response_message_id,error_code,created_at,started_at,finished_at '
         . 'FROM stu_console_generation_requests WHERE user_id=? ORDER BY created_at,id',
+      [$uid]
+    ),
+    'message_revisions' => coreui_export_rows(
+      $pdo,
+      'SELECT message_id,revision_no,previous_message,revised_message,superseded_message_count,created_at '
+        . 'FROM stu_console_message_revisions WHERE user_id=? ORDER BY created_at,id',
       [$uid]
     ),
     'message_attachments' => coreui_export_rows(

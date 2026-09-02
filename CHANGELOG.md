@@ -2,6 +2,23 @@
 
 Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versioniert.
 
+## v0.5.1-alpha - 01.09.2026
+
+- Praktischen Produktivtest von `0.5.0-alpha` ausgewertet: Markdown, Codebloecke, Kopieren, Neugenerierung, Antwortdetails und alle bestehenden Werkzeuge funktionierten; persistentes Feedback und der gewuenschte Bearbeitungsfluss benoetigten Korrekturen.
+- Feedbackspeicherung fuer bereits bestehende STU-Reaktionstabellen gehaertet. Migration `009_message_editing` erweitert den privaten Kanalwert auf `console`, normalisiert die Emoji-Spalte auf `utf8mb4` und CoreUI speichert neue Bewertungen als altkompatible ASCII-Tokens.
+- Fehlerhafte Feedbackaufrufe bleiben nicht mehr als stilles rotes Aufblitzen stehen, sondern zeigen zusaetzlich einen konkreten Aktionsfehler an.
+- Alternative Ember-Antworten werden nach `reply_to_id` gruppiert. Eine Vorher-/Naechster-Navigation mit Zaehler zeigt alle dauerhaft gespeicherten Varianten auch nach einem Seitenreload.
+- Fortsetzungen bleiben an ihre konkrete Quellvariante gebunden und werden nur zusammen mit dieser Variante angezeigt.
+- Bearbeiten einer Benutzernachricht arbeitet nun wirklich auf derselben Nachrichten-ID und derselben Blase. Der bisherige "als neue Nachricht"-Entwurfspfad wurde entfernt.
+- Migration 009 fuehrt eine kontogebundene Revisionshistorie und den Generierungsmodus `edit` ein. Der Verlauf vor der bearbeiteten Nachricht bleibt Modellkontext; spaetere, auf dem alten Text beruhende Nachrichten werden aus dem aktiven Zweig ausgeblendet und bleiben im Kontoexport nachvollziehbar.
+- Modellkontext und SSE-Idempotenz ignorieren ausgeblendete Nachrichten konsequent.
+- Der Nachrichteneditor bleibt waehrend einer laufenden Ember-Antwort benutzbar. Abgesendete Folgetexte erscheinen als wartende Benutzer-Turns und werden nach Abschluss der aktuellen Antwort automatisch gesendet.
+- Vorgemerkte Texte koennen vor dem Senden wieder entfernt werden. Der vorhandene lokale Sende-Cooldown wird beim automatischen Weiterreichen eingehalten.
+- Fortsetzungsaktion verstaendlicher als Aktion fuer unvollstaendige Antworten beschriftet.
+- Kontoexport um Nachrichtenrevisionen und ausgeblendete Zweige erweitert, ohne Thinking-Inhalte oder temporaere Anforderungstoken offenzulegen.
+- Healthcheck, Compose- und Native-Preflight, Installer und Nachrichtenaktionen-Selftest auf Migration 009, Revisionsspeicherung, ASCII-Feedback, echte Bearbeitung und Variantenanzeige erweitert.
+- Version, Cache-Buster, Setup, README, Changelog-Archiv, Branding-Test und Uebergabeprotokoll auf `0.5.1-alpha` aktualisiert.
+
 ## v0.5.0-alpha - 01.09.2026
 
 - Sicheren lokalen Markdown-Renderer fuer Ueberschriften, Hervorhebungen, Listen, Zitate, Links, Tabellen, Inline-Code und eingezaeunte Codebloecke eingefuehrt.

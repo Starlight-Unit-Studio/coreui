@@ -138,7 +138,7 @@ try {
   $stTurn = $pdo->prepare(
     "SELECT id, message, file_uuid, image_url FROM stu_chat_messages
      WHERE id = ? AND channel = 'console' AND user_id = ? AND character_id = ?
-       AND session_id = ?
+       AND session_id = ? AND deleted_at IS NULL
      LIMIT 1"
   );
   $stTurn->execute([$afterId, (int)$uid, $character_id, $sessionId]);
@@ -187,9 +187,11 @@ if ($imageUrl === null && $attachmentIds === [] && is_array($turnRow)) {
 $promptMessage = $message;
 $excludeReplyToId = null;
 if ($generationRequest !== null) {
-  if ($generationMode === 'regenerate') {
+  if ($generationMode === 'regenerate' || $generationMode === 'edit') {
     // Eine Alternative darf nicht die bereits gespeicherte Antwort desselben
-    // Turns aus dem Kontext abschreiben. Andere vorherige Turns bleiben erhalten.
+    // Turns aus dem Kontext abschreiben. Bei einer echten Bearbeitung wurden
+    // die nachfolgenden Nachrichten bereits ausgeblendet. Andere vorherige
+    // Turns bleiben in beiden Faellen erhalten.
     $excludeReplyToId = $afterId;
   } elseif ($generationMode === 'continue') {
     try {
@@ -281,7 +283,7 @@ try {
       $stExist = $pdo->prepare(
         "SELECT id, message, thinking_content FROM stu_chat_messages
          WHERE channel = 'console' AND user_id = ? AND character_id = ?
-           AND session_id = ? AND reply_to_id = ?
+           AND session_id = ? AND reply_to_id = ? AND deleted_at IS NULL
          ORDER BY id DESC LIMIT 1"
       );
       $stExist->execute([(int)$uid, $emberCid, $sessionId, $afterId]);

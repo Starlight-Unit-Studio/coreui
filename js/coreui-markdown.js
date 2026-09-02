@@ -1,4 +1,4 @@
-/* Ember CoreUI 0.5.0-alpha: sichere, lokal ausgelieferte Markdown-Darstellung. */
+/* Ember CoreUI 0.5.1-alpha: sichere, lokal ausgelieferte Markdown-Darstellung. */
 (function (root, factory) {
   'use strict';
   var api = factory();

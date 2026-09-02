@@ -50,6 +50,7 @@ try {
       $pdo->query('SELECT password_changed_at,last_login_at FROM stu_users LIMIT 0');
       $pdo->query('SELECT token_hash,expires_at,revoked_at FROM stu_auth_sessions LIMIT 0');
       $pdo->query('SELECT response_floor_id,mode,status,response_message_id,browse_job_id FROM stu_console_generation_requests LIMIT 0');
+      $pdo->query('SELECT revision_no,superseded_message_count FROM stu_console_message_revisions LIMIT 0');
       $stMigration = $pdo->prepare('SELECT COUNT(*) FROM stu_schema_migrations WHERE version=?');
       $stMigration->execute(['003_console_sessions']);
       if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_003_console_sessions';
@@ -63,6 +64,8 @@ try {
       if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_007_remove_private_studio_lore';
       $stMigration->execute(['008_message_actions']);
       if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_008_message_actions';
+      $stMigration->execute(['009_message_editing']);
+      if ((int)$stMigration->fetchColumn() !== 1) $missing[] = 'migration_009_message_editing';
       $stPrivateLore = $pdo->prepare(
         'SELECT COUNT(*) FROM ember_knowledge_chunks WHERE source IN (?, ?)'
       );

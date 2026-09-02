@@ -75,6 +75,26 @@ try {
     stu_json(['ok'=>true, 'request'=>$request], 201);
   }
 
+  if ($action === 'edit_message') {
+    $messageId = (int)($body['message_id'] ?? 0);
+    $turn = coreui_console_action_message(
+      $pdo,
+      (int)$uid,
+      $sessionId,
+      $messageId,
+      false
+    );
+    chat_require_character($pdo, (int)$uid, (string)($turn['character_id'] ?? ''));
+    $result = coreui_console_edit_prepare(
+      $pdo,
+      (int)$uid,
+      $sessionId,
+      $messageId,
+      (string)($body['message'] ?? '')
+    );
+    stu_json(['ok'=>true] + $result, 201);
+  }
+
   stu_json(['ok'=>false, 'error'=>'unknown_action'], 400);
 } catch (InvalidArgumentException $e) {
   stu_json(['ok'=>false, 'error'=>$e->getMessage()], 400);
@@ -82,7 +102,7 @@ try {
   $error = $e->getMessage();
   $status = str_contains($error, 'not_found') ? 404
     : (in_array($error, ['generation_busy', 'session_busy'], true) ? 409
-      : ($error === 'message_actions_migration_required' ? 503 : 400));
+      : (in_array($error, ['message_actions_migration_required', 'message_editing_migration_required'], true) ? 503 : 400));
   stu_json(['ok'=>false, 'error'=>$error], $status);
 } catch (Throwable $e) {
   if (function_exists('stu__log_error')) {
