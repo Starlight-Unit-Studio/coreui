@@ -42,6 +42,12 @@ $exactCases = [
   ['Berechne 5 - 12.', '-7'],
   ['12 X 12', '144'],
   ['-5 + -8', '-13'],
+  ['Berechne 12 * 12, und nenne nur das Ergebnis.', '144'],
+  ['Calculate 12 * 12.', '144'],
+  ['00012 x 00012.', '144'],
+  ['Was ergibt 12*12?', '144'],
+  ['Nenne das Ergebnis von 12*12.', '144'],
+  ['Give only the exact result of 12*12.', '144'],
 ];
 foreach ($exactCases as [$expression, $expected]) {
   $actual = ember_exact_integer_calculation($expression);
@@ -55,6 +61,18 @@ foreach ([
   'Berechne 1.5 * 8.',
   'Berechne 12 * 12 und erklaere den Rechenweg.',
   'Was ist Episode 123 - 456?',
+  'Welches Ergebnis hatte Episode 123-456?',
+  'Was ist die Rechnung in Kapitel 12-13?',
+  'Calculate 12*12 and explain your reasoning.',
+  'Calculate 12*12 and show your work.',
+  'Calculate 12*12 and provide an explanation.',
+  'Berechne 12*12 und gib eine Erklaerung.',
+  'Berechne 12*12 und gib eine Erklärung.',
+  'Calculate how many chapters are in 12-13.',
+  'Berechne, wie viele Episoden der Bereich 12-13 umfasst.',
+  '0x10',
+  '٢+٣',
+  '１２+３',
 ] as $unsafeFastPath) {
   if (ember_exact_integer_calculation($unsafeFastPath) !== null) {
     reply_test_fail('Mehrdeutige Rechnung gelangt in den exakten Schnellpfad: ' . $unsafeFastPath);
@@ -101,13 +119,20 @@ if (!str_contains($streamSource, "'think'    => ember_thinking_enabled()")
   reply_test_fail('Thinking wird im SSE-Pfad nicht serverseitig aktiviert oder deaktiviert.');
 }
 if (!str_contains($streamSource, 'ember_exact_integer_calculation($promptMessage)')
-    || !str_contains($streamSource, "'truncated' => false")) {
+    || !str_contains($streamSource, "'truncated' => false")
+    || !str_contains($streamSource, '$consoleAfkOwned = false;')
+    || !str_contains($streamSource, 'if ($consoleAfkOwned && isset($pdo)')) {
   reply_test_fail('Der SSE-Pfad schliesst exakte Ganzzahlrechnungen nicht lokal ab.');
 }
 
 $chatSource = (string)file_get_contents(dirname(__DIR__) . '/api/chat.php');
 if (!str_contains($chatSource, "!empty(\$lastCall['exact_calc_fastpath'])")) {
   reply_test_fail('Ein lokales Rechenergebnis kann weiterhin einen Reflect-Modellaufruf starten.');
+}
+$globalFastPath = strpos($chatSource, '$exactCalculation = $triggerImageUrl === null');
+$globalOllamaLock = strpos($chatSource, '$globalLock = ember_global_lock_acquire();', $globalFastPath ?: 0);
+if ($globalFastPath === false || $globalOllamaLock === false || $globalFastPath > $globalOllamaLock) {
+  reply_test_fail('Der synchrone Rechenpfad wartet weiterhin vorab auf den Ollama-Lock.');
 }
 
 $clientSource = (string)file_get_contents(dirname(__DIR__) . '/js/console-app.js');

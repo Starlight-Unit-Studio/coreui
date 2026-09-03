@@ -9,8 +9,8 @@ STAND 02.09.2026
 Repository:
 https://github.com/Starlight-Unit-Studio/coreui
 
-Arbeitsbranch:
-release/0.5.2-alpha
+Arbeitsbranch der nachgelagerten Korrektur:
+fix/0.5.2-alpha-review
 
 Ziel-Branch:
 main
@@ -36,6 +36,13 @@ installiert und praktisch bestaetigt. Persistentes Feedback, Varianten,
 Bearbeitung derselben Benutzerblase, wartende Folgetexte und die bestehenden
 Chatfunktionen arbeiten produktiv. 0.5.2-alpha baut ausschliesslich auf diesem
 bestaetigten Stand auf.
+
+PR #19 veroeffentlichte den ersten 0.5.2-alpha-Stand auf main. Der anschliessend
+auf dem Produktivserver ausgefuehrte Preflight meldete einen Fehler im neuen
+Reply-Pipeline-Selftest. Die parallel noch laufende automatische Codepruefung
+identifizierte denselben Satzzeichenfehler und weitere Randfaelle. Deshalb ist
+erst die nachgelagerte Korrektur mit neu gebautem ZIP und neuer SHA der
+verbindliche 0.5.2-alpha-Paketstand.
 
 ======================================================================
 2. PRODUKTIV BEOBACHTETER FEHLER
@@ -101,6 +108,7 @@ Enthalten:
 5. Gemeinsames Verhalten fuer Stream- und Synchronpfad.
 6. Neue Regressionstests im bestehenden Reply-Pipeline-Selftest.
 7. Vollstaendiger Versions-, Installer-, Dokumentations- und Paketabgleich.
+8. Korrektur aller nach PR #19 gemeldeten Parser-, AFK- und Lock-Randfaelle.
 
 Nicht Ziel dieses Releases:
 
@@ -357,6 +365,11 @@ Lokal zwingend:
 * bash -n setup.sh und scripts/*.sh
 * python3 scripts/branding-license-selftest.py
 * git diff --check
+* Satzzeichen direkt hinter dem zweiten Operanden
+* Ablehnung von Unicode-Ziffern, Hexadezimalwerten und beschrifteten Bereichen
+* deutsche und englische Erklaerungswuensche im normalen Modellpfad
+* eindeutige Ergebnisformulierungen im lokalen Schnellpfad
+* AFK-Eigentum und lockfreier synchroner Schnellpfad
 * Versions- und Cache-Buster-Abgleich
 * ZIP-Inhaltsvergleich mit dem freigegebenen Quellbaum
 * SHA-256-Pruefung
@@ -415,7 +428,7 @@ README.md und den aktuellen Release-Branch lesen.
 
 Vor einer Veroeffentlichung:
 
-1. Aktuellen main und release/0.5.2-alpha vergleichen.
+1. Aktuellen main und fix/0.5.2-alpha-review vergleichen.
 2. Keine fremden oder privaten Dateien in Git oder ZIP aufnehmen.
 3. Keine Migration 010 erfinden oder anwenden.
 4. Archiv aus einer sauberen Quellkopie bauen.
