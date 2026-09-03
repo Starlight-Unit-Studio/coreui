@@ -77,7 +77,7 @@ All installer, privacy, upload, profile, navigation, private RAG-Lite, and Pytho
 - Private knowledge uploads additionally accept common source and data formats such as Python, CSV, JSON, XML, YAML, PHP, JavaScript, HTML, CSS, and SQL.
 - A dedicated Compose Python queue worker and sandbox self-test close the previously incomplete execution path. Generated code runs only in a disposable restricted container.
 - No private Starlight Unit manuscript is bundled or imported. Migration `007_remove_private_studio_lore` removes only the two historic accidental global source IDs from already-updated Ember CoreUI databases.
-- The production address remains `https://coreui.starlight-unit.de`.
+- The production address remains `https://core.starlight-unit.de`.
 
 The session scopes, exact turn assignments, lossless legacy history, controlled session deletion, Thinking protection, profiles, user settings, and Admin Core from the preceding releases remain included. Game, homepage, Apache, KeyHelp, host PHP, Repack paths, and the existing STU database remain untouched.
 
