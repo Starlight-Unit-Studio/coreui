@@ -45,7 +45,7 @@ Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNIT
 - The local path does not mark Ember as AFK and cannot leave a Python job or model request blocking the session.
 - Exact calculation results do not start memory reflection or reputation analysis after storage, so no hidden follow-up model call can delay completion.
 - Attachments, images, decimals, division, powers, chained expressions, multiple numeric constraints, and requests for an explanation remain in the normal model and tool path.
-- A sentence-ending period or comma is accepted after the second operand, while decimal values, Unicode digits, hexadecimal literals, chapter or episode ranges, and German or English explanation requests are rejected from the deterministic path.
+- A sentence-ending period or comma is accepted after the second operand. Decimal values, Unicode digits, hexadecimal literals, labeled ranges, and German or English explanation requests are rejected from the deterministic path, while unambiguous result wording remains local.
 - A local calculation owns no Console-AFK marker and therefore cannot clear the state of a concurrent model or tool turn. The synchronous path also checks the deterministic result before requesting the global Ollama lock.
 - The reply-pipeline self-test covers the reported `123456789 * 987654321` case, signed arithmetic, large values, sentence punctuation, ambiguous ranges, Unicode digits, hexadecimal literals, AFK ownership, the lock-free synchronous path, strict rejection boundaries, and SSE integration.
 

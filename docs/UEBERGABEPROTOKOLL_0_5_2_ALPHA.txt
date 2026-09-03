@@ -366,8 +366,9 @@ Lokal zwingend:
 * python3 scripts/branding-license-selftest.py
 * git diff --check
 * Satzzeichen direkt hinter dem zweiten Operanden
-* Ablehnung von Unicode-Ziffern, Hexadezimalwerten und Bereichsangaben
+* Ablehnung von Unicode-Ziffern, Hexadezimalwerten und beschrifteten Bereichen
 * deutsche und englische Erklaerungswuensche im normalen Modellpfad
+* eindeutige Ergebnisformulierungen im lokalen Schnellpfad
 * AFK-Eigentum und lockfreier synchroner Schnellpfad
 * Versions- und Cache-Buster-Abgleich
 * ZIP-Inhaltsvergleich mit dem freigegebenen Quellbaum

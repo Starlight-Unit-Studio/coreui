@@ -3708,13 +3708,19 @@ function ember_exact_integer_calculation(string $message): ?string {
   $plain = trim(ember_tool_strip_addressing($message));
   if ($plain === '' || strlen($plain) > 4096) return null;
   if (preg_match(
-    '~\b(?:rechenweg|erklaer|erklär|begründe|warum|schritt(?:e|weise)?|herleitung|explain|reasoning|why|steps?|derivation|show\s+(?:(?:the|your)\s+)?work)\b~iu',
+    '~\b(?:rechenweg|erklaer|erklär|erklaerung|erklärung|begründe|begruendung|begründung|warum|schritt(?:e|weise)?|herleitung|explain|explanations?|reason(?:ing|s)?|why|steps?|derivation|derive|show\s+(?:(?:the|your)\s+)?work|workings?)\b~iu',
     $plain
   )) {
     return null;
   }
   // Hexadezimale Literale wie 0x10 duerfen nicht als Multiplikation gelten.
   if (preg_match('~(?<![0-9A-Za-z])0[xX][0-9A-Fa-f]+(?![0-9A-Za-z])~', $plain)) return null;
+  // Beschriftete Bereiche und Kennungen bleiben selbst mit einem Rechenverb
+  // semantisch mehrdeutig und gehoeren deshalb immer in den Modellpfad.
+  if (preg_match(
+    '~\b(?:episode(?:n)?|folge(?:n)?|kapitel|chapter(?:s)?|band|baende|bände|volume(?:s)?|seite(?:n)?|page(?:s)?|bereich(?:e)?|range(?:s)?|abschnitt(?:e)?|section(?:s)?|version(?:en)?|release(?:s)?|build(?:s)?|port(?:s)?|uhr|jahr(?:e)?|date|datum|ticket(?:s)?|nummer(?:n)?|number(?:s)?|spiel(?:e)?|score)\b~iu',
+    $plain
+  )) return null;
 
   $number = '[+-]?\s*[0-9]{1,512}';
   // Punkt und Komma hinter dem zweiten Operanden koennen normale Satzzeichen
@@ -3731,7 +3737,7 @@ function ember_exact_integer_calculation(string $message): ?string {
   if (preg_match('~\p{N}~u', $outside)) return null;
 
   $hasCalculationIntent = (bool)preg_match(
-    '~\b(?:berechne|berechnen|rechne|rechnen|ausrechnen|addiere|subtrahiere|multipliziere|calculate|calc|compute)\b~iu',
+    '~\b(?:berechne|berechnen|rechne|rechnen|rechnung|ausrechnen|addiere|subtrahiere|multipliziere|ergibt|ergebnis|exakt|calculate|calc|compute|result|exact)\b~iu',
     $plain
   );
   $outsideNoise = preg_replace('~[\s=?!.,;:\"\'()\[\]{}]+~u', '', $outside);

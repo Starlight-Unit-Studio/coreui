@@ -86,7 +86,9 @@ Die korrigierte Fassung:
 * lehnt Unicode-Ziffern statt einer falschen Nullantwort sicher ab
 * verwechselt 0x10 nicht mit 0 x 10
 * behandelt Kapitel- und Episodenbereiche nicht als Subtraktion
+* gibt beschrifteten Bereichen Vorrang vor einem enthaltenen Rechenwort
 * erkennt deutsche und englische Wuensche nach Rechenweg oder Erklaerung
+* behaelt eindeutige Ergebnisformulierungen wie Was ergibt 12*12 lokal
 * loescht keinen AFK-Status, den der lokale Turn nicht selbst gesetzt hat
 * prueft den synchronen Schnellpfad vor dem globalen Ollama-Lock
 

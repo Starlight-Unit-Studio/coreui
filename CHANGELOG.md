@@ -17,6 +17,7 @@ Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versi
 - Nach dem ersten `0.5.2-alpha`-Paket gemeldeten Preflight-Fehler korrigiert: Ein Punkt oder Komma direkt nach dem zweiten Operanden gilt nun als Satzzeichen und nicht mehr pauschal als Dezimaltrennzeichen.
 - Schnellpfad auf ASCII-Ganzzahlen begrenzt und ungueltige Operanden werden sicher abgelehnt. Unicode-Ziffern koennen dadurch nicht mehr als falsches Ergebnis `0` enden.
 - Routing gegen Bereiche, Kapitel- und Episodenangaben, Hexadezimalwerte sowie deutsche und englische Erklaerungswuensche gehaertet.
+- Beschriftete Bereiche besitzen Vorrang vor Rechenwoertern, waehrend eindeutige Ergebnisformulierungen wie `Was ergibt 12*12?` und `Nenne das Ergebnis von 12*12.` lokal bleiben.
 - Lokale Rechenschritte loeschen keinen fremden Console-AFK-Status mehr. Der synchrone Pfad prueft die Rechnung vor dem globalen Ollama-Lock.
 - Regressionstest um Satzzeichen, Unicode-Ziffern, `0x10`, Bereichsangaben, englische Erklaerungswuensche, AFK-Eigentum und lockfreien Synchronabschluss erweitert.
 - Keine neue Datenbankmigration. Migration 009, Konten, Sitzungen, Nachrichten, Reaktionen, Revisionen, Anhaenge und lokale Konfiguration bleiben unveraendert erhalten.

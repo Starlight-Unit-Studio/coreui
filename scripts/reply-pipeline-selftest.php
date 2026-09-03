@@ -45,6 +45,9 @@ $exactCases = [
   ['Berechne 12 * 12, und nenne nur das Ergebnis.', '144'],
   ['Calculate 12 * 12.', '144'],
   ['00012 x 00012.', '144'],
+  ['Was ergibt 12*12?', '144'],
+  ['Nenne das Ergebnis von 12*12.', '144'],
+  ['Give only the exact result of 12*12.', '144'],
 ];
 foreach ($exactCases as [$expression, $expected]) {
   $actual = ember_exact_integer_calculation($expression);
@@ -62,6 +65,11 @@ foreach ([
   'Was ist die Rechnung in Kapitel 12-13?',
   'Calculate 12*12 and explain your reasoning.',
   'Calculate 12*12 and show your work.',
+  'Calculate 12*12 and provide an explanation.',
+  'Berechne 12*12 und gib eine Erklaerung.',
+  'Berechne 12*12 und gib eine Erklärung.',
+  'Calculate how many chapters are in 12-13.',
+  'Berechne, wie viele Episoden der Bereich 12-13 umfasst.',
   '0x10',
   '٢+٣',
   '１２+３',
