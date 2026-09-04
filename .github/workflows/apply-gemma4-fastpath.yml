@@ -19,7 +19,7 @@ jobs:
           ref: fix/gemma4-minimal-ollama-options
           fetch-depth: 0
 
-      - name: Apply minimal known-good Gemma 4 options
+      - name: Remove legacy per-call Gemma 4 knobs
         shell: bash
         run: |
           python3 - <<'PY'
@@ -34,109 +34,88 @@ jobs:
               p.write_text(text.replace(old, new, 1), encoding='utf-8')
 
           chat = 'api/chat.php'
-          helper_anchor = """function ember_repeat_last_n(): int {
-            $n = (int)ember_cfg('STU_EMBER_REPEAT_LAST_N', 96);
-            return max(0, min(512, $n));
-          }
-          """
-          helper_new = helper_anchor + """
-          // Gemma 4 / Ollama minimal known-good fast path (Turin validation, 2026-09-04).
-          // Only the three validated sampling keys are forwarded inside Ollama `options`.
-          // Context, predict, thread, repeat, seed and stop controls stay backend-managed
-          // unless a future isolated A/B benchmark explicitly validates them.
-          function ember_ollama_known_good_options(array $optionOverrides = []): array {
-            $options = [
-              'temperature' => ember_temperature(),
-              'top_p' => defined('STU_EMBER_TOP_P') ? ember_top_p() : 0.95,
-              'top_k' => defined('STU_EMBER_TOP_K') ? ember_top_k() : 64,
-            ];
-            $allowed = [
-              'temperature' => true,
-              'top_p' => true,
-              'top_k' => true,
-            ];
-            foreach ($optionOverrides as $k => $v) {
-              if ($v === null || !isset($allowed[$k])) continue;
-              $options[$k] = $v;
-            }
-            return $options;
-          }
-          """
-          replace_once(chat, helper_anchor, helper_new)
 
-          old_sync = """  $options = [
-              'num_thread' => ember_num_thread(),
-              'temperature' => ember_temperature(),
-              'top_p' => ember_top_p(),
-              'repeat_penalty' => ember_repeat_penalty(),
-              'num_predict' => ember_num_predict_for_model($model),
-              'num_ctx' => ember_num_ctx_for_model($model),
-              'stop' => ember_stop_tokens_for_model($model),
-              'seed' => ember_seed_for_model($model),
-              'top_k' => ember_top_k(),
-              'repeat_last_n' => ember_repeat_last_n(),
-            ];
-            // Gemma 4 Thinking-Parameter (nur wenn nicht explizit konfiguriert).
-            if (!defined('STU_EMBER_TEMPERATURE'))    $options['temperature']    = 0.80;
-            if (!defined('STU_EMBER_TOP_P'))          $options['top_p']          = 0.95;
-            if (!defined('STU_EMBER_TOP_K'))          $options['top_k']          = 64;
-            if (!defined('STU_EMBER_REPEAT_PENALTY')) $options['repeat_penalty'] = 1.08;
-            if (!defined('STU_EMBER_REPEAT_LAST_N'))  $options['repeat_last_n'] = 64;
-            if (!defined('STU_EMBER_NUM_THREAD'))     $options['num_thread']     = 12;
-            if (!empty($optionOverrides)) {
-              foreach ($optionOverrides as $k => $v) {
-                if ($v === null) continue;
-                $options[$k] = $v;
-              }
-            }
-          """
-          new_sync = """  // Keep the Gemma 4 fast path intentionally minimal. Renderer/parser remain
-            // Modelfile concerns; PHP forwards only the validated sampling keys.
-            $options = ember_ollama_known_good_options($optionOverrides);
-          """
-          replace_once(chat, old_sync, new_sync)
+          replace_once(chat,
+          """    'prompt_eval_count' => 0,
+              'num_predict' => (int)($options['num_predict'] ?? 0),
+          """,
+          """    'prompt_eval_count' => 0,
+          """)
+          replace_once(chat,
+          """    'prompt_eval_count' => 0,
+              'num_predict' => (int)($options['num_predict'] ?? 0),
+          """,
+          """    'prompt_eval_count' => 0,
+          """)
+
+          replace_once(chat,
+          """  $limit = (int)($meta['num_predict'] ?? 0);
+            $used = (int)($meta['eval_count'] ?? 0);
+            return $limit > 0 && $used >= $limit;
+          """,
+          """  return false;
+          """)
+
+          replace_once(chat,
+          """      'eval_count' => (int)($previousMeta['eval_count'] ?? 0),
+              'num_predict' => (int)($previousMeta['num_predict'] ?? 0),
+          """,
+          """      'eval_count' => (int)($previousMeta['eval_count'] ?? 0),
+          """)
+
+          replace_once(chat,
+          """      ember_timeout_for_model($model),
+              ['num_predict' => ember_num_predict_for_model($model)],
+              $imageUrl
+          """,
+          """      ember_timeout_for_model($model),
+              [],
+              $imageUrl
+          """)
+
+          replace_once(chat,
+          """      $visionTimeout,
+              ['num_predict' => 6500, 'num_ctx' => ember_num_ctx_for_model($primaryModel)],
+              $imageUrl
+          """,
+          """      $visionTimeout,
+              [],
+              $imageUrl
+          """)
+
+          replace_once(chat,
+          """      ember_call_ollama(ember_model(), \"DU BIST EMBER. Antworte exakt mit ok.\", \"ok\", 8, [
+                '__suppress_fail_log' => 1,
+                'num_predict' => 8,
+                'num_ctx' => 512,
+                'temperature' => 0.1,
+                'top_p' => 0.5,
+              ]);
+          """,
+          """      ember_call_ollama(ember_model(), \"DU BIST EMBER. Antworte exakt mit ok.\", \"ok\", 8, [
+                '__suppress_fail_log' => 1,
+              ]);
+          """)
 
           stream = 'api/console_stream.php'
-          old_stream = """  $options = [
-              'num_thread'     => ember_num_thread(),
-              'temperature'    => ember_temperature(),
-              'top_p'          => ember_top_p(),
-              'repeat_penalty' => ember_repeat_penalty(),
-              'num_predict'    => ember_num_predict_for_model($model),
-              'num_ctx'        => ember_num_ctx_for_model($model),
-              'stop'           => ember_stop_tokens_for_model($model),
-              'seed'           => ember_seed_for_model($model),
-              'top_k'          => ember_top_k(),
-              'repeat_last_n'  => ember_repeat_last_n(),
-            ];
-            if (!defined('STU_EMBER_TEMPERATURE'))    $options['temperature']    = 0.80;
-            if (!defined('STU_EMBER_TOP_P'))          $options['top_p']          = 0.95;
-            if (!defined('STU_EMBER_TOP_K'))          $options['top_k']          = 64;
-            if (!defined('STU_EMBER_REPEAT_PENALTY')) $options['repeat_penalty'] = 1.08;
-            if (!defined('STU_EMBER_REPEAT_LAST_N'))  $options['repeat_last_n']  = 64;
-            if (!defined('STU_EMBER_NUM_THREAD'))     $options['num_thread']     = 12;
-          """
-          new_stream = """  // Match the synchronous Gemma 4 fast path exactly.
-            $options = ember_ollama_known_good_options();
-          """
-          replace_once(stream, old_stream, new_stream)
+          replace_once(stream,
+          """  $numPredict = (int)($options['num_predict'] ?? 0);
+            $reasonLower = strtolower($doneReason);
+            $truncated = in_array($reasonLower, ['length', 'max_tokens', 'token_limit'], true)
+              || ($numPredict > 0 && $evalCount >= $numPredict)
+              || ($doneSeen && !$done);
+          """,
+          """  $reasonLower = strtolower($doneReason);
+            $truncated = in_array($reasonLower, ['length', 'max_tokens', 'token_limit'], true)
+              || ($doneSeen && !$done);
+          """)
 
-          cfg = Path('api/config.local.php.example')
-          cfg_text = cfg.read_text(encoding='utf-8')
-          old_cfg = """define('STU_EMBER_LOCK_NAMESPACE', 'ember_coreui');
-          define('STU_EMBER_NUM_PREDICT', 6500);
-          define('STU_EMBER_TIMEOUT', 600);
-          """
-          new_cfg = """define('STU_EMBER_LOCK_NAMESPACE', 'ember_coreui');
-          // Gemma 4 fast path: PHP forwards only temperature/top_p/top_k to Ollama.
-          // This legacy value is retained only as an application-side output budget;
-          // it is intentionally NOT sent as Ollama num_predict.
-          define('STU_EMBER_NUM_PREDICT', 6500);
-          define('STU_EMBER_TIMEOUT', 600);
-          """
-          if cfg_text.count(old_cfg) != 1:
-              raise SystemExit('api/config.local.php.example: expected config anchor once')
-          cfg.write_text(cfg_text.replace(old_cfg, new_cfg, 1), encoding='utf-8')
+          replace_once(stream,
+          """      'eval_count' => $evalCount,
+              'num_predict' => $numPredict,
+          """,
+          """      'eval_count' => $evalCount,
+          """)
           PY
 
       - name: PHP lint
@@ -151,12 +130,14 @@ jobs:
         run: |
           echo 'Remaining candidate option lines (review only):'
           grep -nE "['\"](num_ctx|num_predict|num_thread|repeat_penalty|repeat_last_n|seed|stop)['\"][[:space:]]*=>" api/chat.php api/console_stream.php || true
+          echo 'Known-good helper call sites:'
+          grep -n "ember_ollama_known_good_options" api/chat.php api/console_stream.php
 
       - name: Commit patch
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add api/chat.php api/console_stream.php api/config.local.php.example
-          git commit -m 'Optimize Gemma 4 Ollama fast path'
+          git add api/chat.php api/console_stream.php
+          git commit -m 'Remove legacy Gemma 4 per-call overrides'
           git push origin HEAD:fix/gemma4-minimal-ollama-options
