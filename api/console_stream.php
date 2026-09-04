@@ -563,24 +563,8 @@ function console_stream_ollama(string $model, string $systemPrompt, string $user
   $url       = ember_url();
   $keepAlive = ember_keep_alive();
 
-  $options = [
-    'num_thread'     => ember_num_thread(),
-    'temperature'    => ember_temperature(),
-    'top_p'          => ember_top_p(),
-    'repeat_penalty' => ember_repeat_penalty(),
-    'num_predict'    => ember_num_predict_for_model($model),
-    'num_ctx'        => ember_num_ctx_for_model($model),
-    'stop'           => ember_stop_tokens_for_model($model),
-    'seed'           => ember_seed_for_model($model),
-    'top_k'          => ember_top_k(),
-    'repeat_last_n'  => ember_repeat_last_n(),
-  ];
-  if (!defined('STU_EMBER_TEMPERATURE'))    $options['temperature']    = 0.80;
-  if (!defined('STU_EMBER_TOP_P'))          $options['top_p']          = 0.95;
-  if (!defined('STU_EMBER_TOP_K'))          $options['top_k']          = 64;
-  if (!defined('STU_EMBER_REPEAT_PENALTY')) $options['repeat_penalty'] = 1.08;
-  if (!defined('STU_EMBER_REPEAT_LAST_N'))  $options['repeat_last_n']  = 64;
-  if (!defined('STU_EMBER_NUM_THREAD'))     $options['num_thread']     = 12;
+  // Match the synchronous Gemma 4 fast path exactly.
+  $options = ember_ollama_known_good_options();
 
   $messages = [];
   if (trim($systemPrompt) !== '') $messages[] = ['role' => 'system', 'content' => $systemPrompt];

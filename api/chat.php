@@ -611,6 +611,28 @@ function ember_repeat_last_n(): int {
   return max(0, min(512, $n));
 }
 
+// Gemma 4 / Ollama minimal known-good fast path (Turin validation, 2026-09-04).
+// Only the three validated sampling keys are forwarded inside Ollama `options`.
+// Context, predict, thread, repeat, seed and stop controls stay backend-managed
+// unless a future isolated A/B benchmark explicitly validates them.
+function ember_ollama_known_good_options(array $optionOverrides = []): array {
+  $options = [
+    'temperature' => ember_temperature(),
+    'top_p' => defined('STU_EMBER_TOP_P') ? ember_top_p() : 0.95,
+    'top_k' => defined('STU_EMBER_TOP_K') ? ember_top_k() : 64,
+  ];
+  $allowed = [
+    'temperature' => true,
+    'top_p' => true,
+    'top_k' => true,
+  ];
+  foreach ($optionOverrides as $k => $v) {
+    if ($v === null || !isset($allowed[$k])) continue;
+    $options[$k] = $v;
+  }
+  return $options;
+}
+
 // --- Ember Memory (Langzeitgedaechtnis) ---
 function ember_memory_enabled(): bool {
   $runtime = function_exists('coreui_ai_runtime_settings') ? coreui_ai_runtime_settings() : [];
@@ -2897,31 +2919,9 @@ function ember_call_ollama(string $model, string $systemPrompt, string $userProm
   // Nur /api/chat - Gemma 4 wird ausschliesslich ueber den Chat-Endpoint angesprochen.
   $isChat = true;
 
-  $options = [
-    'num_thread' => ember_num_thread(),
-    'temperature' => ember_temperature(),
-    'top_p' => ember_top_p(),
-    'repeat_penalty' => ember_repeat_penalty(),
-    'num_predict' => ember_num_predict_for_model($model),
-    'num_ctx' => ember_num_ctx_for_model($model),
-    'stop' => ember_stop_tokens_for_model($model),
-    'seed' => ember_seed_for_model($model),
-    'top_k' => ember_top_k(),
-    'repeat_last_n' => ember_repeat_last_n(),
-  ];
-  // Gemma 4 Thinking-Parameter (nur wenn nicht explizit konfiguriert).
-  if (!defined('STU_EMBER_TEMPERATURE'))    $options['temperature']    = 0.80;
-  if (!defined('STU_EMBER_TOP_P'))          $options['top_p']          = 0.95;
-  if (!defined('STU_EMBER_TOP_K'))          $options['top_k']          = 64;
-  if (!defined('STU_EMBER_REPEAT_PENALTY')) $options['repeat_penalty'] = 1.08;
-  if (!defined('STU_EMBER_REPEAT_LAST_N'))  $options['repeat_last_n'] = 64;
-  if (!defined('STU_EMBER_NUM_THREAD'))     $options['num_thread']     = 12;
-  if (!empty($optionOverrides)) {
-    foreach ($optionOverrides as $k => $v) {
-      if ($v === null) continue;
-      $options[$k] = $v;
-    }
-  }
+  // Keep the Gemma 4 fast path intentionally minimal. Renderer/parser remain
+  // Modelfile concerns; PHP forwards only the validated sampling keys.
+  $options = ember_ollama_known_good_options($optionOverrides);
 
   if ($isChat) {
     // User-Message aufbauen - bei Bildern als base64 einbetten (max 1024px, JPEG)

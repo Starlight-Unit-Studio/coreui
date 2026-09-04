@@ -17,6 +17,9 @@ define('STU_EMBER_CHARACTER_NAME', 'Ember');
 define('STU_EMBER_MODEL', 'ember-coreui:latest');
 define('STU_EMBER_OLLAMA_URL', 'http://127.0.0.1:11434/api/chat');
 define('STU_EMBER_LOCK_NAMESPACE', 'ember_coreui');
+// Gemma 4 fast path: PHP forwards only temperature/top_p/top_k to Ollama.
+// This legacy value is retained only as an application-side output budget;
+// it is intentionally NOT sent as Ollama num_predict.
 define('STU_EMBER_NUM_PREDICT', 6500);
 define('STU_EMBER_TIMEOUT', 600);
 define('STU_EMBER_TIMEOUT_RETRY', 600);
