@@ -25,30 +25,24 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          def replace_once(path, old, new):
+          def replace_exact(path, old, new, expected=1):
               p = Path(path)
               text = p.read_text(encoding='utf-8')
               count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f'{path}: expected exactly one match, got {count}')
-              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+              if count != expected:
+                  raise SystemExit(f'{path}: expected {expected} matches, got {count}')
+              p.write_text(text.replace(old, new), encoding='utf-8')
 
           chat = 'api/chat.php'
 
-          replace_once(chat,
+          replace_exact(chat,
           """    'prompt_eval_count' => 0,
               'num_predict' => (int)($options['num_predict'] ?? 0),
           """,
           """    'prompt_eval_count' => 0,
-          """)
-          replace_once(chat,
-          """    'prompt_eval_count' => 0,
-              'num_predict' => (int)($options['num_predict'] ?? 0),
-          """,
-          """    'prompt_eval_count' => 0,
-          """)
+          """, 2)
 
-          replace_once(chat,
+          replace_exact(chat,
           """  $limit = (int)($meta['num_predict'] ?? 0);
             $used = (int)($meta['eval_count'] ?? 0);
             return $limit > 0 && $used >= $limit;
@@ -56,14 +50,14 @@ jobs:
           """  return false;
           """)
 
-          replace_once(chat,
+          replace_exact(chat,
           """      'eval_count' => (int)($previousMeta['eval_count'] ?? 0),
               'num_predict' => (int)($previousMeta['num_predict'] ?? 0),
           """,
           """      'eval_count' => (int)($previousMeta['eval_count'] ?? 0),
           """)
 
-          replace_once(chat,
+          replace_exact(chat,
           """      ember_timeout_for_model($model),
               ['num_predict' => ember_num_predict_for_model($model)],
               $imageUrl
@@ -73,7 +67,7 @@ jobs:
               $imageUrl
           """)
 
-          replace_once(chat,
+          replace_exact(chat,
           """      $visionTimeout,
               ['num_predict' => 6500, 'num_ctx' => ember_num_ctx_for_model($primaryModel)],
               $imageUrl
@@ -83,7 +77,7 @@ jobs:
               $imageUrl
           """)
 
-          replace_once(chat,
+          replace_exact(chat,
           """      ember_call_ollama(ember_model(), \"DU BIST EMBER. Antworte exakt mit ok.\", \"ok\", 8, [
                 '__suppress_fail_log' => 1,
                 'num_predict' => 8,
@@ -98,7 +92,7 @@ jobs:
           """)
 
           stream = 'api/console_stream.php'
-          replace_once(stream,
+          replace_exact(stream,
           """  $numPredict = (int)($options['num_predict'] ?? 0);
             $reasonLower = strtolower($doneReason);
             $truncated = in_array($reasonLower, ['length', 'max_tokens', 'token_limit'], true)
@@ -110,7 +104,7 @@ jobs:
               || ($doneSeen && !$done);
           """)
 
-          replace_once(stream,
+          replace_exact(stream,
           """      'eval_count' => $evalCount,
               'num_predict' => $numPredict,
           """,
