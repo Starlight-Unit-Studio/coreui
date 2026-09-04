@@ -669,10 +669,8 @@ function console_stream_ollama(string $model, string $systemPrompt, string $user
   $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
   curl_close($ch);
 
-  $numPredict = (int)($options['num_predict'] ?? 0);
   $reasonLower = strtolower($doneReason);
   $truncated = in_array($reasonLower, ['length', 'max_tokens', 'token_limit'], true)
-    || ($numPredict > 0 && $evalCount >= $numPredict)
     || ($doneSeen && !$done);
   $ok = $curlOk !== false
     && $curlErrno === 0
@@ -692,7 +690,6 @@ function console_stream_ollama(string $model, string $systemPrompt, string $user
       'done' => $done ? 1 : 0,
       'done_reason' => $doneReason,
       'eval_count' => $evalCount,
-      'num_predict' => $numPredict,
     ]);
   }
 

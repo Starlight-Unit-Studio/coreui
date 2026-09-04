@@ -3073,7 +3073,6 @@ function ember_call_ollama(string $model, string $systemPrompt, string $userProm
     'done_reason' => '',
     'eval_count' => 0,
     'prompt_eval_count' => 0,
-    'num_predict' => (int)($options['num_predict'] ?? 0),
   ];
 
   curl_setopt_array($ch, [
@@ -3105,7 +3104,6 @@ function ember_call_ollama(string $model, string $systemPrompt, string $userProm
     'done_reason' => '',
     'eval_count' => 0,
     'prompt_eval_count' => 0,
-    'num_predict' => (int)($options['num_predict'] ?? 0),
   ];
 
   if ($raw === false || $raw === '' || $code < 200 || $code >= 300) {
@@ -3208,9 +3206,7 @@ function ember_last_call_was_truncated(): bool {
   $reason = strtolower(trim((string)($meta['done_reason'] ?? '')));
   if (in_array($reason, ['length', 'max_tokens', 'token_limit'], true)) return true;
 
-  $limit = (int)($meta['num_predict'] ?? 0);
-  $used = (int)($meta['eval_count'] ?? 0);
-  return $limit > 0 && $used >= $limit;
+  return false;
 }
 
 function ember_join_continuation(string $head, string $tail): string {
@@ -3254,7 +3250,6 @@ function ember_continue_truncated_reply(
       'segment' => $segments + 1,
       'done_reason' => (string)($previousMeta['done_reason'] ?? ''),
       'eval_count' => (int)($previousMeta['eval_count'] ?? 0),
-      'num_predict' => (int)($previousMeta['num_predict'] ?? 0),
     ]);
 
     $continuationPrompt = $userPrompt
@@ -3269,7 +3264,7 @@ function ember_continue_truncated_reply(
       $systemPrompt,
       $continuationPrompt,
       ember_timeout_for_model($model),
-      ['num_predict' => ember_num_predict_for_model($model)],
+      [],
       $imageUrl
     );
     if (!is_string($tail) || trim($tail) === '') {
@@ -4324,7 +4319,7 @@ AKTUELLER ABSENDER (WICHTIG): {$senderChar['name']} [{$senderChar['id']}]
       $visionSys,
       $visionPrompt,
       $visionTimeout,
-      ['num_predict' => 6500, 'num_ctx' => ember_num_ctx_for_model($primaryModel)],
+      [],
       $imageUrl
     );
     $imgReply = ember_continue_truncated_reply(
@@ -7847,10 +7842,6 @@ if ($action === 'ember_warmup') {
       ember_prepare_background_runtime();
       ember_call_ollama(ember_model(), "DU BIST EMBER. Antworte exakt mit ok.", "ok", 8, [
         '__suppress_fail_log' => 1,
-        'num_predict' => 8,
-        'num_ctx' => 512,
-        'temperature' => 0.1,
-        'top_p' => 0.5,
       ]);
     }
   } catch (Throwable $e) {}
