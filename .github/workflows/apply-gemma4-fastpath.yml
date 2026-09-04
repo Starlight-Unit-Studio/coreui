@@ -25,91 +25,33 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          def replace_exact(path, old, new, expected=1):
+          def apply(path, replacements):
               p = Path(path)
               text = p.read_text(encoding='utf-8')
-              count = text.count(old)
-              if count != expected:
-                  raise SystemExit(f'{path}: expected {expected} matches, got {count}')
-              p.write_text(text.replace(old, new), encoding='utf-8')
+              for label, old, new, expected in replacements:
+                  count = text.count(old)
+                  if count != expected:
+                      raise SystemExit(f'{path} [{label}]: expected {expected}, got {count}')
+                  text = text.replace(old, new)
+              p.write_text(text, encoding='utf-8')
 
-          chat = 'api/chat.php'
+          apply('api/chat.php', [
+              ('last-call num_predict metadata', "    'num_predict' => (int)($options['num_predict'] ?? 0),\n", '', 2),
+              ('truncation limit read', "  $limit = (int)($meta['num_predict'] ?? 0);\n  $used = (int)($meta['eval_count'] ?? 0);\n  return $limit > 0 && $used >= $limit;\n", "  return false;\n", 1),
+              ('continuation debug metadata', "      'num_predict' => (int)($previousMeta['num_predict'] ?? 0),\n", '', 1),
+              ('continuation override', "      ['num_predict' => ember_num_predict_for_model($model)],\n", "      [],\n", 1),
+              ('vision overrides', "      ['num_predict' => 6500, 'num_ctx' => ember_num_ctx_for_model($primaryModel)],\n", "      [],\n", 1),
+              ('warmup num_predict', "        'num_predict' => 8,\n", '', 1),
+              ('warmup num_ctx', "        'num_ctx' => 512,\n", '', 1),
+              ('warmup temperature', "        'temperature' => 0.1,\n", '', 1),
+              ('warmup top_p', "        'top_p' => 0.5,\n", '', 1),
+          ])
 
-          replace_exact(chat,
-          """    'prompt_eval_count' => 0,
-              'num_predict' => (int)($options['num_predict'] ?? 0),
-          """,
-          """    'prompt_eval_count' => 0,
-          """, 2)
-
-          replace_exact(chat,
-          """  $limit = (int)($meta['num_predict'] ?? 0);
-            $used = (int)($meta['eval_count'] ?? 0);
-            return $limit > 0 && $used >= $limit;
-          """,
-          """  return false;
-          """)
-
-          replace_exact(chat,
-          """      'eval_count' => (int)($previousMeta['eval_count'] ?? 0),
-              'num_predict' => (int)($previousMeta['num_predict'] ?? 0),
-          """,
-          """      'eval_count' => (int)($previousMeta['eval_count'] ?? 0),
-          """)
-
-          replace_exact(chat,
-          """      ember_timeout_for_model($model),
-              ['num_predict' => ember_num_predict_for_model($model)],
-              $imageUrl
-          """,
-          """      ember_timeout_for_model($model),
-              [],
-              $imageUrl
-          """)
-
-          replace_exact(chat,
-          """      $visionTimeout,
-              ['num_predict' => 6500, 'num_ctx' => ember_num_ctx_for_model($primaryModel)],
-              $imageUrl
-          """,
-          """      $visionTimeout,
-              [],
-              $imageUrl
-          """)
-
-          replace_exact(chat,
-          """      ember_call_ollama(ember_model(), \"DU BIST EMBER. Antworte exakt mit ok.\", \"ok\", 8, [
-                '__suppress_fail_log' => 1,
-                'num_predict' => 8,
-                'num_ctx' => 512,
-                'temperature' => 0.1,
-                'top_p' => 0.5,
-              ]);
-          """,
-          """      ember_call_ollama(ember_model(), \"DU BIST EMBER. Antworte exakt mit ok.\", \"ok\", 8, [
-                '__suppress_fail_log' => 1,
-              ]);
-          """)
-
-          stream = 'api/console_stream.php'
-          replace_exact(stream,
-          """  $numPredict = (int)($options['num_predict'] ?? 0);
-            $reasonLower = strtolower($doneReason);
-            $truncated = in_array($reasonLower, ['length', 'max_tokens', 'token_limit'], true)
-              || ($numPredict > 0 && $evalCount >= $numPredict)
-              || ($doneSeen && !$done);
-          """,
-          """  $reasonLower = strtolower($doneReason);
-            $truncated = in_array($reasonLower, ['length', 'max_tokens', 'token_limit'], true)
-              || ($doneSeen && !$done);
-          """)
-
-          replace_exact(stream,
-          """      'eval_count' => $evalCount,
-              'num_predict' => $numPredict,
-          """,
-          """      'eval_count' => $evalCount,
-          """)
+          apply('api/console_stream.php', [
+              ('stream num_predict read', "  $numPredict = (int)($options['num_predict'] ?? 0);\n", '', 1),
+              ('stream limit clause', "    || ($numPredict > 0 && $evalCount >= $numPredict)\n", '', 1),
+              ('stream debug num_predict', "      'num_predict' => $numPredict,\n", '', 1),
+          ])
           PY
 
       - name: PHP lint
