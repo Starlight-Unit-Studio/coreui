@@ -489,7 +489,7 @@ function ember_temperature(): float {
 }
 
 function ember_top_p(): float {
-  $p = (float)ember_cfg('STU_EMBER_TOP_P', 0.85);
+  $p = (float)ember_cfg('STU_EMBER_TOP_P', 0.95);
   return max(0.05, min(1.0, $p));
 }
 
@@ -602,7 +602,7 @@ function ember_seed_for_model(string $model): int {
 }
 
 function ember_top_k(): int {
-  $n = (int)ember_cfg('STU_EMBER_TOP_K', 40);
+  $n = (int)ember_cfg('STU_EMBER_TOP_K', 64);
   return max(0, min(200, $n));
 }
 
@@ -2885,6 +2885,36 @@ function ember_should_reply(string $userMsg): bool {
   return ember_is_direct_invocation($userMsg);
 }
 
+// Gemma 4 / Ollama minimal known-good fast path from live validation.
+// Only temperature/top_p/top_k are sent by default. Backend-specific context,
+// predict, thread, repeat, seed and stop controls require an explicit experimental
+// gate until isolated backend/model/version/hardware A/B tests verify them.
+function ember_ollama_known_good_options(string $model, array $optionOverrides = []): array {
+  $options = [
+    'temperature' => ember_temperature(),
+    'top_p' => ember_top_p(),
+    'top_k' => ember_top_k(),
+  ];
+
+  if ((bool)ember_cfg('STU_EMBER_UNVERIFIED_TUNING_ENABLED', false)) {
+    if (defined('STU_EMBER_NUM_THREAD'))     $options['num_thread'] = ember_num_thread();
+    if (defined('STU_EMBER_REPEAT_PENALTY')) $options['repeat_penalty'] = ember_repeat_penalty();
+    if (defined('STU_EMBER_NUM_PREDICT'))    $options['num_predict'] = ember_num_predict_for_model($model);
+    if (defined('STU_EMBER_NUM_CTX'))        $options['num_ctx'] = ember_num_ctx_for_model($model);
+    if (defined('STU_EMBER_STOP'))           $options['stop'] = ember_stop_tokens_for_model($model);
+    if (defined('STU_EMBER_SEED'))           $options['seed'] = ember_seed_for_model($model);
+    if (defined('STU_EMBER_REPEAT_LAST_N'))  $options['repeat_last_n'] = ember_repeat_last_n();
+  }
+
+  foreach ($optionOverrides as $k => $v) {
+    if ($v === null) {
+      unset($options[$k]);
+      continue;
+    }
+    $options[$k] = $v;
+  }
+  return $options;
+}
 function ember_call_ollama(string $model, string $systemPrompt, string $userPrompt, int $timeoutSec = 12, array $optionOverrides = [], $imageUrl = null, ?bool $thinkOverride = null): ?string {
   // Thinking ist strikt an genau diesen Modellaufruf gebunden. Ohne Reset koennte ein
   // spaeterer Call ohne message.thinking versehentlich einen alten Entwurf retten.
@@ -2897,31 +2927,7 @@ function ember_call_ollama(string $model, string $systemPrompt, string $userProm
   // Nur /api/chat - Gemma 4 wird ausschliesslich ueber den Chat-Endpoint angesprochen.
   $isChat = true;
 
-  $options = [
-    'num_thread' => ember_num_thread(),
-    'temperature' => ember_temperature(),
-    'top_p' => ember_top_p(),
-    'repeat_penalty' => ember_repeat_penalty(),
-    'num_predict' => ember_num_predict_for_model($model),
-    'num_ctx' => ember_num_ctx_for_model($model),
-    'stop' => ember_stop_tokens_for_model($model),
-    'seed' => ember_seed_for_model($model),
-    'top_k' => ember_top_k(),
-    'repeat_last_n' => ember_repeat_last_n(),
-  ];
-  // Gemma 4 Thinking-Parameter (nur wenn nicht explizit konfiguriert).
-  if (!defined('STU_EMBER_TEMPERATURE'))    $options['temperature']    = 0.80;
-  if (!defined('STU_EMBER_TOP_P'))          $options['top_p']          = 0.95;
-  if (!defined('STU_EMBER_TOP_K'))          $options['top_k']          = 64;
-  if (!defined('STU_EMBER_REPEAT_PENALTY')) $options['repeat_penalty'] = 1.08;
-  if (!defined('STU_EMBER_REPEAT_LAST_N'))  $options['repeat_last_n'] = 64;
-  if (!defined('STU_EMBER_NUM_THREAD'))     $options['num_thread']     = 12;
-  if (!empty($optionOverrides)) {
-    foreach ($optionOverrides as $k => $v) {
-      if ($v === null) continue;
-      $options[$k] = $v;
-    }
-  }
+  $options = ember_ollama_known_good_options($model, $optionOverrides);
 
   if ($isChat) {
     // User-Message aufbauen - bei Bildern als base64 einbetten (max 1024px, JPEG)
@@ -3269,7 +3275,7 @@ function ember_continue_truncated_reply(
       $systemPrompt,
       $continuationPrompt,
       ember_timeout_for_model($model),
-      ['num_predict' => ember_num_predict_for_model($model)],
+      [],
       $imageUrl
     );
     if (!is_string($tail) || trim($tail) === '') {
@@ -4324,7 +4330,7 @@ AKTUELLER ABSENDER (WICHTIG): {$senderChar['name']} [{$senderChar['id']}]
       $visionSys,
       $visionPrompt,
       $visionTimeout,
-      ['num_predict' => 6500, 'num_ctx' => ember_num_ctx_for_model($primaryModel)],
+      [],
       $imageUrl
     );
     $imgReply = ember_continue_truncated_reply(
