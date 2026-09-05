@@ -1,0 +1,39 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+CHANGELOG 0.5.3-ALPHA
+STAND 05.09.2026
+
+======================================================================
+MINIMAL KNOWN-GOOD INFERENCE PROFILE
+======================================================================
+
+Die mehrstuendige reale Validierung ueber Ember CoreUI hat gezeigt, dass feste
+Backendparameter die Gemma-4/Ollama-Leistung deutlich verschlechtern koennen.
+Der sichere Produktionsstandard fuer den aktuell validierten Pfad ist deshalb
+bewusst minimal.
+
+Standardmaessig werden nur diese Ollama-Optionen gesendet:
+
+* temperature = 1.0
+* top_p = 0.95
+* top_k = 64
+
+Nicht mehr automatisch gesendet werden insbesondere:
+
+* num_ctx
+* num_predict
+* num_thread
+* repeat_penalty / repeat_last_n
+* seed
+* stop
+
+Synchroner und SSE-Pfad verwenden dieselbe Options-Policy. Vision-Aufrufe und
+Fortsetzungen abgeschnittener Antworten erzwingen ebenfalls keine historischen
+Kontext- oder Predict-Budgets mehr.
+
+Historische beziehungsweise backend-spezifische Tuningparameter bleiben nur
+fuer gezielte Tests hinter STU_EMBER_UNVERIFIED_TUNING_ENABLED und expliziter
+Konfiguration verfuegbar. Ein einzelner entfernter Parameter wird nicht als
+alleinige Ursache der beobachteten Beschleunigung festgeschrieben.
+
+Es gibt keine neue Datenbankmigration. Migration 009 bleibt unveraendert.
+Alle Korrekturen aus 0.5.2-alpha und den vorherigen Releases bleiben enthalten.

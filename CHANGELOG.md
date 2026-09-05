@@ -2,6 +2,18 @@
 
 Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versioniert.
 
+## v0.5.3-alpha - 05.09.2026
+
+- Produktionspfad fuer Gemma 4 + Ollama auf das waehrend der mehrstuendigen CoreUI-Validierung ermittelte Minimalprofil ausgerichtet.
+- Normale Ollama-Aufrufe senden standardmaessig nur `temperature=1.0`, `top_p=0.95` und `top_k=64` innerhalb von `options`.
+- `num_ctx`, `num_predict`, Thread-, Repeat-, Seed- und Stop-Parameter werden im normalen Generierungspfad nicht mehr automatisch injiziert.
+- Synchroner Antwortpfad und privater SSE-Pfad verwenden dieselbe gemeinsame Known-Good-Options-Policy und koennen dadurch nicht mehr still auseinanderlaufen.
+- Vision-Aufrufe und Fortsetzungen abgeschnittener Antworten erzwingen keine alten Kontext- oder Predict-Budgets mehr.
+- Historische beziehungsweise backend-spezifische Tuningparameter bleiben fuer gezielte A/B-Tests hinter `STU_EMBER_UNVERIFIED_TUNING_ENABLED` und expliziter Konfiguration verfuegbar.
+- Die Aenderung behandelt die beobachtete Performanceverbesserung bewusst als Ergebnis des gesamten Minimalprofils und schreibt sie nicht allein `num_ctx` zu.
+- Keine neue Datenbankmigration. Migration 009 bleibt der aktuelle Schema-Stand; Konten, Sitzungen, Nachrichten, Reaktionen, Revisionen, Anhaenge, Uploads, private RAG-Daten und lokale Konfiguration bleiben erhalten.
+- Version, Cache-Buster, Setup, README, Changelog-Archiv, Preflight-relevante Versionsreferenzen, Uebergabeprotokoll, Release-ZIP und SHA-256 auf `0.5.3-alpha` aktualisiert.
+
 ## v0.5.2-alpha - 02.09.2026
 
 - Produktiv gemeldeten Stillstand bei exakten Rechenauftraegen wie `123456789 * 987654321` behoben. Der bisherige Pfad konnte erst eine Streaming-Generierung, danach den synchronen Modellfallback, den Python-Worker und einen weiteren Modellaufruf starten.
