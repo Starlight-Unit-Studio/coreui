@@ -17,7 +17,19 @@ define('STU_EMBER_CHARACTER_NAME', 'Ember');
 define('STU_EMBER_MODEL', 'ember-coreui:latest');
 define('STU_EMBER_OLLAMA_URL', 'http://127.0.0.1:11434/api/chat');
 define('STU_EMBER_LOCK_NAMESPACE', 'ember_coreui');
-define('STU_EMBER_NUM_PREDICT', 6500);
+
+// Current Gemma 4 + Ollama known-good fast path.
+define('STU_EMBER_TEMPERATURE', 1.0);
+define('STU_EMBER_TOP_P', 0.95);
+define('STU_EMBER_TOP_K', 64);
+define('STU_EMBER_UNVERIFIED_TUNING_ENABLED', false);
+// Only enable the legacy/backend-specific controls below after controlled A/B tests.
+// define('STU_EMBER_NUM_PREDICT', 6500);
+// define('STU_EMBER_NUM_CTX', 16384);
+// define('STU_EMBER_NUM_THREAD', 16);
+// define('STU_EMBER_REPEAT_PENALTY', 1.18);
+// define('STU_EMBER_REPEAT_LAST_N', 96);
+
 define('STU_EMBER_TIMEOUT', 600);
 define('STU_EMBER_TIMEOUT_RETRY', 600);
 define('STU_EMBER_MAX_REPLY_CHARS', 60000);
