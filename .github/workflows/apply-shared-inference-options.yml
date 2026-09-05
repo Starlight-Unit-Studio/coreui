@@ -1,0 +1,138 @@
+name: Align shared inference options
+
+on:
+  push:
+    branches:
+      - fix/minimal-known-good-inference-options
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Centralize known-good options
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected exactly one match, found {count}")
+              return text.replace(old, new, 1)
+
+          chat_path = Path('api/chat.php')
+          text = chat_path.read_text(encoding='utf-8')
+
+          call_marker = "function ember_call_ollama(string $model, string $systemPrompt, string $userPrompt, int $timeoutSec = 12, array $optionOverrides = [], $imageUrl = null, ?bool $thinkOverride = null): ?string {"
+          helper = "\n".join([
+              "// Gemma 4 / Ollama minimal known-good fast path from live validation.",
+              "// Only temperature/top_p/top_k are sent by default. Backend-specific context,",
+              "// predict, thread, repeat, seed and stop controls require an explicit experimental",
+              "// gate until isolated backend/model/version/hardware A/B tests verify them.",
+              "function ember_ollama_known_good_options(string $model, array $optionOverrides = []): array {",
+              "  $options = [",
+              "    'temperature' => ember_temperature(),",
+              "    'top_p' => ember_top_p(),",
+              "    'top_k' => ember_top_k(),",
+              "  ];",
+              "",
+              "  if ((bool)ember_cfg('STU_EMBER_UNVERIFIED_TUNING_ENABLED', false)) {",
+              "    if (defined('STU_EMBER_NUM_THREAD'))     $options['num_thread'] = ember_num_thread();",
+              "    if (defined('STU_EMBER_REPEAT_PENALTY')) $options['repeat_penalty'] = ember_repeat_penalty();",
+              "    if (defined('STU_EMBER_NUM_PREDICT'))    $options['num_predict'] = ember_num_predict_for_model($model);",
+              "    if (defined('STU_EMBER_NUM_CTX'))        $options['num_ctx'] = ember_num_ctx_for_model($model);",
+              "    if (defined('STU_EMBER_STOP'))           $options['stop'] = ember_stop_tokens_for_model($model);",
+              "    if (defined('STU_EMBER_SEED'))           $options['seed'] = ember_seed_for_model($model);",
+              "    if (defined('STU_EMBER_REPEAT_LAST_N'))  $options['repeat_last_n'] = ember_repeat_last_n();",
+              "  }",
+              "",
+              "  foreach ($optionOverrides as $k => $v) {",
+              "    if ($v === null) {",
+              "      unset($options[$k]);",
+              "      continue;",
+              "    }",
+              "    $options[$k] = $v;",
+              "  }",
+              "  return $options;",
+              "}",
+              "",
+          ])
+          text = replace_once(text, call_marker, helper + call_marker, 'helper insertion')
+
+          inline_start = "  // Gemma 4 + Ollama known-good fast path from live validation."
+          inline_end = "\n".join([
+              "  if (!empty($optionOverrides)) {",
+              "    foreach ($optionOverrides as $k => $v) {",
+              "      if ($v === null) {",
+              "        unset($options[$k]);",
+              "        continue;",
+              "      }",
+              "      $options[$k] = $v;",
+              "    }",
+              "  }",
+              "",
+          ])
+          if text.count(inline_start) != 1:
+              raise SystemExit(f'inline options start expected 1, found {text.count(inline_start)}')
+          start = text.index(inline_start)
+          end = text.find(inline_end, start)
+          if end < 0:
+              raise SystemExit('inline options end not found')
+          end += len(inline_end)
+          text = text[:start] + "  $options = ember_ollama_known_good_options($model, $optionOverrides);\n" + text[end:]
+          chat_path.write_text(text, encoding='utf-8')
+
+          stream_path = Path('api/console_stream.php')
+          stream = stream_path.read_text(encoding='utf-8')
+          stream_start_marker = "  $options = [\n    'num_thread'     => ember_num_thread(),"
+          stream_end_marker = "  if (!defined('STU_EMBER_NUM_THREAD'))     $options['num_thread']     = 12;\n\n"
+          if stream.count(stream_start_marker) != 1:
+              raise SystemExit(f'stream options start expected 1, found {stream.count(stream_start_marker)}')
+          s = stream.index(stream_start_marker)
+          e = stream.find(stream_end_marker, s)
+          if e < 0:
+              raise SystemExit('stream options end not found')
+          e += len(stream_end_marker)
+          stream = stream[:s] + "  // Keep SSE and synchronous generation on the same validated option policy.\n  $options = ember_ollama_known_good_options($model);\n\n" + stream[e:]
+          stream_path.write_text(stream, encoding='utf-8')
+
+          # Fail closed: both normal generation paths must use the shared helper.
+          final_chat = chat_path.read_text(encoding='utf-8')
+          final_stream = stream_path.read_text(encoding='utf-8')
+          if final_chat.count('function ember_ollama_known_good_options(') != 1:
+              raise SystemExit('shared helper missing or duplicated')
+          if final_chat.count('$options = ember_ollama_known_good_options($model, $optionOverrides);') != 1:
+              raise SystemExit('sync call does not use shared helper exactly once')
+          if final_stream.count('$options = ember_ollama_known_good_options($model);') != 1:
+              raise SystemExit('SSE call does not use shared helper exactly once')
+          PY
+
+      - name: PHP syntax check
+        run: |
+          php -l api/chat.php
+          php -l api/console_stream.php
+          php -l api/config.local.php.example
+
+      - name: Verify diff
+        run: |
+          git diff --check
+          git diff -- api/chat.php api/console_stream.php api/config.local.php.example
+
+      - name: Commit patch and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/apply-shared-inference-options.yml
+          git add api/chat.php api/console_stream.php api/config.local.php.example
+          git commit -m "fix: share minimal inference options with SSE"
+          git push origin HEAD:fix/minimal-known-good-inference-options
