@@ -1,0 +1,38 @@
+name: Apply README Discovery Intro
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/update_readme_discovery.py'
+      - '.github/workflows/apply-readme-discovery.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply README discovery intro
+        run: python3 .github/scripts/update_readme_discovery.py
+
+      - name: Validate README
+        run: |
+          grep -Fq 'designed for local **Gemma 4 models via Ollama**' README.md
+          grep -Fq 'Playwright-based browser research with SearXNG' README.md
+          grep -Fq 'Current version: `0.5.2-alpha`' README.md
+
+      - name: Commit README update and remove one-time helper
+        run: |
+          git config user.name 'Starlight Unit Studios'
+          git config user.email 'pschildgen87@gmail.com'
+          git add README.md
+          git rm .github/scripts/update_readme_discovery.py .github/workflows/apply-readme-discovery.yml
+          git commit -m 'Improve Ember CoreUI README discovery intro'
+          git push
