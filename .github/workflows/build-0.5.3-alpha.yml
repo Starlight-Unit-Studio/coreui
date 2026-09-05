@@ -1,0 +1,313 @@
+name: Build Ember CoreUI 0.5.3-alpha release
+
+on:
+  push:
+    branches:
+      - release/0.5.3-alpha
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare version, documentation and release archive
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          OLD_DOT='0.5.2-alpha'
+          OLD_UNDER='0_5_2_ALPHA'
+          NEW_DOT='0.5.3-alpha'
+          NEW_UNDER='0_5_3_ALPHA'
+          RELEASE_DIR='releases/v0.5.3-alpha'
+          ROOT='EMBER_COREUI_0_5_3_ALPHA'
+          ARCHIVE='EMBER_COREUI_0_5_3_ALPHA.zip'
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          old_dot = '0.5.2-alpha'
+          old_under = '0_5_2_ALPHA'
+          new_dot = '0.5.3-alpha'
+          new_under = '0_5_3_ALPHA'
+
+          tracked = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          changed = []
+          for raw in tracked:
+              if not raw:
+                  continue
+              path = Path(raw)
+              if raw == 'CHANGELOG.md' or raw.startswith('docs/') or raw.startswith('releases/') or raw.startswith('.github/'):
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except (UnicodeDecodeError, OSError):
+                  continue
+              updated = text.replace(old_dot, new_dot).replace(old_under, new_under)
+              if updated != text:
+                  path.write_text(updated, encoding='utf-8')
+                  changed.append(raw)
+
+          version = Path('VERSION')
+          version.write_text(new_dot + '\n', encoding='utf-8')
+          if 'VERSION' not in changed:
+              changed.append('VERSION')
+
+          readme = Path('README.md')
+          text = readme.read_text(encoding='utf-8')
+          old_intro = (
+              '`0.5.3-alpha` is a focused completion hotfix for exact integer calculations in the private Core Channel.\n\n'
+          )
+          new_intro = (
+              '`0.5.3-alpha` aligns the production Gemma 4 + Ollama request path with the minimal known-good inference profile established during extended live CoreUI validation.\n\n'
+              '- Normal generation sends only `temperature=1.0`, `top_p=0.95`, and `top_k=64` inside Ollama `options` by default.\n'
+              '- `num_ctx`, `num_predict`, thread, repeat, seed, and stop controls are no longer injected into normal generation automatically.\n'
+              '- Synchronous and SSE generation share the same option-policy helper so the two paths cannot silently drift.\n'
+              '- Vision and truncated-continuation paths no longer force the old context or predict budgets.\n'
+              '- Legacy backend-specific tuning remains available only behind the explicit experimental `STU_EMBER_UNVERIFIED_TUNING_ENABLED` gate plus explicit configuration.\n'
+              '- There is no new database migration. Existing accounts, sessions, messages, revisions, uploads, RAG data, and local configuration remain unchanged.\n\n'
+              'The deterministic calculation fixes from `0.5.2-alpha` remain included:\n\n'
+          )
+          if old_intro not in text:
+              raise SystemExit('README release-result marker not found after version update')
+          readme.write_text(text.replace(old_intro, new_intro, 1), encoding='utf-8')
+
+          changelog = Path('CHANGELOG.md')
+          text = changelog.read_text(encoding='utf-8')
+          marker = 'Ember CoreUI wird bis zur finalen Aufnahme in den STU-Repack eigenstaendig versioniert.\n\n'
+          section = '''## v0.5.3-alpha - 05.09.2026
+
+- Produktionspfad fuer Gemma 4 + Ollama auf das waehrend der mehrstuendigen CoreUI-Validierung ermittelte Minimalprofil ausgerichtet.
+- Normale Ollama-Aufrufe senden standardmaessig nur `temperature=1.0`, `top_p=0.95` und `top_k=64` innerhalb von `options`.
+- `num_ctx`, `num_predict`, Thread-, Repeat-, Seed- und Stop-Parameter werden im normalen Generierungspfad nicht mehr automatisch injiziert.
+- Synchroner Antwortpfad und privater SSE-Pfad verwenden dieselbe gemeinsame Known-Good-Options-Policy und koennen dadurch nicht mehr still auseinanderlaufen.
+- Vision-Aufrufe und Fortsetzungen abgeschnittener Antworten erzwingen keine alten Kontext- oder Predict-Budgets mehr.
+- Historische beziehungsweise backend-spezifische Tuningparameter bleiben fuer gezielte A/B-Tests hinter `STU_EMBER_UNVERIFIED_TUNING_ENABLED` und expliziter Konfiguration verfuegbar.
+- Die Aenderung behandelt die beobachtete Performanceverbesserung bewusst als Ergebnis des gesamten Minimalprofils und schreibt sie nicht allein `num_ctx` zu.
+- Keine neue Datenbankmigration. Migration 009 bleibt der aktuelle Schema-Stand; Konten, Sitzungen, Nachrichten, Reaktionen, Revisionen, Anhaenge, Uploads, private RAG-Daten und lokale Konfiguration bleiben erhalten.
+- Version, Cache-Buster, Setup, README, Changelog-Archiv, Preflight-relevante Versionsreferenzen, Uebergabeprotokoll, Release-ZIP und SHA-256 auf `0.5.3-alpha` aktualisiert.
+
+'''
+          if marker not in text:
+              raise SystemExit('CHANGELOG insertion marker not found')
+          if '## v0.5.3-alpha' not in text:
+              text = text.replace(marker, marker + section, 1)
+          changelog.write_text(text, encoding='utf-8')
+
+          changelog_txt = Path('docs/changelogs-txt/CHANGELOG_0_5_3_ALPHA.txt')
+          changelog_txt.write_text('''STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+CHANGELOG 0.5.3-ALPHA
+STAND 05.09.2026
+
+======================================================================
+MINIMAL KNOWN-GOOD INFERENCE PROFILE
+======================================================================
+
+Die mehrstuendige reale Validierung ueber Ember CoreUI hat gezeigt, dass feste
+Backendparameter die Gemma-4/Ollama-Leistung deutlich verschlechtern koennen.
+Der sichere Produktionsstandard fuer den aktuell validierten Pfad ist deshalb
+bewusst minimal.
+
+Standardmaessig werden nur diese Ollama-Optionen gesendet:
+
+* temperature = 1.0
+* top_p = 0.95
+* top_k = 64
+
+Nicht mehr automatisch gesendet werden insbesondere:
+
+* num_ctx
+* num_predict
+* num_thread
+* repeat_penalty / repeat_last_n
+* seed
+* stop
+
+Synchroner und SSE-Pfad verwenden dieselbe Options-Policy. Vision-Aufrufe und
+Fortsetzungen abgeschnittener Antworten erzwingen ebenfalls keine historischen
+Kontext- oder Predict-Budgets mehr.
+
+Historische beziehungsweise backend-spezifische Tuningparameter bleiben nur
+fuer gezielte Tests hinter STU_EMBER_UNVERIFIED_TUNING_ENABLED und expliziter
+Konfiguration verfuegbar. Ein einzelner entfernter Parameter wird nicht als
+alleinige Ursache der beobachteten Beschleunigung festgeschrieben.
+
+Es gibt keine neue Datenbankmigration. Migration 009 bleibt unveraendert.
+Alle Korrekturen aus 0.5.2-alpha und den vorherigen Releases bleiben enthalten.
+''', encoding='utf-8')
+
+          protocol = Path('docs/UEBERGABEPROTOKOLL_0_5_3_ALPHA.txt')
+          protocol.write_text('''STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+UEBERGABEPROTOKOLL 0.5.3-ALPHA
+STAND 05.09.2026
+
+======================================================================
+1. VERBINDLICHER QUELLSTAND
+======================================================================
+
+Repository:
+https://github.com/Starlight-Unit-Studio/coreui
+
+Arbeitsbranch:
+release/0.5.3-alpha
+
+Ziel-Branch:
+main
+
+Produktversion:
+0.5.3-alpha
+
+Paketwurzel:
+EMBER_COREUI_0_5_3_ALPHA
+
+Releasepaar:
+EMBER_COREUI_0_5_3_ALPHA.zip
+EMBER_COREUI_0_5_3_ALPHA.zip.sha256
+
+Produktive Adresse:
+https://coreui.starlight-unit.de
+
+======================================================================
+2. RELEASEZIEL
+======================================================================
+
+0.5.3-alpha uebernimmt die waehrend der ausgedehnten realen CoreUI-Tests
+erarbeitete Minimal-Konfiguration fuer Gemma 4 + Ollama in den offiziellen
+Produktionspfad. Der Client soll keine unvalidierten Backendparameter mehr als
+vermeintlich hilfreiche Defaults festschreiben.
+
+Der normale Pfad sendet nur temperature=1.0, top_p=0.95 und top_k=64.
+Kontext-, Predict-, Thread-, Repeat-, Seed- und Stop-Optionen bleiben
+backendverwaltet, solange sie nicht fuer die konkrete Backend-/Modell-/Versions-
+und Hardwarekombination isoliert validiert wurden.
+
+Synchroner Aufruf und SSE verwenden dieselbe Policy. Vision und automatische
+Fortsetzung erhalten keine gesonderten alten Predict-/Context-Budgets mehr.
+
+======================================================================
+3. KOMPATIBILITAET UND ROLLBACK
+======================================================================
+
+Die bisherigen Tuningfunktionen bleiben im Quellcode fuer gezielte A/B-Tests
+erhalten. Sie werden nur aktiv, wenn STU_EMBER_UNVERIFIED_TUNING_ENABLED
+explizit gesetzt und die jeweilige Option ebenfalls konfiguriert wurde.
+
+Es gibt keine Datenbankmigration. Migration 009 bleibt der aktuelle
+Schema-Stand. Konten, Sitzungen, Nachrichten, Revisionen, Feedback, Anhaenge,
+Uploads, private RAG-Daten und api/config.local.php werden beim Update nicht
+zurueckgesetzt.
+
+Ein Rollback auf das vorherige 0.5.2-alpha-Release ist dadurch ohne
+Schema-Rueckmigration moeglich.
+
+======================================================================
+4. RELEASEPRUEFUNG
+======================================================================
+
+Vor der Freigabe werden mindestens geprueft:
+
+* PHP-Syntax von api/chat.php, api/console_stream.php und config-Beispiel
+* Bash-Syntax von Setup und Shell-Skripten
+* Branding-/Lizenz-Selftest
+* git diff --check
+* ZIP-Integritaet und Paketwurzel
+* VERSION im entpackten Paket
+* SHA-256-Pruefung
+* Ausschluss historisch gesperrter privater Studio-Dokumente
+* konsistente Versionsreferenzen ausserhalb historischer Changelogs/Releases
+
+======================================================================
+5. ABGRENZUNG
+======================================================================
+
+0.5.3-alpha fuehrt keine neue Runtime-Architektur ein und ersetzt Ollama noch
+nicht. Die Client-Aenderung bereitet vielmehr die spaetere Uebergabe von
+Backend-, Hardware- und Capability-Entscheidungen an Quantum Runtime vor.
+
+Game, Homepage, Repack, KeyHelp, Host-PHP und externe Datenbanken sind nicht
+Bestandteil dieses CoreUI-Releases.
+''', encoding='utf-8')
+
+          index = Path('docs/changelogs-txt/INDEX.txt')
+          text = index.read_text(encoding='utf-8')
+          if '* CHANGELOG_0_5_3_ALPHA.txt' not in text:
+              text = text.replace('* CHANGELOG_0_5_2_ALPHA.txt\n', '* CHANGELOG_0_5_2_ALPHA.txt\n* CHANGELOG_0_5_3_ALPHA.txt\n')
+          text = text.replace('Quelle: CHANGELOG.md aus Ember CoreUI 0.5.2-alpha', 'Quelle: CHANGELOG.md aus Ember CoreUI 0.5.3-alpha')
+          index.write_text(text, encoding='utf-8')
+
+          print('Updated active version references in:')
+          for item in sorted(changed):
+              print(' -', item)
+          PY
+
+          git add -A
+
+          if git grep -n -E '0\.5\.2-alpha|0_5_2_ALPHA' -- ':!CHANGELOG.md' ':!docs/**' ':!releases/**' ':!.github/**'; then
+            echo 'Unexpected active 0.5.2 version reference remains.' >&2
+            exit 1
+          fi
+
+          php -l api/chat.php
+          php -l api/console_stream.php
+          php -l api/config.local.php.example
+          bash -n setup.sh
+          while IFS= read -r -d '' f; do bash -n "$f"; done < <(find scripts -maxdepth 1 -type f -name '*.sh' -print0)
+          git diff --check
+
+          rm -rf "$RUNNER_TEMP/coreui-release-stage"
+          mkdir -p "$RUNNER_TEMP/coreui-release-stage/$ROOT"
+          while IFS= read -r -d '' f; do
+            case "$f" in
+              releases/*|.github/*) continue ;;
+            esac
+            mkdir -p "$RUNNER_TEMP/coreui-release-stage/$ROOT/$(dirname "$f")"
+            cp -a "$f" "$RUNNER_TEMP/coreui-release-stage/$ROOT/$f"
+          done < <(git ls-files -z)
+
+          mkdir -p "$RELEASE_DIR"
+          rm -f "$RELEASE_DIR/$ARCHIVE" "$RELEASE_DIR/$ARCHIVE.sha256"
+          (
+            cd "$RUNNER_TEMP/coreui-release-stage"
+            zip -q -r "$GITHUB_WORKSPACE/$RELEASE_DIR/$ARCHIVE" "$ROOT"
+          )
+          (
+            cd "$RELEASE_DIR"
+            sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
+            sha256sum -c "$ARCHIVE.sha256"
+          )
+
+          unzip -tq "$RELEASE_DIR/$ARCHIVE"
+          test "$(unzip -p "$RELEASE_DIR/$ARCHIVE" "$ROOT/VERSION" | tr -d '[:space:]')" = "$NEW_DOT"
+          for required in VERSION README.md compose.yaml scripts/install.sh scripts/stack.sh scripts/preflight.sh; do
+            unzip -l "$RELEASE_DIR/$ARCHIVE" "$ROOT/$required" | grep -q "$ROOT/$required"
+          done
+          if unzip -l "$RELEASE_DIR/$ARCHIVE" | grep -Eiq 'MASTER.?BIBEL|KOMPENDIUM.?V6'; then
+            echo 'Blocked private studio material detected in release archive.' >&2
+            exit 1
+          fi
+
+          python3 scripts/branding-license-selftest.py
+          git diff --check
+
+          echo 'Release archive:'
+          ls -lh "$RELEASE_DIR/$ARCHIVE" "$RELEASE_DIR/$ARCHIVE.sha256"
+          cat "$RELEASE_DIR/$ARCHIVE.sha256"
+
+      - name: Commit release and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/build-0.5.3-alpha.yml
+          git add -A
+          git config user.name 'Starlight Unit Studios'
+          git config user.email 'pschildgen87@gmail.com'
+          git commit -m 'release: prepare Ember CoreUI 0.5.3-alpha'
+          git push origin HEAD
