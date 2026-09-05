@@ -32,27 +32,19 @@ jobs:
           chat_path = Path('api/chat.php')
           text = chat_path.read_text(encoding='utf-8')
 
-          text = replace_once(
-              text,
-              "ember_cfg('STU_EMBER_TOP_P', 0.85)",
-              "ember_cfg('STU_EMBER_TOP_P', 0.95)",
-              'top_p default',
-          )
-          text = replace_once(
-              text,
-              "ember_cfg('STU_EMBER_TOP_K', 40)",
-              "ember_cfg('STU_EMBER_TOP_K', 64)",
-              'top_k default',
-          )
+          text = replace_once(text, "ember_cfg('STU_EMBER_TOP_P', 0.85)", "ember_cfg('STU_EMBER_TOP_P', 0.95)", 'top_p default')
+          text = replace_once(text, "ember_cfg('STU_EMBER_TOP_K', 40)", "ember_cfg('STU_EMBER_TOP_K', 64)", 'top_k default')
 
           start_marker = "  $options = [\n    'num_thread' => ember_num_thread(),"
-          end_marker = """  if (!empty($optionOverrides)) {
-            foreach ($optionOverrides as $k => $v) {
-              if ($v === null) continue;
-              $options[$k] = $v;
-            }
-          }
-          """
+          end_marker = "\n".join([
+              "  if (!empty($optionOverrides)) {",
+              "    foreach ($optionOverrides as $k => $v) {",
+              "      if ($v === null) continue;",
+              "      $options[$k] = $v;",
+              "    }",
+              "  }",
+              "",
+          ])
           if text.count(start_marker) != 1:
               raise SystemExit(f"options block start: expected 1, found {text.count(start_marker)}")
           start = text.index(start_marker)
@@ -60,85 +52,79 @@ jobs:
           if end < 0:
               raise SystemExit('options block end marker not found')
           end += len(end_marker)
-          replacement = """  // Gemma 4 + Ollama known-good fast path from live validation.
-          // Keep the normal request intentionally minimal. Context, predict, thread and
-          // repetition controls remain opt-in until exact backend/model/version/hardware
-          // A/B testing verifies that they do not regress correctness or throughput.
-          $options = [
-            'temperature' => ember_temperature(),
-            'top_p' => ember_top_p(),
-            'top_k' => ember_top_k(),
-          ];
 
-          if ((bool)ember_cfg('STU_EMBER_UNVERIFIED_TUNING_ENABLED', false)) {
-            if (defined('STU_EMBER_NUM_THREAD'))     $options['num_thread'] = ember_num_thread();
-            if (defined('STU_EMBER_REPEAT_PENALTY')) $options['repeat_penalty'] = ember_repeat_penalty();
-            if (defined('STU_EMBER_NUM_PREDICT'))    $options['num_predict'] = ember_num_predict_for_model($model);
-            if (defined('STU_EMBER_NUM_CTX'))        $options['num_ctx'] = ember_num_ctx_for_model($model);
-            if (defined('STU_EMBER_STOP'))           $options['stop'] = ember_stop_tokens_for_model($model);
-            if (defined('STU_EMBER_SEED'))           $options['seed'] = ember_seed_for_model($model);
-            if (defined('STU_EMBER_REPEAT_LAST_N'))  $options['repeat_last_n'] = ember_repeat_last_n();
-          }
-
-          if (!empty($optionOverrides)) {
-            foreach ($optionOverrides as $k => $v) {
-              if ($v === null) {
-                unset($options[$k]);
-                continue;
-              }
-              $options[$k] = $v;
-            }
-          }
-          """
+          replacement = "\n".join([
+              "  // Gemma 4 + Ollama known-good fast path from live validation.",
+              "  // Keep the normal request intentionally minimal. Context, predict, thread and",
+              "  // repetition controls remain opt-in until exact backend/model/version/hardware",
+              "  // A/B testing verifies that they do not regress correctness or throughput.",
+              "  $options = [",
+              "    'temperature' => ember_temperature(),",
+              "    'top_p' => ember_top_p(),",
+              "    'top_k' => ember_top_k(),",
+              "  ];",
+              "",
+              "  if ((bool)ember_cfg('STU_EMBER_UNVERIFIED_TUNING_ENABLED', false)) {",
+              "    if (defined('STU_EMBER_NUM_THREAD'))     $options['num_thread'] = ember_num_thread();",
+              "    if (defined('STU_EMBER_REPEAT_PENALTY')) $options['repeat_penalty'] = ember_repeat_penalty();",
+              "    if (defined('STU_EMBER_NUM_PREDICT'))    $options['num_predict'] = ember_num_predict_for_model($model);",
+              "    if (defined('STU_EMBER_NUM_CTX'))        $options['num_ctx'] = ember_num_ctx_for_model($model);",
+              "    if (defined('STU_EMBER_STOP'))           $options['stop'] = ember_stop_tokens_for_model($model);",
+              "    if (defined('STU_EMBER_SEED'))           $options['seed'] = ember_seed_for_model($model);",
+              "    if (defined('STU_EMBER_REPEAT_LAST_N'))  $options['repeat_last_n'] = ember_repeat_last_n();",
+              "  }",
+              "",
+              "  if (!empty($optionOverrides)) {",
+              "    foreach ($optionOverrides as $k => $v) {",
+              "      if ($v === null) {",
+              "        unset($options[$k]);",
+              "        continue;",
+              "      }",
+              "      $options[$k] = $v;",
+              "    }",
+              "  }",
+              "",
+          ])
           text = text[:start] + replacement + text[end:]
 
-          text = replace_once(
-              text,
-              "['num_predict' => 6500, 'num_ctx' => ember_num_ctx_for_model($primaryModel)]",
-              "[]",
-              'vision forced tuning',
-          )
-          text = replace_once(
-              text,
-              "['num_predict' => ember_num_predict_for_model($model)]",
-              "[]",
-              'continuation forced predict',
-          )
-
+          text = replace_once(text, "['num_predict' => 6500, 'num_ctx' => ember_num_ctx_for_model($primaryModel)]", "[]", 'vision forced tuning')
+          text = replace_once(text, "['num_predict' => ember_num_predict_for_model($model)]", "[]", 'continuation forced predict')
           chat_path.write_text(text, encoding='utf-8')
 
           cfg_path = Path('api/config.local.php.example')
           cfg = cfg_path.read_text(encoding='utf-8')
-          old_cfg = """define('STU_EMBER_LOCK_NAMESPACE', 'ember_coreui');
-          define('STU_EMBER_NUM_PREDICT', 6500);
-          define('STU_EMBER_TIMEOUT', 600);
-          """
-          new_cfg = """define('STU_EMBER_LOCK_NAMESPACE', 'ember_coreui');
-
-          // Current Gemma 4 + Ollama known-good fast path.
-          define('STU_EMBER_TEMPERATURE', 1.0);
-          define('STU_EMBER_TOP_P', 0.95);
-          define('STU_EMBER_TOP_K', 64);
-          define('STU_EMBER_UNVERIFIED_TUNING_ENABLED', false);
-          // Only enable the legacy/backend-specific controls below after controlled A/B tests.
-          // define('STU_EMBER_NUM_PREDICT', 6500);
-          // define('STU_EMBER_NUM_CTX', 16384);
-          // define('STU_EMBER_NUM_THREAD', 16);
-          // define('STU_EMBER_REPEAT_PENALTY', 1.18);
-          // define('STU_EMBER_REPEAT_LAST_N', 96);
-
-          define('STU_EMBER_TIMEOUT', 600);
-          """
+          old_cfg = "\n".join([
+              "define('STU_EMBER_LOCK_NAMESPACE', 'ember_coreui');",
+              "define('STU_EMBER_NUM_PREDICT', 6500);",
+              "define('STU_EMBER_TIMEOUT', 600);",
+              "",
+          ])
+          new_cfg = "\n".join([
+              "define('STU_EMBER_LOCK_NAMESPACE', 'ember_coreui');",
+              "",
+              "// Current Gemma 4 + Ollama known-good fast path.",
+              "define('STU_EMBER_TEMPERATURE', 1.0);",
+              "define('STU_EMBER_TOP_P', 0.95);",
+              "define('STU_EMBER_TOP_K', 64);",
+              "define('STU_EMBER_UNVERIFIED_TUNING_ENABLED', false);",
+              "// Only enable the legacy/backend-specific controls below after controlled A/B tests.",
+              "// define('STU_EMBER_NUM_PREDICT', 6500);",
+              "// define('STU_EMBER_NUM_CTX', 16384);",
+              "// define('STU_EMBER_NUM_THREAD', 16);",
+              "// define('STU_EMBER_REPEAT_PENALTY', 1.18);",
+              "// define('STU_EMBER_REPEAT_LAST_N', 96);",
+              "",
+              "define('STU_EMBER_TIMEOUT', 600);",
+              "",
+          ])
           cfg = replace_once(cfg, old_cfg, new_cfg, 'config tuning block')
           cfg_path.write_text(cfg, encoding='utf-8')
 
-          # Fail closed if the normal request accidentally regains the old forced controls.
           final = chat_path.read_text(encoding='utf-8')
           normal_start = final.index("  // Gemma 4 + Ollama known-good fast path")
           normal_end = final.index("  if (!empty($optionOverrides))", normal_start)
           normal = final[normal_start:normal_end]
-          required = ["'temperature' => ember_temperature()", "'top_p' => ember_top_p()", "'top_k' => ember_top_k()"]
-          for item in required:
+          for item in ["'temperature' => ember_temperature()", "'top_p' => ember_top_p()", "'top_k' => ember_top_k()"]:
               if item not in normal:
                   raise SystemExit(f'missing known-good option: {item}')
           if "STU_EMBER_UNVERIFIED_TUNING_ENABLED" not in normal:
