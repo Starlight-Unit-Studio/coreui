@@ -2885,22 +2885,11 @@ function ember_should_reply(string $userMsg): bool {
   return ember_is_direct_invocation($userMsg);
 }
 
-function ember_call_ollama(string $model, string $systemPrompt, string $userPrompt, int $timeoutSec = 12, array $optionOverrides = [], $imageUrl = null, ?bool $thinkOverride = null): ?string {
-  // Thinking ist strikt an genau diesen Modellaufruf gebunden. Ohne Reset koennte ein
-  // spaeterer Call ohne message.thinking versehentlich einen alten Entwurf retten.
-  $GLOBALS['STU_EMBER_LAST_THINKING'] = '';
-  $url = ember_url();
-  $keepAlive = ember_keep_alive();
-  $suppressFailLog = !empty($optionOverrides['__suppress_fail_log']);
-  if (array_key_exists('__suppress_fail_log', $optionOverrides)) unset($optionOverrides['__suppress_fail_log']);
-
-  // Nur /api/chat - Gemma 4 wird ausschliesslich ueber den Chat-Endpoint angesprochen.
-  $isChat = true;
-
-  // Gemma 4 + Ollama known-good fast path from live validation.
-  // Keep the normal request intentionally minimal. Context, predict, thread and
-  // repetition controls remain opt-in until exact backend/model/version/hardware
-  // A/B testing verifies that they do not regress correctness or throughput.
+// Gemma 4 / Ollama minimal known-good fast path from live validation.
+// Only temperature/top_p/top_k are sent by default. Backend-specific context,
+// predict, thread, repeat, seed and stop controls require an explicit experimental
+// gate until isolated backend/model/version/hardware A/B tests verify them.
+function ember_ollama_known_good_options(string $model, array $optionOverrides = []): array {
   $options = [
     'temperature' => ember_temperature(),
     'top_p' => ember_top_p(),
@@ -2917,15 +2906,28 @@ function ember_call_ollama(string $model, string $systemPrompt, string $userProm
     if (defined('STU_EMBER_REPEAT_LAST_N'))  $options['repeat_last_n'] = ember_repeat_last_n();
   }
 
-  if (!empty($optionOverrides)) {
-    foreach ($optionOverrides as $k => $v) {
-      if ($v === null) {
-        unset($options[$k]);
-        continue;
-      }
-      $options[$k] = $v;
+  foreach ($optionOverrides as $k => $v) {
+    if ($v === null) {
+      unset($options[$k]);
+      continue;
     }
+    $options[$k] = $v;
   }
+  return $options;
+}
+function ember_call_ollama(string $model, string $systemPrompt, string $userPrompt, int $timeoutSec = 12, array $optionOverrides = [], $imageUrl = null, ?bool $thinkOverride = null): ?string {
+  // Thinking ist strikt an genau diesen Modellaufruf gebunden. Ohne Reset koennte ein
+  // spaeterer Call ohne message.thinking versehentlich einen alten Entwurf retten.
+  $GLOBALS['STU_EMBER_LAST_THINKING'] = '';
+  $url = ember_url();
+  $keepAlive = ember_keep_alive();
+  $suppressFailLog = !empty($optionOverrides['__suppress_fail_log']);
+  if (array_key_exists('__suppress_fail_log', $optionOverrides)) unset($optionOverrides['__suppress_fail_log']);
+
+  // Nur /api/chat - Gemma 4 wird ausschliesslich ueber den Chat-Endpoint angesprochen.
+  $isChat = true;
+
+  $options = ember_ollama_known_good_options($model, $optionOverrides);
 
   if ($isChat) {
     // User-Message aufbauen - bei Bildern als base64 einbetten (max 1024px, JPEG)
