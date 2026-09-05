@@ -18,7 +18,11 @@ jobs:
           fetch-depth: 0
 
       - name: Build and validate release
-        run: python3 .github/release_053.py
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed -i 's/":!.github\/\*\*",/":!.github\/\*\*", ":!README.md",/' .github/release_053.py
+          python3 .github/release_053.py
 
       - name: Commit release and remove temporary builder
         shell: bash
