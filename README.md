@@ -7,7 +7,7 @@ It combines private conversations and sessions, user-scoped RAG-Lite, local long
 
 Ember CoreUI runs on its own containerized Nginx, PHP-FPM, MariaDB, SearXNG, browser, and Python-worker stack and remains isolated from STΛRLIɢHT The Game and other Starlight Unit systems.
 
-Current version: `0.5.2-alpha`
+Current version: `0.5.3-alpha`
 
 ## Quick installation
 
@@ -41,7 +41,16 @@ Further details are provided in `LICENSE_HISTORY.md`, `TRADEMARKS.md`, `COMMUNIT
 
 ## Result of this release
 
-`0.5.2-alpha` is a focused completion hotfix for exact integer calculations in the private Core Channel.
+`0.5.3-alpha` aligns the production Gemma 4 + Ollama request path with the minimal known-good inference profile established during extended live CoreUI validation.
+
+- Normal generation sends only `temperature=1.0`, `top_p=0.95`, and `top_k=64` inside Ollama `options` by default.
+- `num_ctx`, `num_predict`, thread, repeat, seed, and stop controls are no longer injected into normal generation automatically.
+- Synchronous and SSE generation share the same option-policy helper so the two paths cannot silently drift.
+- Vision and truncated-continuation paths no longer force the old context or predict budgets.
+- Legacy backend-specific tuning remains available only behind the explicit experimental `STU_EMBER_UNVERIFIED_TUNING_ENABLED` gate plus explicit configuration.
+- There is no new database migration. Existing accounts, sessions, messages, revisions, uploads, RAG data, and local configuration remain unchanged.
+
+The deterministic calculation fixes from `0.5.2-alpha` remain included:
 
 - A prompt containing exactly one signed integer addition, subtraction, or multiplication can now be completed locally without waiting for Ollama or the Python worker.
 - The calculation uses decimal string arithmetic instead of PHP integer conversion. Operands of up to 512 digits remain exact on both 32-bit and 64-bit hosts.
@@ -271,14 +280,14 @@ The same verified flow used by the quick installer can be run manually:
 
 ```bash
 cd /home/users/game/tmp
-BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.5.2-alpha'
+BASE='https://raw.githubusercontent.com/Starlight-Unit-Studio/coreui/main/releases/v0.5.3-alpha'
 
-curl -fL "$BASE/EMBER_COREUI_0_5_2_ALPHA.zip" -o EMBER_COREUI_0_5_2_ALPHA.zip
-curl -fL "$BASE/EMBER_COREUI_0_5_2_ALPHA.zip.sha256" -o EMBER_COREUI_0_5_2_ALPHA.zip.sha256
-sha256sum -c EMBER_COREUI_0_5_2_ALPHA.zip.sha256
-unzip -q EMBER_COREUI_0_5_2_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_5_3_ALPHA.zip" -o EMBER_COREUI_0_5_3_ALPHA.zip
+curl -fL "$BASE/EMBER_COREUI_0_5_3_ALPHA.zip.sha256" -o EMBER_COREUI_0_5_3_ALPHA.zip.sha256
+sha256sum -c EMBER_COREUI_0_5_3_ALPHA.zip.sha256
+unzip -q EMBER_COREUI_0_5_3_ALPHA.zip
 
-sudo mv EMBER_COREUI_0_5_2_ALPHA /opt/ember-coreui
+sudo mv EMBER_COREUI_0_5_3_ALPHA /opt/ember-coreui
 cd /opt/ember-coreui
 sudo chmod 0750 setup.sh scripts/*.sh
 sudo ./scripts/install.sh
@@ -286,14 +295,14 @@ sudo ./scripts/install.sh
 
 The installer asks for the administrator email address, a password of at least 12 characters, and an optional display name through `COREUI_ADMIN_NAME`.
 
-## Update to 0.5.2-alpha
+## Update to 0.5.3-alpha
 
 The existing database, accounts, sessions, uploads, and protected credentials are preserved. The package is copied only over static project files and templates.
 
 ```bash
 cd /home/users/game/tmp
-sha256sum -c EMBER_COREUI_0_5_2_ALPHA.zip.sha256
-unzip -q -o EMBER_COREUI_0_5_2_ALPHA.zip
+sha256sum -c EMBER_COREUI_0_5_3_ALPHA.zip.sha256
+unzip -q -o EMBER_COREUI_0_5_3_ALPHA.zip
 
 sudo apt-get update
 sudo apt-get install -y rsync
@@ -304,7 +313,7 @@ sudo rsync -a \
   --exclude='uploads/' \
   --exclude='assets/chat_media/' \
   --exclude='assets/profile_photos/' \
-  EMBER_COREUI_0_5_2_ALPHA/ /opt/ember-coreui/
+  EMBER_COREUI_0_5_3_ALPHA/ /opt/ember-coreui/
 
 cd /opt/ember-coreui
 sudo ./scripts/stack.sh up -d --build --force-recreate php web browse pyworker
@@ -685,4 +694,4 @@ A complete German legal notice and a final privacy policy are deliberately not y
 
 ## Alpha status
 
-`0.5.2-alpha` completes exact single-expression integer calculations locally so a model or Python timeout cannot leave the private Core Channel waiting without an answer. Persistent feedback, alternative-answer navigation, true in-place editing, queued follow-up text, safe local Markdown, code blocks, continuations, response details, profile images, TXT decoding, installer verification, attachment reconstruction, private RAG-Lite retrieval, and isolated Python execution remain included. Speech input, native model audio transport, and spoken TTS output remain scheduled for the separate audio stage. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.
+`0.5.3-alpha` completes exact single-expression integer calculations locally so a model or Python timeout cannot leave the private Core Channel waiting without an answer. Persistent feedback, alternative-answer navigation, true in-place editing, queued follow-up text, safe local Markdown, code blocks, continuations, response details, profile images, TXT decoding, installer verification, attachment reconstruction, private RAG-Lite retrieval, and isolated Python execution remain included. Speech input, native model audio transport, and spoken TTS output remain scheduled for the separate audio stage. The free Ember CoreUI Community Source License introduced in `0.4.2-alpha` remains unchanged. There is no user counting, phone-home, license key, paywall, or paid Ember CoreUI offering.

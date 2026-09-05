@@ -1,0 +1,89 @@
+STΛRLIɢHT: EMBER COREUI BY STARLIGHT UNIT STUDIOS
+UEBERGABEPROTOKOLL 0.5.3-ALPHA
+STAND 05.09.2026
+
+======================================================================
+1. VERBINDLICHER QUELLSTAND
+======================================================================
+
+Repository:
+https://github.com/Starlight-Unit-Studio/coreui
+
+Arbeitsbranch:
+release/0.5.3-alpha
+
+Ziel-Branch:
+main
+
+Produktversion:
+0.5.3-alpha
+
+Paketwurzel:
+EMBER_COREUI_0_5_3_ALPHA
+
+Releasepaar:
+EMBER_COREUI_0_5_3_ALPHA.zip
+EMBER_COREUI_0_5_3_ALPHA.zip.sha256
+
+Produktive Adresse:
+https://coreui.starlight-unit.de
+
+======================================================================
+2. RELEASEZIEL
+======================================================================
+
+0.5.3-alpha uebernimmt die waehrend der ausgedehnten realen CoreUI-Tests
+erarbeitete Minimal-Konfiguration fuer Gemma 4 + Ollama in den offiziellen
+Produktionspfad. Der Client soll keine unvalidierten Backendparameter mehr als
+vermeintlich hilfreiche Defaults festschreiben.
+
+Der normale Pfad sendet nur temperature=1.0, top_p=0.95 und top_k=64.
+Kontext-, Predict-, Thread-, Repeat-, Seed- und Stop-Optionen bleiben
+backendverwaltet, solange sie nicht fuer die konkrete Backend-/Modell-/Versions-
+und Hardwarekombination isoliert validiert wurden.
+
+Synchroner Aufruf und SSE verwenden dieselbe Policy. Vision und automatische
+Fortsetzung erhalten keine gesonderten alten Predict-/Context-Budgets mehr.
+
+======================================================================
+3. KOMPATIBILITAET UND ROLLBACK
+======================================================================
+
+Die bisherigen Tuningfunktionen bleiben im Quellcode fuer gezielte A/B-Tests
+erhalten. Sie werden nur aktiv, wenn STU_EMBER_UNVERIFIED_TUNING_ENABLED
+explizit gesetzt und die jeweilige Option ebenfalls konfiguriert wurde.
+
+Es gibt keine Datenbankmigration. Migration 009 bleibt der aktuelle
+Schema-Stand. Konten, Sitzungen, Nachrichten, Revisionen, Feedback, Anhaenge,
+Uploads, private RAG-Daten und api/config.local.php werden beim Update nicht
+zurueckgesetzt.
+
+Ein Rollback auf das vorherige 0.5.2-alpha-Release ist dadurch ohne
+Schema-Rueckmigration moeglich.
+
+======================================================================
+4. RELEASEPRUEFUNG
+======================================================================
+
+Vor der Freigabe werden mindestens geprueft:
+
+* PHP-Syntax von api/chat.php, api/console_stream.php und config-Beispiel
+* Bash-Syntax von Setup und Shell-Skripten
+* Branding-/Lizenz-Selftest
+* git diff --check
+* ZIP-Integritaet und Paketwurzel
+* VERSION im entpackten Paket
+* SHA-256-Pruefung
+* Ausschluss historisch gesperrter privater Studio-Dokumente
+* konsistente Versionsreferenzen ausserhalb historischer Changelogs/Releases
+
+======================================================================
+5. ABGRENZUNG
+======================================================================
+
+0.5.3-alpha fuehrt keine neue Runtime-Architektur ein und ersetzt Ollama noch
+nicht. Die Client-Aenderung bereitet vielmehr die spaetere Uebergabe von
+Backend-, Hardware- und Capability-Entscheidungen an Quantum Runtime vor.
+
+Game, Homepage, Repack, KeyHelp, Host-PHP und externe Datenbanken sind nicht
+Bestandteil dieses CoreUI-Releases.
