@@ -399,7 +399,8 @@ try {
   $fileTaskHandled = !$isVisionTurn && $attachmentIds === []
     && $generationMode !== 'continue' && ember_py_enabled()
     && coreui_console_download_requested($promptMessage)
-    && (ember_console_file_tool_is_local(ember_model())
+    && ((coreui_up_enabled() && coreui_up_requested($promptMessage))
+      || ember_console_file_tool_is_local(ember_model())
       || coreui_console_multifile_source_directive($promptMessage) !== null);
 
   // v1.1.1.94: Vision-Turns nehmen NICHT den Streaming-Pfad. console_stream_ollama()

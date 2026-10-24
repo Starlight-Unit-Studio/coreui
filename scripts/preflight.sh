@@ -129,6 +129,12 @@ UI_FILES=(
   scripts/work-events-selftest.php
   scripts/work-events-persistence-selftest.php
   scripts/local-file-tool-selftest.php
+  scripts/universal-project-agent-selftest.php
+  scripts/universal-project-writer-selftest.php
+  scripts/universal-project-writer-selftest.py
+  api/console_universal_project.php
+  api/console_universal_source_protocol.php
+  scripts/universal-source-protocol-selftest.php
   scripts/gemma-zero-parameters-selftest.php
   config/Modelfile.template
   scripts/response-timing-ui-selftest.js
@@ -430,6 +436,23 @@ if (( ${#COMPOSE_CMD[@]} > 0 )); then
     ok 'Lokale Dateiauftraege: Python-Fences, mehrteilige Projekte, ZIP und Vollstaendigkeit geprueft.'
   else
     fail 'Lokaler Dateiwerkzeug-Selbsttest fehlgeschlagen.'
+  fi
+
+  if compose exec -T php php scripts/universal-source-protocol-selftest.php >/dev/null 2>&1; then
+    ok 'Universelles Quelldatei-Protokoll: Rohtext, Fences, Ollama Stop/Length geprueft.'
+  else
+    fail 'Universelles Quelldatei-Protokoll Selbsttest fehlgeschlagen.'
+  fi
+  if compose exec -T php php scripts/universal-project-agent-selftest.php >/dev/null 2>&1; then
+    ok 'Universeller Projekt-Agent: JSON-Plan, Pfade, Abhaengigkeiten und Fortsetzungen geprueft.'
+  else
+    fail 'Universeller Projekt-Agent Selbsttest fehlgeschlagen.'
+  fi
+  if compose exec -T php php scripts/universal-project-writer-selftest.php --emit-payload \
+      | compose exec -T browse python3 scripts/universal-project-writer-selftest.py >/dev/null 2>&1; then
+    ok 'Universelles ZIP: Python-Writer, verschachtelte Pfade und Inhaltsvergleich geprueft.'
+  else
+    fail 'Universeller ZIP-Writer Selbsttest fehlgeschlagen.'
   fi
 
   if command -v node >/dev/null 2>&1; then

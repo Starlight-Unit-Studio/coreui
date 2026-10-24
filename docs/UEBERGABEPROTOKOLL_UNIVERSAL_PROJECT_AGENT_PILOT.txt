@@ -1,0 +1,146 @@
+AKTUALISIERUNG 24.10.2026
+Die historischen Testluecken unten sind teilweise geschlossen:
+Vollstaendiger Checkout auf Basis main 0.5.32, PHP-/Offline-/echte
+ZIP-Writer-Tests bestanden. Docker-Integration und Live-Abnahme offen.
+Neuestes Protokoll: UEBERGABEPROTOKOLL_PILOT_OFFLINE_2026_10_24.txt
+Der Endmarker ist im aktuellen gemeinsamen Adapter optional, wenn
+Ollama einen normalen Abschluss liefert und die Quelle validiert wird.
+PR #69 bleibt DRAFT, Feature AUS, kein main-Merge.
+
+E.M.B.E.R. COREUI UEBERGABEPROTOKOLL: UNIVERSAL PROJECT AGENT PILOT
+Stand: 24.10.2026
+Status: EXPERIMENTELL / DRAFT / NICHT PRODUKTIV FREIGEGEBEN
+Repository: Starlight-Unit-Studio/coreui
+Branch: feat/universal-project-agent-pilot
+Pull Request: https://github.com/Starlight-Unit-Studio/coreui/pull/69
+Basis des Pilot-Branches: 0.5.31
+Produktiver main-Stand bei diesem Protokoll: 0.5.32
+Aktivierung des Piloten: standardmaessig AUS
+
+ZIEL UND ARCHITEKTURRICHTLINIE
+Der Benutzer hat zurecht kritisiert, dass fuer jede andere
+Homepage-, Browsergame- oder Projektstruktur immer neue
+Sonderwege entstehen. Ziel ist ein EINZIGER, modularer und
+projektartunabhaengiger Dateiwerkzeugvertrag:
+- Die KI erstellt einen strukturierten Projektplan.
+- CoreUI validiert Pfade, Dateien und Abhaengigkeiten.
+- Das Modell liefert Quelldateien einzeln statt einen
+  riesigen Python-Dateischreiber mit eingebettetem Quelltext.
+- CoreUI behandelt Quellen als inerte Daten und erstellt
+  mit servereigenem, deterministischem Writer das ZIP.
+- Der Download gilt erst nach bestandener Artefaktpruefung
+  als bestaetigt.
+Referenzen: bewährte Konzepte von OpenCode (Dateiwerkzeuge),
+Aider (gezielte eindeutige Edits) und OpenHands (Agentenablauf).
+Keine Fremdframeworks oder deren Quellcode kopiert.
+
+FESTE PROJEKTREGELN
+E.M.B.E.R. ist das Framework/Backend; E.M.B.E.R. CoreUI ist
+das eigenstaendige Terminal.
+Mara Thorne ist die CoreAI/TCI der Ravager Thorn; Ember
+ist eine separate CoreAI der Starlight Ember.
+ALLE Ollama-Modelle werden weiterhin aus der LOKALEN
+Ollama-Modellliste gewaehlt. Auch gemma4:31b-cloud wird
+via lokalem Ollama-Endpunkt verwendet; KEINE gesonderte
+Cloud-API-Anbindung in CoreUI.
+E.M.B.E.R. verarbeitet Modellanfragen strikt SERIELL.
+Freigegebenes Gemma-Modelfile bleibt unberuehrt.
+Bei Gemma kein num_ctx / num_predict hinzufuegen.
+Keine GitHub Actions bei aufgebrauchtem Kontingent.
+
+IMPLEMENTIERTER PILOT IN DRAFT-PR #69
+- Neues Modul: api/console_universal_project.php.
+- Expliziter Konfigurationsschalter:
+  STU_EMBER_UNIVERSAL_FILES_ENABLED (nur true aktiviert).
+  Standardzustand: deaktiviert.
+- Generischer JSON-Manifest-Parser mit relativen Pfaden,
+  Dateitypen, Zweck, Abhaengigkeiten und Zykluspruefung.
+- Stabil sortierter Dateigenerierungsplan nach Abhaengigkeit.
+- Beschraenkte Quelle-pro-Datei-Modellaufrufe ueber
+  bestehenden lokalen Ollama-Call und globale serielle Queue.
+- Erforderlicher Endmarker <<<COREUI_END_FILE>>>.
+  Begrenzt fortsetzbare Teilantworten und Fehlerabbruch.
+- Validierung u.a. von JSON, HTML, CSS und SVG sowie
+  lokalen HTML-Verweisen auf geplante Dateien.
+- ZIP-Writer mit komprimierten/base64-kodierten QUELLDATEN,
+  Unterordnern, Archiv-Inhaltspruefung und CRC-Testlogik.
+- Genau ein ZIP als gewuenschtes fertiges Artefakt.
+- Separater eindeutiger Search/Replace-Edit-Primitiv vorhanden,
+  noch KEIN autonomer mehrstufiger Code-Repair-Agent.
+- Chat- und SSE-Anschluss im Pilot-Branch hinter Flag.
+- Bestehende Account-/Sitzungs-Artefaktbestaetigung verwendet.
+- Debug-Preview fuer den Pilot-Code unterdrueckt.
+
+BEWUSSTE GRENZEN DER ERSTEN PILOTSTUFE
+- Nur ausdruecklicher ZIP-Projektauftrag.
+- Maximal zehn UTF-8-Textquelldateien, zusammen hoechstens
+  400 KB; max. vier relative Pfadsegmente.
+- Keine binaeren Bilder, Musik, Videos, Fonts oder andere
+  binaere Asset-Generierung.
+- Kein autonomer Terminalzugriff aus Modellantworten.
+- Noch keine native Ollama-Tool-Call-API; JSON-Antwort wird
+  ueber den bestehenden Ollama-Chatpfad geprueft.
+- Ein erfolgreicher Manifest- und ZIP-Test garantiert keine
+  fehlerfreie JavaScript-/Python-Programmlogik oder Darstellung.
+
+TESTS IM PILOT-BRANCH
+- scripts/universal-project-agent-selftest.php:
+  simulierte Modellantworten, Beispiel-Homepage und
+  Python-Projekt, sichere Pfade, Abhaengigkeiten, Zyklen,
+  Teilantworten, Fehlersperren, eindeutige Edits.
+- scripts/universal-project-writer-selftest.php:
+  echter Python-Writer im wegwerfbaren Testverzeichnis;
+  anschliessender Member-/Byte-/CRC-Vergleich.
+- Integration der beiden Tests in Compose- und Native-
+  Preflight-Skripte des Pilot-Branches vorbereitet.
+- Separates technisches Dokument:
+  docs/UNIVERSAL_PROJECT_AGENT_PILOT.md
+- WICHTIG: Vollstaendiger PHP-Laufzeittest auf echtem Checkout,
+  Sandbox-Docker-Integration und Ollama-Live-Abnahme wurden
+  fuer PR #69 NOCH NICHT erfolgreich nachgewiesen.
+  Der PR bleibt deshalb DRAFT und darf nicht ohne
+  Testabnahme nach main gemergt werden.
+
+NEUER PRODUKTIVER LIVEBEFUND VOM 24.10.2026
+Die Screenshots zeigen einen Test im bestehenden produktiven
+Dateipfad (NICHT im deaktivierten Pilot-Agenten):
+- Der Auftrag fuer eine private Anime-/Videospiel-Homepage
+  als ZIP wird nun als Homepage-Projekt erkannt.
+- CoreUI fordert Quelldateien einzeln an.
+- Eine erste Quelltextantwort wird empfangen.
+- Bei style.css treten wiederholt
+  "Quelldatei nicht lesbar"-Meldungen auf.
+- Schlussmeldung: Projektquellen unvollstaendig; kein ZIP.
+Damit ist das urspruengliche Routingproblem verbessert,
+aber der lokale Quelldatei-Vertrag noch nicht stabil.
+Daraus darf KEIN Rueckschluss gezogen werden, dass der
+separate universelle Pilot bereits produktiv getestet wurde.
+
+NAECHSTE SCHRITTE / GEPLANTE ABNAHME
+1. Exakte lokale Quelle-/Antwortpruefung fuer style.css im
+   aktuellen Dateipfad analysieren: Abschlussmarker,
+   Ollama done_reason, Ausgabegrenzen, Parserannahmen,
+   Code-Fences und Content-/Sicherheitsvalidierung.
+2. Bestehende stabile Werkzeugaustausch- und Edit-Konzepte
+   von OpenCode/Aider/OpenHands weiter als Referenz
+   vergleichen, keine projektartspezifischen Kruecken.
+3. PHP-Syntax und beide neuen Offline-Selbsttests auf
+   vollstaendigem Checkout laufen lassen und protokollieren.
+4. Modellgeneriertes Test-ZIP im isolierten Python-Worker
+   erstellen, alle Mitgliedsdateien und Bytes verifizieren.
+5. Pilot nur in STAGING aktivieren; lokales Gemma4:e4b,
+   gemma4:26b und via Ollama lokales gemma4:31b-cloud
+   mit IDENTISCHEM Projektauftrag pruefen.
+6. Danach unabhaengiges NICHT-Homepage-Projekt testen
+   (z.B. Python-Paket) und Fortsetzung/Abbruch pruefen.
+7. Chatantworten-Versionierung, Downloadkarten,
+   Benutzer-/Sitzungsisolation und mobilen Browser testen.
+8. Nur nach bestandener Freigabe in einer neuen
+   monotonen CoreUI-Version auf main uebernehmen.
+   Releaseversion JETZT NICHT reservieren/vortaeuschen.
+
+STATUSBESCHRAENKUNG
+Der produktive Fehler mit style.css ist weiterhin offen.
+PR #69 bleibt als Pilot getrennt von main 0.5.32.
+Dieses Protokoll dokumentiert den tatsaechlichen Stand
+und behauptet KEINEN erfolgreichen Live-Download.

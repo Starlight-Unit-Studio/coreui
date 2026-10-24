@@ -1,0 +1,66 @@
+E.M.B.E.R. COREUI: UEBERGABE PILOT OFFLINE-ABNAHME
+Stand: 24.10.2026
+PR: https://github.com/Starlight-Unit-Studio/coreui/pull/69
+Branch: feat/universal-project-agent-pilot
+Status: DRAFT, standardmaessig AUS, NICHT nach main gemergt.
+Produktivversion bleibt 0.5.32.
+
+FORTSETZUNG
+Neueste Pilot-Basis vor dieser Arbeit:
+bf5399331f21bec28d47685696f5a7643500c81b
+main 0.5.32 wurde konfliktfrei in den Pilotstand integriert:
+000c3a6 (vollstaendige SHA siehe Git-Historie).
+Damit ist auch der korrigierte Frontend-Preflight aus 0.5.32 enthalten.
+Kein Produktionsrelease, keine neue Releaseversion reserviert.
+
+JETZT TATSAECHLICH BESTANDEN
+Auf vollstaendigem Git-Checkout mit PHP 8.3.6 und Python 3:
+- PHP-Syntax: console_universal_source_protocol.php,
+  console_universal_project.php, chat.php, console_stream.php.
+- scripts/universal-source-protocol-selftest.php
+- scripts/universal-project-agent-selftest.php
+- scripts/universal-project-writer-selftest.php
+- scripts/universal-project-zip-smoke.php
+- scripts/local-file-tool-selftest.php
+- scripts/frontend-regression-selftest.php
+- scripts/gemma-zero-parameters-selftest.php
+- PHP --emit-payload | Python universal-project-writer-selftest.py,
+  wie im Preflight vorgesehen (hier direkt auf dem Testhost).
+- Shell-Syntax beider Preflight-Skripte.
+- Branding, Cache-Hashes und git diff --check.
+Die ZIP-Tests haben den echten PHP-generierten Python-Writer ausgefuehrt,
+nested Members, Dateibytes und CRC verglichen. Modellantworten waren
+synthetische Fixtures, keine echte Ollama-Inferenz.
+Modelfile gegen main verglichen: unveraendert.
+
+BEFUND ZUM PRODUKTIVEN CSS-FEHLER
+Der bisherige Pfad verwirft u.a. unpassende Fences, Toolmarker,
+leere/uebergrosse Quellen und strukturell ungueltige CSS-Antworten.
+Seine inkrementelle Fortsetzung ist auf JavaScript beschraenkt.
+Ohne echte Antwort bzw. Abschlussmetadaten ist NICHT bewiesen, welche
+Bedingung den konkreten style.css-Lauf verworfen hat.
+Der Pilot hat einen gemeinsamen Adapter fuer raw/fenced/marked Quellen
+und begrenzte Fortsetzung auch fuer CSS. Tests dieser Varianten bestehen.
+Keine weitere produktive Sonderroute hinzugefuegt.
+
+NOCH OFFEN, KEIN ERFOLG BEHAUPTET
+- Docker-Sandbox mit wirklichem Worker und Account-/Sitzungs-Downloads.
+- Vollstaendiger Server-Preflight mit MariaDB und Diensten.
+- Staging-Inferenz ueber lokalen Ollama-Endpunkt: Gemma4:e4b,
+  Gemma4:26b und gemma4:31b-cloud aus derselben lokalen Modellliste.
+- Identischer Anime-Homepage-ZIP-Auftrag plus ein Nicht-Homepage-Projekt.
+- Fortsetzung/Abbruch, keine doppelten Antworten, Downloadkarten,
+  Benutzerisolation und Darstellung in Android Chrome.
+Diese Umgebung hat weder Docker noch einen verbundenen Staging-Server.
+
+WEITERARBEIT
+1. PR #69 als Draft behalten. Pilot erst in separater Staging-Installation
+   mit STU_EMBER_UNIVERSAL_FILES_ENABLED=true aktivieren.
+2. Docker-/Worker- und Modelltests oben durchfuehren, echte Ergebnisse
+   dokumentieren. Kein Aktivieren auf Produktion allein wegen Offline-PASS.
+3. Bei bestandenem Gate neuen Versionsstand festlegen und PR promoten.
+4. Nach jedem main-Merge neues TXT-Uebergabeprotokoll im Repo und als Datei.
+Dauerfreigabe fuer beauftragte CoreUI-Arbeit, Push/PR/Merge liegt vor.
+GitHub Actions bleiben wegen Kontingent AUS, Commits mit [skip ci].
+Globale Modellqueue bleibt seriell. Gemma: kein num_ctx/num_predict
+hinzufuegen, aktuelles freigegebenes Modelfile unangetastet lassen.
